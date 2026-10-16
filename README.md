@@ -20,7 +20,7 @@ Download the editor for your computer from the [newest release](https://github.c
 - **Windows**: run the `.exe` and follow the installer.
 - **Linux**: make the `.AppImage` runnable (right click, Properties, allow executing, or `chmod +x` it) and open it, or install the `.deb`.
 
-The editor is not signed yet, so the first time you open it your computer warns you about it. On macOS, open System Settings, Privacy & Security, and click Open Anyway. On Windows, click More info and then Run anyway.
+On Windows the editor is not signed, so the first time you open it Windows warns you about it: click More info and then Run anyway.
 
 ### What else you need
 
