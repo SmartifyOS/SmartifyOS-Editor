@@ -115,8 +115,16 @@ export interface SmartifyApi {
 		/** Reads the open project again, for example after the CLI changed it. */
 		refresh(): Promise<OpenResult>;
 		forget(path: string): Promise<RecentProject[]>;
+		/** Where a new car's app goes unless the user picks another folder. */
+		newLocation(): Promise<string>;
 		close(): Promise<void>;
 		reveal(path: string): void;
+	};
+	files: {
+		/** Asks for a folder, starting in `defaultPath`. Undefined when nothing was picked. */
+		pickFolder(title: string, defaultPath?: string): Promise<string | undefined>;
+		/** Asks for a file with one of these extensions (like `glb`). */
+		pickFile(title: string, extensions: string[]): Promise<string | undefined>;
 	};
 	preview: {
 		start(): Promise<void>;
@@ -160,8 +168,11 @@ export const channels = {
 	projectsOpen: 'projects:open',
 	projectsRefresh: 'projects:refresh',
 	projectsForget: 'projects:forget',
+	projectsNewLocation: 'projects:new-location',
 	projectsClose: 'projects:close',
 	projectsReveal: 'projects:reveal',
+	filesPickFolder: 'files:pick-folder',
+	filesPickFile: 'files:pick-file',
 	previewStart: 'preview:start',
 	previewStop: 'preview:stop',
 	previewReload: 'preview:reload',

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Editor from '#lib/components/Editor.svelte';
+	import NewCarDialog from '#lib/components/NewCarDialog.svelte';
 	import PromptDialog from '#lib/components/PromptDialog.svelte';
 	import StatusBar from '#lib/components/StatusBar.svelte';
 	import TitleBar from '#lib/components/TitleBar.svelte';
@@ -22,6 +23,10 @@
 	{/if}
 	<StatusBar />
 </div>
+
+{#if editor.newCarDialog}
+	<NewCarDialog />
+{/if}
 
 {#if prompt}
 	{#key `${prompt.jobId}:${prompt.prompt.id}`}

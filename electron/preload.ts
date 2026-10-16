@@ -34,8 +34,14 @@ const api: SmartifyApi = {
 		open: (path) => ipcRenderer.invoke(channels.projectsOpen, path),
 		refresh: () => ipcRenderer.invoke(channels.projectsRefresh),
 		forget: (path) => ipcRenderer.invoke(channels.projectsForget, path),
+		newLocation: () => ipcRenderer.invoke(channels.projectsNewLocation),
 		close: () => ipcRenderer.invoke(channels.projectsClose),
 		reveal: (path) => ipcRenderer.send(channels.projectsReveal, path)
+	},
+	files: {
+		pickFolder: (title, defaultPath) =>
+			ipcRenderer.invoke(channels.filesPickFolder, title, defaultPath),
+		pickFile: (title, extensions) => ipcRenderer.invoke(channels.filesPickFile, title, extensions)
 	},
 	preview: {
 		start: () => ipcRenderer.invoke(channels.previewStart),

@@ -2,6 +2,7 @@
 	import ChevronDown from '~icons/lucide/chevron-down';
 	import FolderOpen from '~icons/lucide/folder-open';
 	import FolderX from '~icons/lucide/folder-x';
+	import Plus from '~icons/lucide/plus';
 	import ExternalLink from '~icons/lucide/external-link';
 	import Play from '~icons/lucide/play';
 	import Square from '~icons/lucide/square';
@@ -77,6 +78,7 @@
 						{/each}
 						<div class="mx-1 my-1 h-px bg-line"></div>
 					{/if}
+					{@render item(Plus, "Create a new car's app…", () => (editor.newCarDialog = true))}
 					{@render item(FolderOpen, 'Open another project…', () => editor.open())}
 					{@render item(ExternalLink, revealLabel, () => {
 						if (editor.project) window.smartify.projects.reveal(editor.project.path);

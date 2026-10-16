@@ -1,6 +1,6 @@
 import { join, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, ipcMain, Menu, net, protocol, screen, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, screen, shell } from 'electron';
 import { channels, type Rect } from '../shared/api.ts';
 import { cliEnv } from './cli/environment.ts';
 import { CliJob } from './cli/job.ts';
@@ -19,6 +19,7 @@ import {
 	closeProject,
 	currentProject,
 	forgetProject,
+	newProjectLocation,
 	openProject,
 	recentProjects,
 	refreshProject
@@ -176,6 +177,28 @@ function registerIpc(): void {
 		closeProject();
 	});
 	ipcMain.on(channels.projectsReveal, (_event, path: string) => shell.showItemInFolder(path));
+	ipcMain.handle(channels.projectsNewLocation, () => newProjectLocation());
+
+	ipcMain.handle(channels.filesPickFolder, async (_event, title: string, defaultPath?: string) => {
+		if (!window) return undefined;
+		const picked = await dialog.showOpenDialog(window, {
+			title,
+			defaultPath,
+			buttonLabel: 'Choose',
+			properties: ['openDirectory', 'createDirectory']
+		});
+		return picked.canceled ? undefined : picked.filePaths[0];
+	});
+	ipcMain.handle(channels.filesPickFile, async (_event, title: string, extensions: string[]) => {
+		if (!window) return undefined;
+		const picked = await dialog.showOpenDialog(window, {
+			title,
+			buttonLabel: 'Choose',
+			properties: ['openFile'],
+			filters: [{ name: extensions.map((extension) => `.${extension}`).join(', '), extensions }]
+		});
+		return picked.canceled ? undefined : picked.filePaths[0];
+	});
 
 	ipcMain.handle(channels.previewStart, () => {
 		const project = currentProject();

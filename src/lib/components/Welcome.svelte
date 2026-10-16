@@ -1,6 +1,7 @@
 <script lang="ts">
 	import FolderOpen from '~icons/lucide/folder-open';
 	import Folder from '~icons/lucide/folder';
+	import Plus from '~icons/lucide/plus';
 	import X from '~icons/lucide/x';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
 	import CircleAlert from '~icons/lucide/circle-alert';
@@ -53,18 +54,27 @@
 			</div>
 		{/if}
 
-		<Button
-			variant="primary"
-			size="lg"
-			disabled={editor.opening || !editor.cli?.found}
-			onclick={() => editor.open()}
-		>
-			{#if editor.opening}
-				<LoaderCircle class="animate-spin" /> Opening
-			{:else}
-				<FolderOpen /> Open your car's app
-			{/if}
-		</Button>
+		<div class="grid grid-cols-2 gap-2.5">
+			<Button
+				variant="primary"
+				size="lg"
+				disabled={editor.opening || !editor.cli?.found}
+				onclick={() => (editor.newCarDialog = true)}
+			>
+				<Plus /> Create your car's app
+			</Button>
+			<Button
+				size="lg"
+				disabled={editor.opening || !editor.cli?.found}
+				onclick={() => editor.open()}
+			>
+				{#if editor.opening}
+					<LoaderCircle class="animate-spin" /> Opening
+				{:else}
+					<FolderOpen /> Open your car's app
+				{/if}
+			</Button>
+		</div>
 
 		{#if editor.openProblem}
 			<div class="selectable flex gap-3 rounded-xl border border-bad/25 bg-bad/[0.07] p-4">

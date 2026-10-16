@@ -30,12 +30,16 @@ electron/store.ts    what the editor remembers, one JSON file in userData
 resources/           the app icons, made from icon-source.png by scripts/make-icons.py
 src/lib/state/       the window's reactive state (editor.svelte.ts), the only user of window.smartify
 src/lib/components/  the panels, the title bar, the start screen, the CLI prompt dialog
-scripts/             dev runner, build, the dash check, the icons
+scripts/             dev runner, build, the dash check, the icons, the new car screenshots
 ```
 
 - **The window only talks to the main process through `window.smartify`**, whose shape is `SmartifyApi` in `shared/api.ts`. A new call goes into the contract, the preload and a handler in `main.ts`, with its channel name in `channels`.
 - **A question the CLI asks shows up as a `prompt` event** and is answered by the generic `PromptDialog`. A new command needs nothing in the window to be usable.
 - **The running app is a real window above the page.** Anything drawn over the viewport (a menu, a dialog) uses the `coversViewport` attachment so the app hides meanwhile.
+
+## Creating a car
+
+`NewCarDialog` asks what `smartify-os create` asks, a page at a time, with a screenshot of every layout, driver's side and bar (all 36 combinations, so every picture shows the choices already made). The answers go to the CLI as flags, and `create --dry-run` checks them on the page they were typed on before anything is created. The layouts are a copy of the CLI's list, so a new built-in layout is a change in both, and new screenshots: `bun scripts/make-screenshots.ts` (macOS, needs Flutter and `cwebp`) runs a copy of the Miata app in each and writes `src/lib/assets/new-car/`.
 
 ## The live preview
 

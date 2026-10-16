@@ -7,7 +7,7 @@ import type {
 	RecentProject,
 	UpdateState
 } from '../../../shared/api.ts';
-import type { PromptEvent } from '../../../shared/cli.ts';
+import type { CliEvent, PromptEvent, ResultEvent } from '../../../shared/cli.ts';
 
 /**
  * Everything the window shows that comes from the main process, in one reactive object.
@@ -46,6 +46,8 @@ class Editor {
 	/** This editor's version. */
 	version = $state('');
 	update = $state<UpdateState>({ status: 'idle' });
+	/** Whether the dialog that creates a new car's app is open. */
+	newCarDialog = $state(false);
 	/** Whether the "update ready" dialog is open. It opens by itself once per version. */
 	updateDialog = $state(false);
 	private updateDialogShownFor: string | undefined;
@@ -57,6 +59,8 @@ class Editor {
 	);
 
 	private started = false;
+	/** Who follows a job started with {@link runCli}, by its id. */
+	private jobListeners = new Map<string, (event: CliEvent) => void>();
 
 	/** Connects to the main process. Called once, by the root layout. */
 	start(): () => void {
@@ -82,6 +86,7 @@ class Editor {
 				}
 			}),
 			api.cli.onEvent(({ jobId, event }) => {
+				this.jobListeners.get(jobId)?.(event);
 				if (event.type === 'prompt') {
 					this.prompts = [
 						...this.prompts.filter((open) => open.jobId !== jobId),
@@ -172,6 +177,24 @@ class Editor {
 
 	restart(): void {
 		if (this.preview.status === 'running') window.smartify.preview.restart();
+	}
+
+	/**
+	 * Runs `smartify-os <args>`, handing each of its events to `onEvent`, and resolves with
+	 * its result. Questions it asks still go to the prompt dialog.
+	 */
+	async runCli(args: string[], onEvent?: (event: CliEvent) => void): Promise<ResultEvent> {
+		const jobId = await window.smartify.cli.start(args);
+		// The id arrives before the job's first event: both come over the same IPC pipe, and the
+		// main process replies before the CLI has had a chance to print anything.
+		return await new Promise((resolve) => {
+			this.jobListeners.set(jobId, (event) => {
+				onEvent?.(event);
+				if (event.type !== 'result') return;
+				this.jobListeners.delete(jobId);
+				resolve(event);
+			});
+		});
 	}
 
 	answer(open: OpenPrompt, value: unknown): void {

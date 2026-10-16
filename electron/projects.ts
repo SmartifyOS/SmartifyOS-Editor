@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { basename, dirname, join, resolve } from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import type { OpenResult, Project, RecentProject } from '../shared/api.ts';
 import type { CarInfo } from '../shared/cli.ts';
@@ -33,6 +34,14 @@ export function forgetProject(path: string): RecentProject[] {
 		stored.recentProjects = stored.recentProjects.filter((project) => project.path !== path);
 	});
 	return recentProjects();
+}
+
+/** Next to the car opened last, or in Documents for the first one. */
+export function newProjectLocation(): string {
+	const last = recentProjects().find((project) => project.exists);
+	if (last) return dirname(last.path);
+	const documents = join(homedir(), 'Documents');
+	return existsSync(documents) ? documents : homedir();
 }
 
 export function closeProject(): void {
