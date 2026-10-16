@@ -59,9 +59,30 @@ jobs:
 
       - run: bun run build
 
-      # Signing and notarizing need certificates in the repo's secrets, which are not set
-      # up yet. Unsigned builds work, but macOS and Windows warn before opening them.
-      - run: bunx electron-builder --publish never
+      # Signed with the Developer ID certificate and notarized by Apple, so it opens without
+      # a warning (and keeps its Accessibility permission across updates). electron-builder
+      # does both when these are set. Without the secrets it builds unsigned, as before.
+      - name: Package for macOS
+        if: runner.os == 'macOS'
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$CSC_LINK" ]; then
+            echo "::warning::No MAC_CERTIFICATE secret, building an unsigned app."
+            unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+          fi
+          bunx electron-builder --publish never
+
+      # Windows is not signed (SmartScreen's "More info, Run anyway" is a small step), and
+      # Linux needs no signing.
+      - name: Package
+        if: runner.os != 'macOS'
+        run: bunx electron-builder --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 

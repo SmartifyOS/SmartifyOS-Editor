@@ -68,3 +68,5 @@ bun run release    # cut a release (scripts/release.ts), --dry-run to only look
 `SMARTIFY_OS_CLI` points the editor at another CLI binary or script, for trying both repos together.
 
 Releases are cut with `bun run release` and nothing else. It checks the repo, asks for the version and an optional summary, bumps package.json in a `chore: release vX` commit, and pushes a `vX` tag whose message is the release notes (the `feat:`, `fix:` and `refactor:` commits since the last tag). The release workflow checks the tag against package.json, builds every installer and publishes the tag's message as the release notes. The same script is in SmartifyOS-CLI; keep the two alike.
+
+The Mac builds in release.yml are signed with a Developer ID certificate and notarized by Apple, from the repo secrets `MAC_CERTIFICATE` (the .p12, base64), `MAC_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID`. Without them the Mac builds come out unsigned. Windows and Linux are not signed.
