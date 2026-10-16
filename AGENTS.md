@@ -11,8 +11,8 @@ It is for people doing something like programming for the first time. The CLI (t
 - **Electron** for the window on macOS, Windows and Linux.
 - **SvelteKit** (Svelte 5, runes only) for the window, as a static single page with the hash router, served by Electron from `app://editor/`.
 - **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only: near black surfaces edge to edge, hairline borders of white at a few percent, rounded controls with a faint top highlight, glass for menus and dialogs. Text is 14px and controls 32 to 36px tall; nothing smaller than 12px.
-- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts and `ui/Select.svelte` for choices.
-- **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. Never draw an icon by hand.
+- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices and `ui/Switch.svelte` for on and off.
+- **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. A brand's own logo comes from the `logos` set (`~icons/logos/visual-studio-code`). Never draw an icon by hand.
 - **koffi** for the few native calls the live preview needs (Win32, Xlib, macOS Accessibility). The only runtime dependency.
 - **Bun** for installing, scripts and the dev runner. **esbuild** bundles the main process and preload. **electron-builder** packages.
 
@@ -26,16 +26,37 @@ electron/cli/        finding the CLI, running jobs with --json, the console
 electron/preview/    the live preview: session.ts runs `smartify-os run`, one embedder per system
 electron/native/     the koffi bindings, each loaded only on its own system
 electron/projects.ts the open project and the recent ones, read through the CLI
+electron/vscode.ts   finding VS Code where it installs itself, and opening a folder in it
 electron/store.ts    what the editor remembers, one JSON file in userData
+electron/settings.ts what the settings page changes, and what each is by default
 resources/           the app icons, made from icon-source.png by scripts/make-icons.py
 src/lib/state/       the window's reactive state (editor.svelte.ts), the only user of window.smartify
-src/lib/components/  the panels, the title bar, the start screen, the CLI prompt dialog
+src/lib/commands.ts  every CLI command the window runs on the car, with its arguments
+src/lib/exports.ts   what the Export menu (and the inspector) can put on a USB stick
+shared/next-steps.ts the editor's words for the steps the CLI suggests after a command
+electron/catalog.ts  the recommended extensions, catalog/extensions.json for now
+src/lib/components/  the panels, the title bar, the start screen, the dialogs, settings/
+src/routes/          the editor (or start screen) at #/, the settings page at #/settings
 scripts/             dev runner, build, the dash check, the icons, the new car screenshots
 ```
 
 - **The window only talks to the main process through `window.smartify`**, whose shape is `SmartifyApi` in `shared/api.ts`. A new call goes into the contract, the preload and a handler in `main.ts`, with its channel name in `channels`.
 - **A question the CLI asks shows up as a `prompt` event** and is answered by the generic `PromptDialog`. A new command needs nothing in the window to be usable.
 - **The running app is a real window above the page.** Anything drawn over the viewport (a menu, a dialog) uses the `coversViewport` attachment so the app hides meanwhile.
+
+## Working on the car
+
+Everything the car panel and the inspector do (extensions, updating SmartifyOS, linking, devices, the USB sticks) is a command in `src/lib/commands.ts`, run with `editor.runTask`. The task dialog shows its steps and asks its questions inline (`PromptForm`), and once it is over the car is read again, the running app restarted when the car changed. A new command is one entry there and a button. Whether there are updates is asked quietly with `cli.query` (`update --check`, `extension update --check`), which prints nothing to the console.
+
+What the CLI says to do next comes as `data.steps` on a `note`, each with a `kind`. The CLI's words name commands to type, so `shared/next-steps.ts` says each kind the editor's way (a kind it does not know is said the CLI's way).
+
+The add extension dialog lists the extensions the editor recommends, from `catalog.extensions()`. They ship with the editor in `electron/catalog/extensions.json` (a GitHub address, a title and a description each), until the list moves to a server where people can send in their own.
+
+Opening in VS Code looks where its installers put it on every system before PATH, since `code` is not on PATH by default. When it is not there, `VsCodeDialog` links the download and the VS Code extensions worth adding.
+
+## This computer and the settings
+
+The first time the editor finds the CLI it runs `smartify-os setup` in the task dialog (Flutter unless there is one, PlatformIO if wanted), and remembers that it did (`setUp` in the store), however it went. After that it only asks `doctor` quietly, and the start screen says when something SmartifyOS cannot work without is missing. The settings page (`#/settings`, the gear in the title bar, Cmd+, or Ctrl+,) has the doctor first: every check, with a button for the ones a command puts right (`fix` in the CLI's report). A new setting goes into `Settings` in `shared/api.ts`, its default into `electron/settings.ts`, and a row into `settings/Settings.svelte`.
 
 ## Creating a car
 

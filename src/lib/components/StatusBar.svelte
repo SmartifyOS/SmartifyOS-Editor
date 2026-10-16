@@ -7,9 +7,9 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 
 	/**
-	 * The strip along the bottom of the window: updates on the left, which only show when
-	 * there is something to say, and the editor's version on the right, which checks for
-	 * updates when clicked.
+	 * The strip along the bottom of the window: a task moved out of the way and updates on
+	 * the left, which only show when there is something to say, and on the right the versions
+	 * of the CLI and the editor, which checks for updates when clicked.
 	 */
 
 	const update = $derived(editor.update);
@@ -20,6 +20,18 @@
 <footer
 	class="flex h-8 shrink-0 items-center gap-3 border-t border-line bg-bg px-3 text-[12.5px] text-muted"
 >
+	{#if editor.task?.hidden}
+		<button
+			type="button"
+			class="flex h-6 items-center gap-2 rounded-md px-1.5 text-fg/90 hover:bg-hover"
+			title="Show how far it is"
+			onclick={() => editor.task && (editor.task.hidden = false)}
+		>
+			<LoaderCircle class="size-3.5 animate-spin text-primary" />
+			{editor.task.spec.title}
+		</button>
+	{/if}
+
 	{#if update.status === 'checking'}
 		<span class="flex items-center gap-2">
 			<LoaderCircle class="size-3.5 animate-spin" /> Looking for updates
@@ -73,6 +85,9 @@
 
 	<div class="flex-1"></div>
 
+	{#if editor.cli?.found}
+		<span title={editor.cli.path}>CLI {editor.cli.version}</span>
+	{/if}
 	{#if editor.version}
 		<button
 			type="button"

@@ -6,6 +6,7 @@
 	import TriangleAlert from '~icons/lucide/triangle-alert';
 	import CircleAlert from '~icons/lucide/circle-alert';
 	import LoaderCircle from '~icons/lucide/loader-circle';
+	import { goto } from '$app/navigation';
 	import icon from '#lib/assets/icon.png';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Button from './ui/Button.svelte';
@@ -51,6 +52,33 @@
 					{installCommand}
 				</code>
 				<Button size="sm" class="mt-3" onclick={() => editor.refreshCli()}>Check again</Button>
+			</div>
+		{/if}
+
+		{#if editor.computer && !editor.computer.ready}
+			{@const missing = editor.computer.checks.filter((check) => check.status === 'error')}
+			<div class="rounded-xl border border-warn/25 bg-warn/[0.07] p-4">
+				<div class="flex items-center gap-2 font-medium text-warn">
+					<TriangleAlert class="size-4" /> This computer is not ready yet
+				</div>
+				<ul class="mt-1.5 flex flex-col gap-0.5 text-muted">
+					{#each missing as check (check.id)}
+						<li><span class="text-fg">{check.title}</span>: {check.summary}</li>
+					{/each}
+				</ul>
+				<div class="mt-3 flex gap-2">
+					<Button
+						size="sm"
+						variant="primary"
+						disabled={editor.busy}
+						onclick={() => editor.setUpComputer()}
+					>
+						Get it ready
+					</Button>
+					<Button size="sm" variant="ghost" onclick={() => goto('#/settings')}>
+						See what it has
+					</Button>
+				</div>
 			</div>
 		{/if}
 

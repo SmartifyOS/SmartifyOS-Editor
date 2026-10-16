@@ -7,6 +7,7 @@ import { cliEnv } from './cli/environment.ts';
 import { CliJob, runCli } from './cli/job.ts';
 import { anyRunning } from './cli/jobs.ts';
 import { cliStatus } from './cli/locate.ts';
+import { settings } from './settings.ts';
 
 /**
  * Keeps the editor and the tools behind it up to date, as one thing for the user.
@@ -17,8 +18,9 @@ import { cliStatus } from './cli/locate.ts';
  * - The CLI updates itself with `smartify-os self-update`, which needs no restart. It waits
  *   until no CLI job is running, since a running program cannot be replaced on Windows.
  *
- * Background checks never bother the user: only a found update shows. A check the user
- * asks for also shows that it is checking, that all is up to date, or that it failed.
+ * Background checks never bother the user: only a found update shows, and they can be
+ * switched off in the settings. A check the user asks for also shows that it is checking,
+ * that all is up to date, or that it failed.
  */
 
 const releasesUrl = 'https://github.com/SmartifyOS/SmartifyOS-Editor/releases';
@@ -126,6 +128,8 @@ export class Updates {
 
 	/** Looks for updates of the editor and of the tools. `manual` shows the outcome too. */
 	async check(manual: boolean): Promise<void> {
+		// Switched off in the settings, only a check the user asks for happens then.
+		if (!manual && !settings().backgroundUpdates) return;
 		if (manual) {
 			this.manual = { checking: true };
 			this.emit();

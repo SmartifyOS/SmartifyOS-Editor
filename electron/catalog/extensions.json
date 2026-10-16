@@ -1,0 +1,9 @@
+{
+	"extensions": [
+		{
+			"url": "https://github.com/Mauznemo/smartify_os_android_auto",
+			"title": "Android Auto",
+			"description": "Your phone's apps on the car's screen. Plug the phone in, or connect it over Bluetooth."
+		}
+	]
+}

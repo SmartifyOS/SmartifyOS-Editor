@@ -66,3 +66,81 @@ export interface CarInfo {
 	smartifyOs: PackageInfo;
 	extensions: (PackageInfo & { switchedOn: boolean | null })[];
 }
+
+/** A device on the car's CAN bus with a program, as `device list` and the other device commands report one. */
+export interface DeviceInfo {
+	/** `CanDevice.name` in the car's app. */
+	name: string;
+	/** Its folder, relative to the car's app: `devices/headlights`. */
+	folder: string;
+	/** Its firmware's version, like `1.0.0`. */
+	version: string;
+	/** PlatformIO's name for its board. */
+	board: string | null;
+}
+
+/** What `device list` returns. */
+export interface DeviceList {
+	devices: DeviceInfo[];
+}
+
+/** What `update --check` returns: `to` is the newer SmartifyOS, null when the car has it. */
+export interface CoreUpdateCheck {
+	changed: boolean;
+	from: string;
+	to: string | null;
+}
+
+/** What `extension update` returns, with `--check` too: `available` is every update there is. */
+export interface ExtensionUpdates {
+	changed: boolean;
+	available: { name: string; title: string; from: string; to: string }[];
+	updated: { name: string; title: string; from: string; to: string }[];
+}
+
+/** The parts of what `device create` returns that the app uses. */
+export interface DeviceCreated {
+	device: { name: string; node: number; title: string; new: boolean };
+	board: string;
+	/** Relative to the car's app: `devices/headlights`. */
+	folder: string;
+}
+
+/**
+ * One thing to do next, which a `note` carries as `data.steps`. `kind` says what it is,
+ * `text` is how the terminal says it, `path` the file or folder it is about.
+ */
+export interface NextStep {
+	kind: string;
+	text: string;
+	path?: string;
+}
+
+/** One thing `doctor` checked on this computer. */
+export interface DoctorCheck {
+	id: string;
+	/** `Flutter`. */
+	title: string;
+	status: 'ok' | 'warning' | 'error';
+	/** What was found, or what is wrong. */
+	summary: string;
+	/** What it is needed for, when that is not everything. */
+	neededFor?: string;
+	/** What to do about it, in the CLI's words. */
+	hint?: string;
+	/** The arguments of the command that puts it right, when one does: `['setup']`. */
+	fix?: string[];
+	path?: string;
+}
+
+/**
+ * What `doctor` returns, and `setup` as its `doctor`. When there is an error the command
+ * fails, with this as its `error.details`.
+ */
+export interface DoctorReport {
+	/** Nothing failed, so a car can be made here. Warnings do not count. */
+	ready: boolean;
+	errors: number;
+	warnings: number;
+	checks: DoctorCheck[];
+}

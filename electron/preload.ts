@@ -26,7 +26,8 @@ const api: SmartifyApi = {
 		answer: (jobId, promptId, value) =>
 			ipcRenderer.send(channels.cliAnswer, jobId, promptId, value),
 		cancel: (jobId, promptId) => ipcRenderer.send(channels.cliCancel, jobId, promptId),
-		onEvent: (listener) => subscribe(channels.cliEvent, listener)
+		onEvent: (listener) => subscribe(channels.cliEvent, listener),
+		query: (args) => ipcRenderer.invoke(channels.cliQuery, args)
 	},
 	projects: {
 		recent: () => ipcRenderer.invoke(channels.projectsRecent),
@@ -34,6 +35,7 @@ const api: SmartifyApi = {
 		open: (path) => ipcRenderer.invoke(channels.projectsOpen, path),
 		refresh: () => ipcRenderer.invoke(channels.projectsRefresh),
 		forget: (path) => ipcRenderer.invoke(channels.projectsForget, path),
+		forgetAll: () => ipcRenderer.invoke(channels.projectsForgetAll),
 		newLocation: () => ipcRenderer.invoke(channels.projectsNewLocation),
 		close: () => ipcRenderer.invoke(channels.projectsClose),
 		reveal: (path) => ipcRenderer.send(channels.projectsReveal, path)
@@ -51,6 +53,21 @@ const api: SmartifyApi = {
 		setViewport: (rect) => ipcRenderer.send(channels.previewViewport, rect),
 		state: () => ipcRenderer.invoke(channels.previewState),
 		onState: (listener) => subscribe(channels.previewStateChanged, listener)
+	},
+	settings: {
+		get: () => ipcRenderer.invoke(channels.settingsGet),
+		set: (change) => ipcRenderer.invoke(channels.settingsSet, change),
+		onOpen: (listener) => subscribe(channels.settingsOpen, listener)
+	},
+	setup: {
+		needed: () => ipcRenderer.invoke(channels.setupNeeded),
+		done: () => ipcRenderer.send(channels.setupDone)
+	},
+	catalog: {
+		extensions: () => ipcRenderer.invoke(channels.catalogExtensions)
+	},
+	vscode: {
+		open: (folder, file) => ipcRenderer.invoke(channels.vscodeOpen, folder, file)
 	},
 	updates: {
 		state: () => ipcRenderer.invoke(channels.updatesState),

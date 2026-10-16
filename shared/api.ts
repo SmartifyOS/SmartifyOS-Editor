@@ -1,4 +1,4 @@
-import type { CarInfo, CliEvent } from './cli.ts';
+import type { CarInfo, CliEvent, DeviceInfo, ResultEvent } from './cli.ts';
 
 /**
  * The contract between the main process and the window: what the preload script puts on
@@ -25,7 +25,29 @@ export interface Project {
 	path: string;
 	name: string;
 	car: CarInfo;
+	/** The devices on the car's CAN bus that have a program, from `device list`. */
+	devices: DeviceInfo[];
 }
+
+/** An extension the editor recommends, see electron/catalog.ts. */
+export interface CatalogExtension {
+	/** Its GitHub address, which `extension add` takes. */
+	url: string;
+	title: string;
+	/** A sentence or two about what it does. */
+	description: string;
+}
+
+/** What the user can change on the settings page. */
+export interface Settings {
+	/** Looks for updates of the editor and its tools in the background, every few hours. */
+	backgroundUpdates: boolean;
+	/** Where new cars' apps go. Null is next to the car opened last. */
+	newCarFolder: string | null;
+}
+
+export type VsCodeResult =
+	{ ok: true } | { ok: false; missing: true } | { ok: false; missing: false; message: string };
 
 export type OpenResult =
 	| { ok: true; project: Project }
@@ -105,6 +127,11 @@ export interface SmartifyApi {
 		answer(jobId: string, promptId: string, value: unknown): void;
 		cancel(jobId: string, promptId?: string): void;
 		onEvent(listener: (event: JobEvent) => void): () => void;
+		/**
+		 * Runs `smartify-os <args> --json` in the open project quietly, for a command that asks
+		 * nothing and changes nothing (like `update --check`): nothing goes to the console.
+		 */
+		query(args: string[]): Promise<ResultEvent>;
 	};
 	projects: {
 		recent(): Promise<RecentProject[]>;
@@ -115,6 +142,8 @@ export interface SmartifyApi {
 		/** Reads the open project again, for example after the CLI changed it. */
 		refresh(): Promise<OpenResult>;
 		forget(path: string): Promise<RecentProject[]>;
+		/** Empties the list of recent projects. */
+		forgetAll(): Promise<RecentProject[]>;
 		/** Where a new car's app goes unless the user picks another folder. */
 		newLocation(): Promise<string>;
 		close(): Promise<void>;
@@ -137,6 +166,30 @@ export interface SmartifyApi {
 		setViewport(rect: Rect | null): void;
 		state(): Promise<PreviewState>;
 		onState(listener: (state: PreviewState) => void): () => void;
+	};
+	settings: {
+		get(): Promise<Settings>;
+		set(change: Partial<Settings>): Promise<Settings>;
+		/** Called when the settings page is asked for from the app menu (macOS). */
+		onOpen(listener: () => void): () => void;
+	};
+	/** Getting this computer ready, which happens once by itself after installing. */
+	setup: {
+		/** Whether it has never run on this computer yet. */
+		needed(): Promise<boolean>;
+		/** Remembers that it ran. */
+		done(): void;
+	};
+	catalog: {
+		/** The extensions the editor recommends. */
+		extensions(): Promise<CatalogExtension[]>;
+	};
+	vscode: {
+		/**
+		 * Opens the car's app in VS Code, or a folder inside it (like a device's) with one of its
+		 * files. Both are relative to the car's app.
+		 */
+		open(folder?: string, file?: string): Promise<VsCodeResult>;
 	};
 	updates: {
 		state(): Promise<UpdateState>;
@@ -163,11 +216,13 @@ export const channels = {
 	cliAnswer: 'cli:answer',
 	cliCancel: 'cli:cancel',
 	cliEvent: 'cli:event',
+	cliQuery: 'cli:query',
 	projectsRecent: 'projects:recent',
 	projectsCurrent: 'projects:current',
 	projectsOpen: 'projects:open',
 	projectsRefresh: 'projects:refresh',
 	projectsForget: 'projects:forget',
+	projectsForgetAll: 'projects:forget-all',
 	projectsNewLocation: 'projects:new-location',
 	projectsClose: 'projects:close',
 	projectsReveal: 'projects:reveal',
@@ -183,6 +238,13 @@ export const channels = {
 	consoleHistory: 'console:history',
 	consoleClear: 'console:clear',
 	consoleLine: 'console:line',
+	settingsGet: 'settings:get',
+	settingsSet: 'settings:set',
+	settingsOpen: 'settings:open',
+	setupNeeded: 'setup:needed',
+	setupDone: 'setup:done',
+	catalogExtensions: 'catalog:extensions',
+	vscodeOpen: 'vscode:open',
 	appVersion: 'app:version',
 	updatesState: 'updates:state',
 	updatesStateChanged: 'updates:state-changed',

@@ -1,9 +1,10 @@
-import { join, normalize, sep } from 'node:path';
+import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, screen, shell } from 'electron';
-import { channels, type Rect } from '../shared/api.ts';
+import { channels, type Rect, type Settings } from '../shared/api.ts';
+import { catalogExtensions } from './catalog.ts';
 import { cliEnv } from './cli/environment.ts';
-import { CliJob } from './cli/job.ts';
+import { CliJob, runCli } from './cli/job.ts';
 import {
 	clearConsole,
 	consoleHistory,
@@ -18,14 +19,17 @@ import { PreviewSession } from './preview/session.ts';
 import {
 	closeProject,
 	currentProject,
+	forgetAllProjects,
 	forgetProject,
 	newProjectLocation,
 	openProject,
 	recentProjects,
 	refreshProject
 } from './projects.ts';
+import { changeSettings, settings } from './settings.ts';
 import { read, update } from './store.ts';
 import { Updates } from './updates.ts';
+import { openInVsCode } from './vscode.ts';
 
 /**
  * The main process: one editor window, the IPC the window talks through (contract in
@@ -163,6 +167,11 @@ function registerIpc(): void {
 		findJob(jobId)?.cancel(promptId)
 	);
 	onJobEvent((event) => send(channels.cliEvent, event));
+	ipcMain.handle(channels.cliQuery, async (_event, args: string[]) => {
+		const cli = await cliStatus();
+		if (!cli.found) throw new Error(cli.reason);
+		return runCli(cli.path, args, { cwd: currentProject()?.path, env: await cliEnv() });
+	});
 
 	ipcMain.handle(channels.projectsRecent, () => recentProjects());
 	ipcMain.handle(channels.projectsCurrent, () => currentProject());
@@ -173,6 +182,7 @@ function registerIpc(): void {
 	});
 	ipcMain.handle(channels.projectsRefresh, () => refreshProject());
 	ipcMain.handle(channels.projectsForget, (_event, path: string) => forgetProject(path));
+	ipcMain.handle(channels.projectsForgetAll, () => forgetAllProjects());
 	ipcMain.handle(channels.projectsClose, async () => {
 		await preview?.stop();
 		closeProject();
@@ -210,6 +220,33 @@ function registerIpc(): void {
 	ipcMain.on(channels.previewRestart, () => preview?.restart());
 	ipcMain.on(channels.previewViewport, (_event, rect: Rect | null) => preview?.setViewport(rect));
 	ipcMain.handle(channels.previewState, () => preview?.state ?? { status: 'idle' });
+
+	ipcMain.handle(channels.settingsGet, () => settings());
+	ipcMain.handle(channels.settingsSet, (_event, change: Partial<Settings>) =>
+		changeSettings(change)
+	);
+	ipcMain.handle(channels.setupNeeded, () => !read().setUp);
+	ipcMain.on(channels.setupDone, () =>
+		update((stored) => {
+			stored.setUp = true;
+		})
+	);
+	ipcMain.handle(channels.catalogExtensions, () => catalogExtensions());
+	ipcMain.handle(channels.vscodeOpen, (_event, folder?: string, file?: string) => {
+		const project = currentProject();
+		if (!project) return { ok: false, missing: false, message: 'No project is open.' };
+		const dir = resolve(project.path, folder ?? '.');
+		const paths = [dir, ...(file ? [resolve(dir, file)] : [])];
+		// Only ever something inside the car's app.
+		const outside = (path: string) => {
+			const inside = relative(project.path, path);
+			return inside.startsWith('..') || isAbsolute(inside);
+		};
+		if (paths.some(outside)) {
+			return { ok: false, missing: false, message: `${folder} is not inside your car's app.` };
+		}
+		return openInVsCode(paths);
+	});
 
 	ipcMain.handle(channels.appVersion, () => app.getVersion());
 	ipcMain.handle(channels.updatesState, () => updates?.state ?? { status: 'idle' });
@@ -249,6 +286,11 @@ function setMenu(): void {
 				submenu: [
 					{ role: 'about' },
 					{ label: 'Check for Updates…', click: () => void updates?.check(true) },
+					{
+						label: 'Settings…',
+						accelerator: 'Cmd+,',
+						click: () => send(channels.settingsOpen, undefined)
+					},
 					{ type: 'separator' },
 					{ role: 'services' },
 					{ type: 'separator' },

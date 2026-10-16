@@ -3,10 +3,11 @@ import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import type { OpenResult, Project, RecentProject } from '../shared/api.ts';
-import type { CarInfo } from '../shared/cli.ts';
+import type { CarInfo, DeviceInfo, DeviceList } from '../shared/cli.ts';
 import { cliEnv } from './cli/environment.ts';
 import { runCli } from './cli/job.ts';
 import { cliStatus } from './cli/locate.ts';
+import { settings } from './settings.ts';
 import { read, update } from './store.ts';
 
 /**
@@ -36,8 +37,20 @@ export function forgetProject(path: string): RecentProject[] {
 	return recentProjects();
 }
 
-/** Next to the car opened last, or in Documents for the first one. */
+export function forgetAllProjects(): RecentProject[] {
+	update((stored) => {
+		stored.recentProjects = [];
+	});
+	return [];
+}
+
+/**
+ * The folder picked in the settings, or else next to the car opened last, or in Documents
+ * for the first one.
+ */
 export function newProjectLocation(): string {
+	const picked = settings().newCarFolder;
+	if (picked && existsSync(picked)) return picked;
 	const last = recentProjects().find((project) => project.exists);
 	if (last) return dirname(last.path);
 	const documents = join(homedir(), 'Documents');
@@ -85,7 +98,7 @@ export async function openProject(host: BrowserWindow, path?: string): Promise<O
 	const result = await readCar(dir);
 	if (!result.ok) return result;
 
-	current = { path: dir, name: projectName(dir), car: result.car };
+	current = { path: dir, name: projectName(dir), car: result.car, devices: result.devices };
 	update((stored) => {
 		stored.recentProjects = [
 			{ path: dir, name: current?.name ?? basename(dir), openedAt: new Date().toISOString() },
@@ -100,14 +113,14 @@ export async function refreshProject(): Promise<OpenResult> {
 	if (!current) return { ok: false, cancelled: false, message: 'No project is open.' };
 	const result = await readCar(current.path);
 	if (!result.ok) return result;
-	current = { ...current, car: result.car };
+	current = { ...current, car: result.car, devices: result.devices };
 	return { ok: true, project: current };
 }
 
-/** Internal: asks the CLI what the car in this folder runs. */
+/** Internal: asks the CLI what the car in this folder runs, and which devices it has. */
 async function readCar(
 	dir: string
-): Promise<{ ok: true; car: CarInfo } | Extract<OpenResult, { ok: false }>> {
+): Promise<{ ok: true; car: CarInfo; devices: DeviceInfo[] } | Extract<OpenResult, { ok: false }>> {
 	const cli = await cliStatus();
 	if (!cli.found) {
 		return {
@@ -117,9 +130,18 @@ async function readCar(
 			hint: 'Install the SmartifyOS CLI first.'
 		};
 	}
-	const result = await runCli(cli.path, ['extension', 'list'], { cwd: dir, env: await cliEnv() });
-	if (!result.ok) {
-		return { ok: false, cancelled: false, message: result.error.message, hint: result.error.hint };
+	const options = { cwd: dir, env: await cliEnv() };
+	const [car, devices] = await Promise.all([
+		runCli(cli.path, ['extension', 'list'], options),
+		runCli(cli.path, ['device', 'list'], options)
+	]);
+	if (!car.ok) {
+		return { ok: false, cancelled: false, message: car.error.message, hint: car.error.hint };
 	}
-	return { ok: true, car: result.data as CarInfo };
+	return {
+		ok: true,
+		car: car.data as CarInfo,
+		// A CLI from before `device list` knows of none, which leaves the panel empty.
+		devices: devices.ok ? (devices.data as DeviceList).devices : []
+	};
 }

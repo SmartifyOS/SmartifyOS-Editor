@@ -4,13 +4,19 @@
 	import FolderX from '~icons/lucide/folder-x';
 	import Plus from '~icons/lucide/plus';
 	import ExternalLink from '~icons/lucide/external-link';
+	import HardDriveDownload from '~icons/lucide/hard-drive-download';
+	import VsCode from '~icons/logos/visual-studio-code';
 	import Play from '~icons/lucide/play';
 	import Square from '~icons/lucide/square';
 	import RotateCcw from '~icons/lucide/rotate-ccw';
 	import Zap from '~icons/lucide/zap';
 	import LoaderCircle from '~icons/lucide/loader-circle';
+	import SettingsIcon from '~icons/lucide/settings';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import icon from '#lib/assets/icon.png';
 	import { clickOutside, coversViewport } from '#lib/attachments.ts';
+	import { exportChoices } from '#lib/exports.ts';
 	import { shortcut } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Button from './ui/Button.svelte';
@@ -19,6 +25,8 @@
 	const platform = window.smartify.platform;
 
 	let menuOpen = $state(false);
+	const onSettings = $derived(page.route.id === '/settings');
+	let exportOpen = $state(false);
 
 	const others = $derived(editor.recent.filter((p) => p.path !== editor.project?.path).slice(0, 8));
 	const status = $derived(editor.preview.status);
@@ -31,8 +39,13 @@
 
 	function pick(action: () => void) {
 		menuOpen = false;
+		exportOpen = false;
 		action();
 	}
+
+	const exportable = $derived(
+		exportChoices.filter((choice) => !choice.needsDevices || editor.project?.devices.length)
+	);
 </script>
 
 <header
@@ -44,7 +57,9 @@
 >
 	<img src={icon} alt="" class="mr-1.5 size-6 rounded-md" draggable="false" />
 
-	{#if editor.project}
+	{#if onSettings}
+		<span class="text-sm font-medium">Settings</span>
+	{:else if editor.project}
 		<div class="relative">
 			<Button
 				variant="ghost"
@@ -80,6 +95,7 @@
 					{/if}
 					{@render item(Plus, "Create a new car's app…", () => (editor.newCarDialog = true))}
 					{@render item(FolderOpen, 'Open another project…', () => editor.open())}
+					{@render item(VsCode, 'Open in VS Code', () => editor.openInVsCode())}
 					{@render item(ExternalLink, revealLabel, () => {
 						if (editor.project) window.smartify.projects.reveal(editor.project.path);
 					})}
@@ -132,13 +148,50 @@
 
 	<div class="flex-1"></div>
 
-	{#if editor.cli?.found}
-		<span
-			class="rounded-md border border-line px-2 py-0.5 font-mono text-xs text-muted no-drag"
-			title={editor.cli.path}
+	{#if editor.project && !onSettings}
+		<div class="relative">
+			<Button
+				size="sm"
+				aria-expanded={exportOpen}
+				disabled={editor.busy || !editor.cli?.found}
+				onclick={() => (exportOpen = !exportOpen)}
+			>
+				<HardDriveDownload /> Export
+				<ChevronDown class="text-muted" />
+			</Button>
+
+			{#if exportOpen}
+				<div
+					{@attach coversViewport}
+					{@attach clickOutside(() => (exportOpen = false))}
+					class="absolute top-10 right-0 z-50 w-[19rem] rounded-xl p-1 shadow-float glass no-drag"
+				>
+					{#each exportable as choice (choice.label)}
+						<button
+							type="button"
+							class="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-hover"
+							onclick={() => pick(() => void editor.runTask(choice.task))}
+						>
+							<choice.icon class="mt-0.5 size-4 shrink-0 text-muted" />
+							<span class="flex flex-col">
+								<span class="text-sm">{choice.label}</span>
+								<span class="text-xs text-faint">{choice.hint}</span>
+							</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
+	{#if !onSettings}
+		<Button
+			variant="ghost-muted"
+			size="icon-sm"
+			label={`Settings (${shortcut(',')})`}
+			onclick={() => goto('#/settings')}
 		>
-			CLI {editor.cli.version}
-		</span>
+			<SettingsIcon />
+		</Button>
 	{/if}
 </header>
 

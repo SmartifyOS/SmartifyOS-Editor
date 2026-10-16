@@ -1,5 +1,6 @@
 import type { ConsoleLine, JobEvent } from '../../shared/api.ts';
 import type { CliEvent } from '../../shared/cli.ts';
+import { nextSteps } from '../../shared/next-steps.ts';
 import type { CliJob } from './job.ts';
 
 /**
@@ -54,8 +55,12 @@ function consoleLineFor(event: CliEvent): Pick<ConsoleLine, 'level' | 'text'> | 
 				event.level === 'warn' || event.level === 'error' || event.level === 'success'
 					? event.level
 					: 'info';
-			const text = event.title ? `${event.title}\n${event.text}` : event.text;
-			return { level, text };
+			const steps = nextSteps(event.data);
+			if (steps?.length === 0) return undefined;
+			const body = steps
+				? steps.map((step, index) => `${index + 1}. ${step}`).join('\n')
+				: event.text;
+			return { level, text: event.title ? `${event.title}\n${body}` : body };
 		}
 		case 'text':
 			return { level: 'info', text: event.text };

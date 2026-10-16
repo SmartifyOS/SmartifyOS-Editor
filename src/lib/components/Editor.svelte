@@ -14,9 +14,6 @@
 	const right = remembered('layout.right', 312);
 	const bottom = remembered('layout.bottom', 240);
 
-	// svelte-ignore state_referenced_locally
-	let selected = $state<string | undefined>(editor.project?.car.smartifyOs.name);
-
 	function onKey(event: KeyboardEvent) {
 		if (!isCommand(event)) return;
 		const key = event.key.toLowerCase();
@@ -35,7 +32,7 @@
 
 <div class="flex min-h-0 flex-1">
 	<div class="flex min-h-0 shrink-0 flex-col" style:width="{left.value}px">
-		<CarPanel bind:selected />
+		<CarPanel />
 	</div>
 	<Splitter bind:size={left.value} edge="left" min={200} max={480} />
 
@@ -51,6 +48,6 @@
 
 	<Splitter bind:size={right.value} edge="right" min={240} max={560} />
 	<div class="flex min-h-0 shrink-0 flex-col" style:width="{right.value}px">
-		<InspectorPanel {selected} />
+		<InspectorPanel />
 	</div>
 </div>

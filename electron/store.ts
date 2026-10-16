@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { app } from 'electron';
+import type { Settings } from '../shared/api.ts';
 
 /**
  * What the editor remembers between runs, in one JSON file in the app's user data folder.
@@ -12,6 +13,10 @@ export interface Stored {
 	window?: { x?: number; y?: number; width: number; height: number; maximized: boolean };
 	/** Panel sizes and such, owned by the window. */
 	layout?: Record<string, number>;
+	/** Only what was changed, see electron/settings.ts for the rest. */
+	settings?: Partial<Settings>;
+	/** Set once the setup that runs after installing has run. */
+	setUp?: boolean;
 }
 
 const defaults: Stored = { recentProjects: [] };
