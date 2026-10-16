@@ -1,4 +1,5 @@
 import type { Subprocess } from 'bun';
+import { dirname, join } from 'node:path';
 import { context } from 'esbuild';
 import { electronBuild } from './electron-build.ts';
 
@@ -27,6 +28,23 @@ async function waitForVite(): Promise<void> {
 	}
 	throw new Error('Vite did not start.');
 }
+
+/**
+ * macOS names the app in the menu bar after its bundle, which from source is Electron's own.
+ * Its signature does not cover Info.plist, so renaming it there keeps the signature, and with
+ * it the Accessibility permission the preview needs.
+ */
+function nameElectronApp(): void {
+	if (process.platform !== 'darwin') return;
+	const electronPath = require('electron') as unknown as string;
+	const plist = join(dirname(electronPath), '..', 'Info.plist');
+	const name = (require('../package.json') as { productName: string }).productName;
+	for (const key of ['CFBundleName', 'CFBundleDisplayName']) {
+		Bun.spawnSync(['plutil', '-replace', key, '-string', name, plist]);
+	}
+}
+
+nameElectronApp();
 
 let electron: Subprocess | undefined;
 let restarting = false;
