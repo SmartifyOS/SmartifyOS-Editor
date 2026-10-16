@@ -1,0 +1,30 @@
+name: CI
+
+# The same checks as `bun run check`, for code arriving from someone else.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: '1.3.14'
+
+jobs:
+  check:
+    name: Typecheck, format and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run check
+
+      - run: bun run build

@@ -1,0 +1,26 @@
+<script lang="ts">
+	import Editor from '#lib/components/Editor.svelte';
+	import PromptDialog from '#lib/components/PromptDialog.svelte';
+	import TitleBar from '#lib/components/TitleBar.svelte';
+	import Welcome from '#lib/components/Welcome.svelte';
+	import { editor } from '#lib/state/editor.svelte.ts';
+
+	const prompt = $derived(editor.prompts[0]);
+</script>
+
+<div class="flex h-screen flex-col">
+	<TitleBar />
+	{#if editor.project}
+		{#key editor.project.path}
+			<Editor />
+		{/key}
+	{:else}
+		<Welcome />
+	{/if}
+</div>
+
+{#if prompt}
+	{#key `${prompt.jobId}:${prompt.prompt.id}`}
+		<PromptDialog open={prompt} />
+	{/key}
+{/if}

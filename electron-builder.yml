@@ -1,0 +1,46 @@
+# Packaging for every platform the CLI supports. `bun run dist` builds for the computer it
+# runs on, release.yml builds all of them on GitHub.
+appId: com.smartify-os.desktop
+productName: SmartifyOS
+copyright: Copyright © SmartifyOS contributors
+artifactName: smartify-os-desktop-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+
+# koffi loads a native binary at runtime, which can not be read from inside the asar.
+asarUnpack:
+  - node_modules/koffi/**
+  - node_modules/@koromix/**
+
+mac:
+  target:
+    - target: dmg
+    - target: zip
+  category: public.app-category.developer-tools
+  # The live preview moves the app's window with the Accessibility API, which needs the
+  # app to be signed with the same identity across updates for the permission to stick.
+  hardenedRuntime: true
+
+win:
+  target:
+    - target: nsis
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  synopsis: Build your car's SmartifyOS with a live preview
+  maintainer: SmartifyOS contributors

@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+/*
+ * The editor is dark only. Every color is a token here, so the look changes in one place.
+ * Surfaces go from the darkest (the frame around panels) to the lightest (things you click).
+ */
+@theme {
+	--color-frame: #0b0c0e;
+	--color-panel: #141518;
+	--color-raised: #1b1c20;
+	--color-hover: #232429;
+	--color-active: #2b2d33;
+	--color-line: #24262b;
+	--color-line-strong: #33353c;
+
+	--color-fg: #e6e7ea;
+	--color-muted: #9a9ca4;
+	--color-faint: #63656d;
+
+	--color-accent: #22c4dd;
+	--color-accent-strong: #4fd6ea;
+	--color-accent-soft: rgb(34 196 221 / 0.14);
+	--color-good: #4ade80;
+	--color-warn: #fbbf24;
+	--color-bad: #f87171;
+
+	--font-sans:
+		system-ui, -apple-system, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+	--font-mono:
+		ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
+@layer base {
+	html,
+	body {
+		height: 100%;
+		overflow: hidden;
+		background: var(--color-frame);
+		color: var(--color-fg);
+		font-family: var(--font-sans);
+		font-size: 13px;
+		-webkit-font-smoothing: antialiased;
+		user-select: none;
+		color-scheme: dark;
+	}
+
+	input,
+	textarea,
+	.selectable {
+		user-select: text;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+	::-webkit-scrollbar-thumb {
+		background: var(--color-line-strong);
+		border: 3px solid transparent;
+		border-radius: 999px;
+		background-clip: padding-box;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+}
+
+@utility drag {
+	-webkit-app-region: drag;
+}
+
+@utility no-drag {
+	-webkit-app-region: no-drag;
+}
