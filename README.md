@@ -2,27 +2,36 @@
 
 The editor for [SmartifyOS](https://smartify-os.com/), the open source car infotainment system built in Flutter. It is for people who would rather click than type: open your car's app, press Run, and see it live in the middle of the editor.
 
-Everything it does to your car goes through the [SmartifyOS CLI](https://github.com/SmartifyOS/SmartifyOS-CLI), so the CLI on its own stays a complete, minimal way to do all of it.
-
 > [!NOTE]
 > Early days. The editor opens your car's app, remembers the ones you opened, shows what it runs, and runs it with a live preview and hot reload. Changing your car's settings from the editor comes next.
 
-## What you need
+## Install
 
-- The SmartifyOS CLI. The editor tells you how to install it if it is missing.
-- Flutter, the same as for the CLI.
+Download the editor for your computer from the [newest release](https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest):
 
-## The live preview
+| Computer                              | Download the file ending in                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Mac with Apple Silicon (M1 and newer) | `mac-arm64.dmg`                                                                              |
+| Mac with Intel                        | `mac-x64.dmg`                                                                                |
+| Windows                               | `win-x64.exe`, or `win-arm64.exe` on an ARM PC                                               |
+| Linux                                 | `linux-x86_64.AppImage`, or `linux-amd64.deb` for Debian and Ubuntu (`arm64` instead on ARM) |
 
-Run starts your car's app with `smartify-os run` and puts its window into the editor's preview.
+- **macOS**: open the `.dmg` and drag SmartifyOS Editor into Applications.
+- **Windows**: run the `.exe` and follow the installer.
+- **Linux**: make the `.AppImage` runnable (right click, Properties, allow executing, or `chmod +x` it) and open it, or install the `.deb`.
 
-| System  | How                                                                                                                                                                                                |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Windows | The app's window becomes part of the editor's                                                                                                                                                      |
-| Linux   | The same, through X11. On Wayland both the editor and the app run through XWayland, which every Wayland desktop has                                                                                |
-| macOS   | macOS lets no program take in another's window, so the app's window is laid over the preview and moves, resizes and hides with the editor. This needs the Accessibility permission, asked for once |
+The editor is not signed yet, so the first time you open it your computer warns you about it. On macOS, open System Settings, Privacy & Security, and click Open Anyway. On Windows, click More info and then Run anyway.
 
-Without the permission (or when anything else is in the way) the app simply runs in its own window. Inside the editor the app shows without its title bar, which needs a SmartifyOS that knows it runs in the editor.
+### What else you need
+
+- The [SmartifyOS CLI](https://github.com/SmartifyOS/SmartifyOS-CLI), which does the actual work behind the editor. The editor tells you how to install it if it is missing.
+- [Flutter](https://docs.flutter.dev/get-started/install), the same as for the CLI.
+
+## Using it
+
+Open your car's app, the folder with `pubspec.yaml` in it, and press Run. Your app starts and shows in the middle of the editor, and every change you save shows up with a hot reload.
+
+On macOS the editor asks once for the Accessibility permission. It needs it to keep your app's window lined up with the preview while you move or resize the editor. Without it your app simply runs in a window of its own.
 
 | Key                | Does                           |
 | ------------------ | ------------------------------ |
