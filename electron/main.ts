@@ -104,7 +104,8 @@ function createWindow(): BrowserWindow {
 			nodeIntegration: false
 		}
 	});
-	if (saved?.maximized) win.maximize();
+	// Filling the screen the first time (not full screen), as it was left after that.
+	if (!saved || saved.maximized) win.maximize();
 	win.once('ready-to-show', () => win.show());
 
 	// Links open in the browser, and the window never navigates away from the editor.
