@@ -62,6 +62,9 @@ bun install
 bun run dev        # Vite with hot reload, the main process rebuilt and restarted on change
 bun run check      # typecheck both sides, prettier, the dash check
 bun run dist:dir   # an unpacked app for this computer in release/
+bun run release    # cut a release (scripts/release.ts), --dry-run to only look
 ```
 
 `SMARTIFY_OS_CLI` points the editor at another CLI binary or script, for trying both repos together.
+
+Releases are cut with `bun run release` and nothing else. It checks the repo, asks for the version and an optional summary, bumps package.json in a `chore: release vX` commit, and pushes a `vX` tag whose message is the release notes (the `feat:`, `fix:` and `refactor:` commits since the last tag). The release workflow checks the tag against package.json, builds every installer and publishes the tag's message as the release notes. The same script is in SmartifyOS-CLI; keep the two alike.

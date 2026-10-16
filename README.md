@@ -41,6 +41,7 @@ bun run check      # typecheck, formatting and the dash rule. Run it before ever
 bun run build      # build the window and the main process into out/
 bun run dist       # installers for this computer, into release/
 bun run dist:dir   # the same, unpacked, quicker to try
+bun run release    # cut a release, for the maintainer
 ```
 
 Set `SMARTIFY_OS_CLI` to another CLI to try the editor against it, for example a script that runs the CLI from its source:
@@ -49,4 +50,4 @@ Set `SMARTIFY_OS_CLI` to another CLI to try the editor against it, for example a
 SMARTIFY_OS_CLI=/path/to/smartify-os-dev bun run dev
 ```
 
-Installers for every system are built by `.github/workflows/release.yml` when a `v*` tag is pushed: a `.dmg` for macOS (Apple Silicon and Intel), an installer `.exe` for Windows (x64 and ARM64), and an `.AppImage` and `.deb` for Linux (x64 and ARM64).
+`bun run release` walks through a release: it asks for the version and an optional summary, writes the release notes from the `feat:`, `fix:` and `refactor:` commits since the last one, bumps package.json, commits and tags it, and pushes both. `bun run release --dry-run` asks the same and changes nothing. The tag starts `.github/workflows/release.yml`, which builds the installers and publishes them with those notes: a `.dmg` for macOS (Apple Silicon and Intel), an installer `.exe` for Windows (x64 and ARM64), and an `.AppImage` and `.deb` for Linux (x64 and ARM64).
