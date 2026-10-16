@@ -14,6 +14,7 @@ function subscribe<T>(channel: string, listener: (payload: T) => void): () => vo
 
 const api: SmartifyApi = {
 	platform: process.platform as Platform,
+	version: () => ipcRenderer.invoke(channels.appVersion),
 	window: {
 		minimize: () => ipcRenderer.send(channels.windowMinimize),
 		toggleMaximize: () => ipcRenderer.send(channels.windowToggleMaximize),
@@ -44,6 +45,12 @@ const api: SmartifyApi = {
 		setViewport: (rect) => ipcRenderer.send(channels.previewViewport, rect),
 		state: () => ipcRenderer.invoke(channels.previewState),
 		onState: (listener) => subscribe(channels.previewStateChanged, listener)
+	},
+	updates: {
+		state: () => ipcRenderer.invoke(channels.updatesState),
+		onState: (listener) => subscribe(channels.updatesStateChanged, listener),
+		check: () => ipcRenderer.send(channels.updatesCheck),
+		restart: () => ipcRenderer.send(channels.updatesRestart)
 	},
 	console: {
 		history: () => ipcRenderer.invoke(channels.consoleHistory),

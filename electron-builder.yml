@@ -21,6 +21,14 @@ asarUnpack:
   - node_modules/koffi/**
   - node_modules/@koromix/**
 
+# Where the editor looks for its own updates (electron-updater, see electron/updates.ts).
+# Nothing is published from here (release.yml runs it with --publish never), but this is
+# what makes it write the update files (latest*.yml, *.blockmap) that release.yml uploads.
+publish:
+  provider: github
+  owner: SmartifyOS
+  repo: SmartifyOS-Editor
+
 mac:
   target:
     - target: dmg

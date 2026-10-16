@@ -24,6 +24,7 @@ import {
 	refreshProject
 } from './projects.ts';
 import { read, update } from './store.ts';
+import { Updates } from './updates.ts';
 
 /**
  * The main process: one editor window, the IPC the window talks through (contract in
@@ -48,6 +49,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 
 let window: BrowserWindow | undefined;
 let preview: PreviewSession | undefined;
+let updates: Updates | undefined;
 
 /** Serves the built window from `app://editor/`, every unknown path as the single page. */
 function serveRenderer(): void {
@@ -185,6 +187,11 @@ function registerIpc(): void {
 	ipcMain.on(channels.previewViewport, (_event, rect: Rect | null) => preview?.setViewport(rect));
 	ipcMain.handle(channels.previewState, () => preview?.state ?? { status: 'idle' });
 
+	ipcMain.handle(channels.appVersion, () => app.getVersion());
+	ipcMain.handle(channels.updatesState, () => updates?.state ?? { status: 'idle' });
+	ipcMain.on(channels.updatesCheck, () => void updates?.check(true));
+	ipcMain.on(channels.updatesRestart, () => updates?.restart());
+
 	ipcMain.handle(channels.consoleHistory, () => consoleHistory());
 	ipcMain.on(channels.consoleClear, () => clearConsole());
 	onConsoleLine((line) => send(channels.consoleLine, line));
@@ -213,7 +220,21 @@ function setMenu(): void {
 	}
 	Menu.setApplicationMenu(
 		Menu.buildFromTemplate([
-			{ role: 'appMenu' },
+			{
+				label: app.name,
+				submenu: [
+					{ role: 'about' },
+					{ label: 'Check for Updates…', click: () => void updates?.check(true) },
+					{ type: 'separator' },
+					{ role: 'services' },
+					{ type: 'separator' },
+					{ role: 'hide' },
+					{ role: 'hideOthers' },
+					{ role: 'unhide' },
+					{ type: 'separator' },
+					{ role: 'quit' }
+				]
+			},
 			{ role: 'editMenu' },
 			{
 				label: 'View',
@@ -232,6 +253,13 @@ function setMenu(): void {
 }
 
 app.whenReady().then(() => {
+	updates = new Updates(
+		(state) => send(channels.updatesStateChanged, state),
+		() => {
+			preview?.dispose();
+			killAll();
+		}
+	);
 	// A packaged app has its icon in the bundle, running from source shows Electron's.
 	if (isMac && !app.isPackaged) app.dock?.setIcon(iconPath);
 	setMenu();
@@ -239,6 +267,7 @@ app.whenReady().then(() => {
 	registerIpc();
 	window = createWindow();
 	preview = new PreviewSession(window, (state) => send(channels.previewStateChanged, state));
+	updates.start();
 	window.on('closed', () => {
 		preview?.dispose();
 		preview = undefined;

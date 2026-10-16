@@ -14,7 +14,8 @@ export const electronBuild: BuildOptions = {
 	format: 'cjs',
 	target: 'node24',
 	sourcemap: 'linked',
-	// Electron is the runtime itself, and koffi has to stay in node_modules with its binary.
-	external: ['electron', 'koffi'],
+	// Electron is the runtime itself, koffi has to stay in node_modules with its binary, and
+	// electron-updater reads files of its own next to it.
+	external: ['electron', 'koffi', 'electron-updater'],
 	logLevel: 'info'
 };

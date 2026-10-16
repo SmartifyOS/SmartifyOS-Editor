@@ -4,7 +4,8 @@ import type {
 	OpenResult,
 	PreviewState,
 	Project,
-	RecentProject
+	RecentProject,
+	UpdateState
 } from '../../../shared/api.ts';
 import type { PromptEvent } from '../../../shared/cli.ts';
 
@@ -42,6 +43,12 @@ class Editor {
 	opening = $state(false);
 	/** Dialogs and menus currently covering the window, which the app's window must not cover. */
 	overlays = $state(0);
+	/** This editor's version. */
+	version = $state('');
+	update = $state<UpdateState>({ status: 'idle' });
+	/** Whether the "update ready" dialog is open. It opens by itself once per version. */
+	updateDialog = $state(false);
+	private updateDialogShownFor: string | undefined;
 
 	readonly running = $derived(
 		this.preview.status === 'starting' ||
@@ -62,9 +69,12 @@ class Editor {
 		void api.projects.current().then((project) => (this.project ??= project));
 		void api.preview.state().then((state) => (this.preview = state));
 		void api.console.history().then((lines) => (this.consoleLines = lines));
+		void api.version().then((version) => (this.version = version));
+		void api.updates.state().then((state) => this.setUpdate(state));
 
 		const unsubscribe = [
 			api.preview.onState((state) => (this.preview = state)),
+			api.updates.onState((state) => this.setUpdate(state)),
 			api.console.onLine((line) => {
 				this.consoleLines.push(line);
 				if (this.consoleLines.length > maxConsoleLines) {
@@ -92,6 +102,25 @@ class Editor {
 			})
 		];
 		return () => unsubscribe.forEach((stop) => stop());
+	}
+
+	private setUpdate(state: UpdateState): void {
+		this.update = state;
+		if (state.status === 'ready' && this.updateDialogShownFor !== state.version) {
+			this.updateDialogShownFor = state.version;
+			this.updateDialog = true;
+		}
+		// The tools behind the editor may have changed, the title bar shows their version.
+		if (state.status === 'updated') void this.refreshCli();
+	}
+
+	checkForUpdates(): void {
+		window.smartify.updates.check();
+	}
+
+	restartToUpdate(): void {
+		this.updateDialog = false;
+		window.smartify.updates.restart();
 	}
 
 	async refreshCli(): Promise<void> {

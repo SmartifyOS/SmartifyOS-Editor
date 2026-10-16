@@ -49,6 +49,19 @@ The app is run with `SMARTIFY_OS_EDITOR=1`, which tells SmartifyOS core (`_initW
 
 The window reports the viewport's rectangle in CSS pixels, or `null` while it is covered; the session turns it into client pixels (Windows, X11) or screen points (macOS). Hot reload and restart are `{"input":"r"}` and `{"input":"R"}` on the CLI's stdin.
 
+## Updates
+
+`electron/updates.ts` keeps the editor and the CLI up to date, shown to the user as one thing (the status bar on the left, and a dialog once a restart is needed). Users never hear that there is a CLI behind it.
+
+- **The editor** updates with electron-updater from the GitHub releases: it downloads in the background, and a restart (or the next quit) installs it. electron-builder writes the update files (`latest-mac.yml`, `latest.yml`, `latest-linux.yml`, `latest-linux-arm64.yml` and the `.blockmap` files) because of `publish:` in electron-builder.yml, and release.yml uploads them, merging the two Mac and the two Windows builds' files with `scripts/merge-update-info.ts`. macOS only installs updates of a signed app.
+- **The CLI** updates with `smartify-os self-update --json`, as soon as no CLI job runs (Windows cannot replace a running program). It needs no restart.
+
+Background checks stay quiet unless they find something. A check the user asks for (the version in the status bar, or Check for Updates in the macOS app menu) also says it is up to date, or why it failed.
+
+### Trying updates
+
+Set `SMARTIFY_OS_UPDATE_URL` to a folder served over HTTP with a `latest-mac.yml` (or the one for your system) and the zip it names, with a higher version than package.json, and run `bun run dev`. Everything up to the restart works from source; installing it needs a packaged, signed app.
+
 ## Writing style
 
 - Never use em dashes or en dashes, anywhere: UI strings, comments, docs. Use a comma, parentheses or a separate sentence. `scripts/check-dashes.ts` (part of `bun run check`) fails on either.

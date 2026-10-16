@@ -71,8 +71,28 @@ export interface JobEvent {
 	event: CliEvent;
 }
 
+/**
+ * Updates, as the window shows them. The editor and the tools behind it (the CLI) are one
+ * thing to the user, so this is one state: the editor's own update wins when both happen.
+ */
+export type UpdateState =
+	/** Nothing to do. `checkedAt` is set right after a check the user asked for. */
+	| { status: 'idle'; checkedAt?: number }
+	/** Only shown for a check the user asked for, background checks stay quiet. */
+	| { status: 'checking' }
+	| { status: 'downloading'; version?: string; percent: number | null }
+	/** The editor's update is downloaded, a restart puts it in place. */
+	| { status: 'ready'; version: string; notesUrl?: string }
+	| { status: 'restarting' }
+	/** Something was updated that needs no restart, shown for a moment. */
+	| { status: 'updated' }
+	/** Only shown for a check the user asked for. */
+	| { status: 'failed'; message: string };
+
 export interface SmartifyApi {
 	platform: Platform;
+	/** This editor's version, like `0.1.1`. */
+	version(): Promise<string>;
 	window: {
 		minimize(): void;
 		toggleMaximize(): void;
@@ -110,6 +130,14 @@ export interface SmartifyApi {
 		state(): Promise<PreviewState>;
 		onState(listener: (state: PreviewState) => void): () => void;
 	};
+	updates: {
+		state(): Promise<UpdateState>;
+		onState(listener: (state: UpdateState) => void): () => void;
+		/** Looks for updates now, and shows the result (unlike the checks in the background). */
+		check(): void;
+		/** Restarts into the downloaded update. */
+		restart(): void;
+	};
 	console: {
 		history(): Promise<ConsoleLine[]>;
 		clear(): void;
@@ -143,5 +171,10 @@ export const channels = {
 	previewStateChanged: 'preview:state-changed',
 	consoleHistory: 'console:history',
 	consoleClear: 'console:clear',
-	consoleLine: 'console:line'
+	consoleLine: 'console:line',
+	appVersion: 'app:version',
+	updatesState: 'updates:state',
+	updatesStateChanged: 'updates:state-changed',
+	updatesCheck: 'updates:check',
+	updatesRestart: 'updates:restart'
 } as const;

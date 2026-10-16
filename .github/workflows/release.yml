@@ -95,6 +95,8 @@ jobs:
             release/*.exe
             release/*.AppImage
             release/*.deb
+            release/*.blockmap
+            release/latest*.yml
           if-no-files-found: error
 
   publish:
@@ -115,10 +117,25 @@ jobs:
           git tag --list --format='%(contents)' "$GITHUB_REF_NAME" > notes.md
           cat notes.md
 
+      # Each build in a folder of its own: two of them write a latest-mac.yml, two a
+      # latest.yml, and those have to be merged rather than overwrite each other.
       - uses: actions/download-artifact@v7
         with:
-          path: artifacts
-          merge-multiple: true
+          path: downloaded
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # The update files tell the editors already installed where their update is
+      # (electron/updates.ts), so they go out with every release.
+      - name: Collect the files
+        run: |
+          set -eu
+          mkdir -p artifacts
+          find downloaded -type f ! -name 'latest*.yml' -exec mv {} artifacts/ \;
+          bun scripts/merge-update-info.ts downloaded artifacts
+          ls -la artifacts
 
       - name: Create the release
         env:

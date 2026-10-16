@@ -35,6 +35,12 @@ export function findJob(id: string): CliJob | undefined {
 	return jobs.get(id);
 }
 
+/** Whether any job is still running, which an update of the CLI itself has to wait for. */
+export function anyRunning(): boolean {
+	for (const job of jobs.values()) if (job.running) return true;
+	return false;
+}
+
 /** Stops every job, for when the editor quits. */
 export function killAll(): void {
 	for (const job of jobs.values()) job.kill();

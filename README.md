@@ -31,6 +31,8 @@ On Windows the editor is not signed, so the first time you open it Windows warns
 
 Open your car's app, the folder with `pubspec.yaml` in it, and press Run. Your app starts and shows in the middle of the editor, and every change you save shows up with a hot reload.
 
+The editor keeps itself up to date. Updates download in the background, and once one is ready it asks you to restart (or it is put in place the next time you quit).
+
 On macOS the editor asks once for the Accessibility permission. It needs it to keep your app's window lined up with the preview while you move or resize the editor. Without it your app simply runs in a window of its own.
 
 | Key                | Does                           |
