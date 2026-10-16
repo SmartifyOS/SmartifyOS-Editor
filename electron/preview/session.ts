@@ -40,7 +40,13 @@ export class PreviewSession {
 		}
 		host.on('enter-full-screen', replace);
 		host.on('leave-full-screen', replace);
-		host.on('focus', () => this.embedder?.raise());
+		// Clicking the editor brings it in front of the app's window, and macOS finishes doing
+		// so a moment after telling us. Asked again a little later to win that race.
+		host.on('focus', () => {
+			this.embedder?.raise();
+			for (const delay of [50, 200])
+				setTimeout(() => this.attached && this.embedder?.raise(), delay);
+		});
 		host.on('minimize', () => this.embedder?.setVisible(false));
 		host.on('hide', () => this.embedder?.setVisible(false));
 		host.on('restore', () => this.showIfWanted());
@@ -82,7 +88,9 @@ export class PreviewSession {
 					: { message: `The live preview could not be set up: ${String(error)}` };
 		}
 
-		const extra: Record<string, string> = {};
+		// Tells SmartifyOS it runs in the preview, so it leaves out its title bar and window
+		// buttons and lets the editor place it (see _initWindow in smartify_os_core).
+		const extra: Record<string, string> = { SMARTIFY_OS_EDITOR: '1' };
 		// The editor runs through XWayland on Linux (see main.ts), and the app has to as well,
 		// since only an X11 window can be taken into another X11 window.
 		if (process.platform === 'linux') extra.GDK_BACKEND = 'x11';
@@ -140,7 +148,11 @@ export class PreviewSession {
 		const embedder = this.embedder;
 
 		if (this.attached && embedder) {
-			if (embedder.alive()) return;
+			if (embedder.alive()) {
+				// Anything that slipped past the focus event (a drag, another app) is put right.
+				if (this.host.isFocused()) embedder.raise();
+				return;
+			}
 			// The window went (the app quit, or opened a new one). Look for it again.
 			embedder.detach();
 			this.attached = false;

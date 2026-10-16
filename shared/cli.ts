@@ -1,5 +1,5 @@
 /**
- * The CLI's `--json` protocol, as the desktop app reads it.
+ * The CLI's `--json` protocol, as the editor reads it.
  *
  * Mirrors `src/ui/json.ts` in the SmartifyOS CLI repo, which is the source of truth (and its
  * README describes it for users). The protocol only ever grows, so an event or field this

@@ -1,4 +1,4 @@
-The desktop editor for SmartifyOS, the open source car infotainment system built in Flutter.
+The editor for SmartifyOS, the open source car infotainment system built in Flutter.
 
 It is for people doing something like programming for the first time. The CLI (the separate SmartifyOS-CLI repo) stays complete on its own for anyone who wants something small; this editor is the friendly face on top of it, with a live preview of the car's app in the middle, laid out like Unity.
 
@@ -10,7 +10,8 @@ It is for people doing something like programming for the first time. The CLI (t
 
 - **Electron** for the window on macOS, Windows and Linux.
 - **SvelteKit** (Svelte 5, runes only) for the window, as a static single page with the hash router, served by Electron from `app://editor/`.
-- **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only.
+- **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only: near black surfaces edge to edge, hairline borders of white at a few percent, rounded controls with a faint top highlight, glass for menus and dialogs. Text is 14px and controls 32 to 36px tall; nothing smaller than 12px.
+- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts and `ui/Select.svelte` for choices.
 - **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. Never draw an icon by hand.
 - **koffi** for the few native calls the live preview needs (Win32, Xlib, macOS Accessibility). The only runtime dependency.
 - **Bun** for installing, scripts and the dev runner. **esbuild** bundles the main process and preload. **electron-builder** packages.
@@ -26,9 +27,10 @@ electron/preview/    the live preview: session.ts runs `smartify-os run`, one em
 electron/native/     the koffi bindings, each loaded only on its own system
 electron/projects.ts the open project and the recent ones, read through the CLI
 electron/store.ts    what the editor remembers, one JSON file in userData
+resources/           the app icons, made from icon-source.png by scripts/make-icons.py
 src/lib/state/       the window's reactive state (editor.svelte.ts), the only user of window.smartify
 src/lib/components/  the panels, the title bar, the start screen, the CLI prompt dialog
-scripts/             dev runner, build, the dash check
+scripts/             dev runner, build, the dash check, the icons
 ```
 
 - **The window only talks to the main process through `window.smartify`**, whose shape is `SmartifyApi` in `shared/api.ts`. A new call goes into the contract, the preload and a handler in `main.ts`, with its channel name in `channels`.
@@ -41,7 +43,9 @@ scripts/             dev runner, build, the dash check
 
 - **Windows**: `SetParent` into the editor's window, frame taken off (`embed-windows.ts`).
 - **Linux**: `XReparentWindow` (`embed-x11.ts`). The editor forces itself onto X11 and runs the app with `GDK_BACKEND=x11`, since Wayland allows no reparenting.
-- **macOS**: no reparenting exists. The app's window is moved, sized, raised and hidden with the Accessibility API to sit over the viewport (`embed-macos.ts`). Needs the Accessibility permission, which is granted per app (so per signing identity).
+- **macOS**: no reparenting exists. The app's window is moved, sized and hidden with the Accessibility API to sit over the viewport (`embed-macos.ts`), and the editor keeps it directly in front by ordering its own window right behind it (AppKit allows that for your own window). Needs the Accessibility permission, which is granted per app (so per signing identity).
+
+The app is run with `SMARTIFY_OS_EDITOR=1`, which tells SmartifyOS core (`_initWindow` in smartify_os_core) to leave out its title bar and window buttons, its shadow, full screen and taking the focus. Nothing outside an app can take a macOS title bar away, so this needs a core that knows the variable.
 
 The window reports the viewport's rectangle in CSS pixels, or `null` while it is covered; the session turns it into client pixels (Windows, X11) or screen points (macOS). Hot reload and restart are `{"input":"r"}` and `{"input":"R"}` on the CLI's stdin.
 

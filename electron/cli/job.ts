@@ -9,7 +9,7 @@ import { killTree } from '../system/processes.ts';
  * answered by writing JSON lines to its stdin (the protocol is in the CLI's README).
  *
  * The CLI does the real work. This class only carries events out and answers in, so the
- * desktop app never needs its own copy of what a command does.
+ * editor never needs its own copy of what a command does.
  */
 
 export interface JobOptions {

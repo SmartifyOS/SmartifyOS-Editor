@@ -1,9 +1,9 @@
 # Packaging for every platform the CLI supports. `bun run dist` builds for the computer it
 # runs on, release.yml builds all of them on GitHub.
-appId: com.smartify-os.desktop
-productName: SmartifyOS
+appId: com.smartify-os.editor
+productName: SmartifyOS Editor
 copyright: Copyright © SmartifyOS contributors
-artifactName: smartify-os-desktop-${version}-${os}-${arch}.${ext}
+artifactName: smartify-os-editor-${version}-${os}-${arch}.${ext}
 
 directories:
   output: release
@@ -12,6 +12,8 @@ directories:
 files:
   - out/**
   - package.json
+  - resources/icon.png
+  - resources/icon-macos.png
   - '!**/*.map'
 
 # koffi loads a native binary at runtime, which can not be read from inside the asar.

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MousePointerClick from '~icons/lucide/mouse-pointer-click';
 	import type { PackageInfo } from '../../../shared/cli.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Panel from './Panel.svelte';
@@ -24,29 +25,35 @@
 	}
 </script>
 
-<Panel title="Inspector">
+<Panel title="Inspector" surface="card">
 	{#if item}
-		<div class="selectable flex flex-col gap-4 overflow-auto p-3">
-			<div>
-				<div class="text-base font-medium">{item.title}</div>
+		<div class="selectable flex flex-col gap-5 overflow-auto px-4 pt-1 pb-4">
+			<div class="flex flex-col gap-0.5">
+				<div class="text-base font-semibold">{item.title}</div>
 				<div class="font-mono text-xs text-faint">{item.name}</div>
 			</div>
-			<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
-				<dt class="text-faint">Version</dt>
-				<dd>{item.version ?? item.commit?.slice(0, 7) ?? 'unknown'}</dd>
-				<dt class="text-faint">From</dt>
-				<dd class="break-all">{source(item)}</dd>
+			<dl class="flex flex-col gap-3 text-[13px]">
+				{@render field('Version', item.version ?? item.commit?.slice(0, 7) ?? 'unknown', true)}
+				{@render field('From', source(item), true)}
 				{#if item.linkedTo}
-					<dt class="text-faint">Linked to</dt>
-					<dd class="break-all">{item.linkedTo}</dd>
+					{@render field('Linked to', item.linkedTo, true)}
 				{/if}
 				{#if item.switchedOn !== undefined && item.switchedOn !== null}
-					<dt class="text-faint">Switched on</dt>
-					<dd>{item.switchedOn ? 'Yes' : 'No, not in lib/main.dart'}</dd>
+					{@render field('Switched on', item.switchedOn ? 'Yes' : 'No, not in lib/main.dart')}
 				{/if}
 			</dl>
 		</div>
 	{:else}
-		<p class="p-3 text-xs text-faint">Pick something in the car panel to see it here.</p>
+		<div class="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+			<MousePointerClick class="size-5 text-faint" />
+			<p class="text-[13px] text-muted">Pick something in the car panel to see it here.</p>
+		</div>
 	{/if}
 </Panel>
+
+{#snippet field(label: string, value: string, mono = false)}
+	<div class="flex flex-col gap-1">
+		<dt class="text-xs font-medium text-faint">{label}</dt>
+		<dd class={['break-all', mono && 'font-mono text-[12.5px]']}>{value}</dd>
+	</div>
+{/snippet}

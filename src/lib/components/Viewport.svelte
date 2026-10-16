@@ -3,9 +3,14 @@
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import AppWindow from '~icons/lucide/app-window';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
+	import MonitorPlay from '~icons/lucide/monitor-play';
+	import { shortcut } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import Panel from './Panel.svelte';
+	import Button from './ui/Button.svelte';
+	import Kbd from './ui/Kbd.svelte';
+	import Select from './ui/Select.svelte';
 
 	/**
 	 * The live preview. The running app is a real window of its own, which the main process
@@ -14,27 +19,28 @@
 	 */
 
 	const aspects = [
-		{ id: 'free', label: 'Fill', ratio: undefined },
-		{ id: '16:9', label: '16:9', ratio: 16 / 9 },
-		{ id: '8:3', label: '8:3 (1280×480)', ratio: 8 / 3 },
-		{ id: '5:3', label: '5:3 (800×480)', ratio: 5 / 3 },
-		{ id: '4:3', label: '4:3', ratio: 4 / 3 }
+		{ value: 'free', label: 'Fill', ratio: undefined },
+		{ value: '16:9', label: '16:9', ratio: 16 / 9 },
+		{ value: '8:3', label: '8:3 (1280×480)', ratio: 8 / 3 },
+		{ value: '5:3', label: '5:3 (800×480)', ratio: 5 / 3 },
+		{ value: '4:3', label: '4:3', ratio: 4 / 3 }
 	] as const;
 
+	/** Room around the frame, so it reads as a screen on a canvas. */
+	const padding = 16;
+
 	const aspect = remembered('viewport.aspect', 'free');
-	const mod = window.smartify.platform === 'darwin' ? '⌘' : 'Ctrl+';
 
 	let area = $state<HTMLDivElement>();
 	let frame = $state<HTMLDivElement>();
 	let areaWidth = $state(0);
 	let areaHeight = $state(0);
 
-	/** The largest frame of the chosen shape that fits, with a little room around it. */
+	/** The largest frame of the chosen shape that fits. */
 	const size = $derived.by(() => {
-		const ratio = aspects.find((a) => a.id === aspect.value)?.ratio;
-		const pad = ratio ? 16 : 0;
-		const width = Math.max(0, areaWidth - pad * 2);
-		const height = Math.max(0, areaHeight - pad * 2);
+		const ratio = aspects.find((a) => a.value === aspect.value)?.ratio;
+		const width = Math.max(0, areaWidth - padding * 2);
+		const height = Math.max(0, areaHeight - padding * 2);
 		if (!ratio) return { width, height };
 		return width / height > ratio
 			? { width: Math.round(height * ratio), height }
@@ -108,73 +114,72 @@
 <Panel title="Preview">
 	{#snippet actions()}
 		{#if modeLabel}
-			<span class="mr-2 flex items-center gap-1.5 text-xs text-faint">
-				<span class="size-1.5 rounded-full bg-good"></span>{modeLabel}
+			<span class="mr-1.5 flex items-center gap-2 text-[13px] text-muted">
+				<span class="size-2 rounded-full bg-good shadow-[0_0_8px] shadow-good/60"></span>
+				{modeLabel}
 			</span>
 		{/if}
-		<select
-			bind:value={aspect.value}
-			title="The shape of your car's screen"
-			class="h-6 rounded-md border border-line bg-raised px-1.5 text-xs text-muted outline-none hover:text-fg"
-		>
-			{#each aspects as option (option.id)}
-				<option value={option.id}>{option.label}</option>
-			{/each}
-		</select>
+		<Select bind:value={aspect.value} options={aspects} title="The shape of your car's screen" />
 	{/snippet}
 
-	<div bind:this={area} class="relative min-h-0 flex-1 overflow-hidden bg-frame">
+	<div bind:this={area} class="relative min-h-0 flex-1 overflow-hidden border-t border-line canvas">
 		<div
 			bind:this={frame}
-			class={[
-				'absolute top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden',
-				aspect.value !== 'free' && 'ring-1 ring-line-strong'
-			]}
+			class="absolute top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-[10px] border border-line bg-bg"
 			style:width="{size.width}px"
 			style:height="{size.height}px"
 		>
-			<div class="flex max-w-md flex-col items-center gap-3 p-6 text-center">
+			<div class="flex max-w-sm flex-col items-center gap-4 p-6 text-center">
 				{#if preview.status === 'idle'}
-					<button
-						type="button"
-						aria-label="Run your car's app"
-						class="grid size-14 place-items-center rounded-full bg-accent-soft text-accent transition-colors hover:bg-accent hover:text-frame"
-						onclick={() => editor.toggleRun()}
-					>
-						<Play class="ml-0.5 size-6" />
-					</button>
-					<div class="font-medium">Run your car's app to see it here</div>
-					<div class="text-xs text-faint">{mod}P runs and stops it, {mod}R shows your changes.</div>
+					<span class="grid size-12 place-items-center rounded-xl border border-line bg-card">
+						<MonitorPlay class="size-5 text-muted" />
+					</span>
+					<div class="flex flex-col gap-1">
+						<div class="text-base font-medium">Your car's app shows here</div>
+						<div class="text-[13px] text-muted">
+							Run it, then press <Kbd keys={shortcut('R')} class="mx-0.5 text-fg" /> after a change to
+							see it straight away.
+						</div>
+					</div>
+					<Button variant="primary" onclick={() => editor.toggleRun()}>
+						<Play /> Run <Kbd keys={shortcut('P')} class="ml-1" />
+					</Button>
 				{:else if preview.status === 'starting'}
-					<LoaderCircle class="size-6 animate-spin text-accent" />
-					<div class="font-medium">Starting your car's app</div>
-					<div class="line-clamp-2 font-mono text-xs break-all text-faint">
-						{lastLine ?? 'The first start builds it, which takes a while.'}
+					<LoaderCircle class="size-6 animate-spin text-primary" />
+					<div class="flex flex-col gap-1">
+						<div class="text-base font-medium">Starting your car's app</div>
+						<div class="line-clamp-2 font-mono text-xs break-all text-faint">
+							{lastLine ?? 'The first start builds it, which takes a while.'}
+						</div>
 					</div>
 				{:else if preview.status === 'stopping'}
 					<LoaderCircle class="size-6 animate-spin text-muted" />
 					<div class="text-muted">Stopping</div>
 				{:else if preview.status === 'running' && preview.mode === 'separate'}
-					<AppWindow class="size-7 text-muted" />
-					<div class="font-medium">Your app runs in its own window</div>
-					{#if preview.note}
-						<div class="text-xs text-faint">{preview.note}</div>
-					{/if}
+					<span class="grid size-12 place-items-center rounded-xl border border-line bg-card">
+						<AppWindow class="size-5 text-muted" />
+					</span>
+					<div class="flex flex-col gap-1">
+						<div class="text-base font-medium">Your app runs in its own window</div>
+						{#if preview.note}
+							<div class="text-[13px] text-muted">{preview.note}</div>
+						{/if}
+					</div>
 				{:else if preview.status === 'running'}
-					<div class="text-xs text-faint">Your app shows here</div>
+					<LoaderCircle class="size-5 animate-spin text-faint" />
 				{:else if preview.status === 'failed'}
-					<TriangleAlert class="size-7 text-bad" />
-					<div class="selectable font-medium">{preview.message}</div>
-					{#if preview.hint}
-						<div class="selectable text-xs whitespace-pre-line text-muted">{preview.hint}</div>
-					{/if}
-					<button
-						type="button"
-						class="mt-1 rounded-md bg-raised px-3 py-1.5 hover:bg-hover"
-						onclick={() => editor.toggleRun()}
-					>
-						Try again
-					</button>
+					<span class="grid size-12 place-items-center rounded-xl border border-bad/25 bg-bad/10">
+						<TriangleAlert class="size-5 text-bad" />
+					</span>
+					<div class="flex flex-col gap-1">
+						<div class="selectable text-base font-medium">{preview.message}</div>
+						{#if preview.hint}
+							<div class="selectable text-[13px] whitespace-pre-line text-muted">
+								{preview.hint}
+							</div>
+						{/if}
+					</div>
+					<Button onclick={() => editor.toggleRun()}>Try again</Button>
 				{/if}
 			</div>
 		</div>

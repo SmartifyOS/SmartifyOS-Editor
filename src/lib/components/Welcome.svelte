@@ -3,9 +3,11 @@
 	import Folder from '~icons/lucide/folder';
 	import X from '~icons/lucide/x';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
+	import CircleAlert from '~icons/lucide/circle-alert';
 	import LoaderCircle from '~icons/lucide/loader-circle';
-	import logo from '#lib/assets/logo.svg';
+	import icon from '#lib/assets/icon.png';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import Button from './ui/Button.svelte';
 
 	const installCommand =
 		window.smartify.platform === 'win32'
@@ -23,15 +25,18 @@
 	}
 </script>
 
-<div class="grid flex-1 place-items-center overflow-auto bg-frame p-8">
-	<div class="flex w-full max-w-xl flex-col gap-8">
-		<div class="flex flex-col items-center gap-3">
-			<img src={logo} alt="SmartifyOS" class="h-9" draggable="false" />
-			<p class="text-muted">Build your car's system, and see every change live.</p>
+<div class="flex flex-1 justify-center overflow-auto bg-bg px-8 py-16">
+	<div class="my-auto flex w-full max-w-xl flex-col gap-8">
+		<div class="flex flex-col items-center gap-4 text-center">
+			<img src={icon} alt="" class="size-20 rounded-[18px] shadow-float" draggable="false" />
+			<div class="flex flex-col gap-1.5">
+				<h1 class="text-2xl font-semibold tracking-tight">SmartifyOS Editor</h1>
+				<p class="text-[15px] text-muted">Build your car's system, and see every change live.</p>
+			</div>
 		</div>
 
 		{#if editor.cli && !editor.cli.found}
-			<div class="rounded-xl border border-warn/30 bg-warn/5 p-4">
+			<div class="rounded-xl border border-warn/25 bg-warn/[0.07] p-4">
 				<div class="flex items-center gap-2 font-medium text-warn">
 					<TriangleAlert class="size-4" /> The SmartifyOS CLI is needed
 				</div>
@@ -39,76 +44,81 @@
 					The editor does its work through the SmartifyOS CLI. Install it by running this in a
 					terminal, then come back here.
 				</p>
-				<code class="selectable mt-3 block rounded-md bg-frame px-3 py-2 font-mono text-xs text-fg">
+				<code
+					class="selectable mt-3 block rounded-lg border border-line bg-bg px-3 py-2.5 font-mono text-[13px]"
+				>
 					{installCommand}
 				</code>
-				<button
-					type="button"
-					class="mt-3 rounded-md bg-raised px-3 py-1.5 hover:bg-hover"
-					onclick={() => editor.refreshCli()}
-				>
-					Check again
-				</button>
+				<Button size="sm" class="mt-3" onclick={() => editor.refreshCli()}>Check again</Button>
 			</div>
 		{/if}
 
-		<button
-			type="button"
+		<Button
+			variant="primary"
+			size="lg"
 			disabled={editor.opening || !editor.cli?.found}
-			class="flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-medium text-frame transition-colors hover:bg-accent-strong disabled:opacity-50"
 			onclick={() => editor.open()}
 		>
 			{#if editor.opening}
-				<LoaderCircle class="size-4 animate-spin" /> Opening
+				<LoaderCircle class="animate-spin" /> Opening
 			{:else}
-				<FolderOpen class="size-4" /> Open your car's app
+				<FolderOpen /> Open your car's app
 			{/if}
-		</button>
+		</Button>
 
 		{#if editor.openProblem}
-			<div class="selectable rounded-xl border border-bad/30 bg-bad/5 p-4">
-				<div class="font-medium text-bad">{editor.openProblem.message}</div>
-				{#if editor.openProblem.hint}
-					<p class="mt-1 whitespace-pre-line text-muted">{editor.openProblem.hint}</p>
-				{/if}
+			<div class="selectable flex gap-3 rounded-xl border border-bad/25 bg-bad/[0.07] p-4">
+				<CircleAlert class="mt-0.5 size-4 shrink-0 text-bad" />
+				<div>
+					<div class="font-medium">{editor.openProblem.message}</div>
+					{#if editor.openProblem.hint}
+						<p class="mt-1 whitespace-pre-line text-muted">{editor.openProblem.hint}</p>
+					{/if}
+				</div>
 			</div>
 		{/if}
 
 		{#if editor.recent.length > 0}
 			<section class="flex flex-col gap-2">
-				<h2 class="px-1 text-[11px] font-medium tracking-wide text-faint uppercase">Recent</h2>
-				<ul class="overflow-hidden rounded-xl border border-line bg-panel">
+				<h2 class="px-1 text-[13px] font-medium text-muted">Recent projects</h2>
+				<ul class="flex flex-col gap-0.5 rounded-xl border border-line bg-card p-1.5">
 					{#each editor.recent as project (project.path)}
-						<li class="group flex items-center border-b border-line last:border-b-0">
+						<li class="group relative flex items-center">
 							<button
 								type="button"
 								disabled={!project.exists || editor.opening || !editor.cli?.found}
-								class="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left hover:bg-raised disabled:cursor-default disabled:hover:bg-transparent"
+								class="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-hover disabled:hover:bg-transparent"
 								onclick={() => editor.open(project.path)}
 							>
-								<Folder
-									class={['size-4 shrink-0', project.exists ? 'text-accent' : 'text-faint']}
-								/>
+								<span
+									class={[
+										'grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-tint',
+										project.exists ? 'text-fg' : 'text-faint'
+									]}
+								>
+									<Folder class="size-4" />
+								</span>
 								<span class="flex min-w-0 flex-col">
 									<span class={['truncate font-medium', !project.exists && 'text-faint']}>
 										{project.name}
 									</span>
-									<span class="truncate text-xs text-faint">
+									<span class="truncate text-[13px] text-faint">
 										{project.exists ? project.path : `Not found: ${project.path}`}
 									</span>
 								</span>
-								<span class="ml-auto shrink-0 pl-3 text-xs text-faint">{ago(project.openedAt)}</span
-								>
+								<span class="ml-auto shrink-0 pr-9 pl-3 text-[13px] text-faint">
+									{ago(project.openedAt)}
+								</span>
 							</button>
-							<button
-								type="button"
-								title="Remove from this list"
-								aria-label="Remove from this list"
-								class="mr-2 grid size-7 place-items-center rounded-md text-faint opacity-0 group-hover:opacity-100 hover:bg-hover hover:text-fg"
+							<Button
+								variant="ghost-muted"
+								size="icon-sm"
+								label="Remove from this list"
+								class="absolute right-1.5 opacity-0 group-hover:opacity-100"
 								onclick={() => editor.forget(project.path)}
 							>
-								<X class="size-3.5" />
-							</button>
+								<X />
+							</Button>
 						</li>
 					{/each}
 				</ul>

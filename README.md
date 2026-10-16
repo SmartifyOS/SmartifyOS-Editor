@@ -1,4 +1,4 @@
-# SmartifyOS Desktop
+# SmartifyOS Editor
 
 The editor for [SmartifyOS](https://smartify-os.com/), the open source car infotainment system built in Flutter. It is for people who would rather click than type: open your car's app, press Run, and see it live in the middle of the editor.
 
@@ -22,7 +22,7 @@ Run starts your car's app with `smartify-os run` and puts its window into the ed
 | Linux   | The same, through X11. On Wayland both the editor and the app run through XWayland, which every Wayland desktop has                                                                                |
 | macOS   | macOS lets no program take in another's window, so the app's window is laid over the preview and moves, resizes and hides with the editor. This needs the Accessibility permission, asked for once |
 
-Without the permission (or when anything else is in the way) the app simply runs in its own window.
+Without the permission (or when anything else is in the way) the app simply runs in its own window. Inside the editor the app shows without its title bar, which needs a SmartifyOS that knows it runs in the editor.
 
 | Key                | Does                           |
 | ------------------ | ------------------------------ |

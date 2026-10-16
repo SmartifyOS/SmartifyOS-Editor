@@ -5,16 +5,17 @@
 	import ExternalLink from '~icons/lucide/external-link';
 	import Play from '~icons/lucide/play';
 	import Square from '~icons/lucide/square';
-	import RotateCw from '~icons/lucide/rotate-cw';
+	import RotateCcw from '~icons/lucide/rotate-ccw';
 	import Zap from '~icons/lucide/zap';
 	import LoaderCircle from '~icons/lucide/loader-circle';
-	import logo from '#lib/assets/logo.svg';
+	import icon from '#lib/assets/icon.png';
 	import { clickOutside, coversViewport } from '#lib/attachments.ts';
+	import { shortcut } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
-	import IconButton from './IconButton.svelte';
+	import Button from './ui/Button.svelte';
+	import Kbd from './ui/Kbd.svelte';
 
 	const platform = window.smartify.platform;
-	const mod = platform === 'darwin' ? '⌘' : 'Ctrl+';
 
 	let menuOpen = $state(false);
 
@@ -35,121 +36,117 @@
 
 <header
 	class={[
-		'relative flex h-10 shrink-0 items-center gap-2 border-b border-line bg-panel drag',
-		platform === 'darwin' ? 'pr-3 pl-20' : 'pr-36 pl-3'
+		// 48px of content and its 1px border, centered on the macOS window buttons.
+		'relative flex h-[49px] shrink-0 items-center gap-1 border-b border-line bg-bg drag',
+		platform === 'darwin' ? 'pr-3 pl-[84px]' : 'pr-36 pl-3'
 	]}
 >
-	<img src={logo} alt="SmartifyOS" class="h-3.5 opacity-90" draggable="false" />
+	<img src={icon} alt="" class="mr-1.5 size-6 rounded-md" draggable="false" />
 
 	{#if editor.project}
-		<span class="text-faint">/</span>
 		<div class="relative">
-			<button
-				type="button"
-				class="flex h-7 items-center gap-1.5 rounded-md px-2 font-medium no-drag hover:bg-hover"
+			<Button
+				variant="ghost"
+				size="sm"
+				class="text-sm"
+				aria-expanded={menuOpen}
 				onclick={() => (menuOpen = !menuOpen)}
 			>
 				{editor.project.name}
-				<ChevronDown class="size-3.5 text-muted" />
-			</button>
+				<ChevronDown class="text-muted" />
+			</Button>
 
 			{#if menuOpen}
 				<div
 					{@attach coversViewport}
 					{@attach clickOutside(() => (menuOpen = false))}
-					class="absolute top-9 left-0 z-50 w-80 rounded-lg border border-line-strong bg-raised p-1 shadow-2xl shadow-black/60 no-drag"
+					class="absolute top-10 left-0 z-50 w-[22rem] rounded-xl p-1 shadow-float glass no-drag"
 				>
 					{#if others.length > 0}
-						<div
-							class="px-2.5 pt-1.5 pb-1 text-[11px] font-medium tracking-wide text-faint uppercase"
-						>
-							Recent
-						</div>
+						<div class="px-2.5 pt-2 pb-1 text-xs font-medium text-faint">Recent projects</div>
 						{#each others as project (project.path)}
 							<button
 								type="button"
 								disabled={!project.exists}
-								class="flex w-full flex-col rounded-md px-2.5 py-1.5 text-left hover:bg-hover disabled:opacity-40"
+								class="flex w-full flex-col rounded-lg px-2.5 py-2 text-left hover:bg-hover disabled:opacity-40"
 								onclick={() => pick(() => editor.open(project.path))}
 							>
-								<span>{project.name}</span>
+								<span class="text-sm">{project.name}</span>
 								<span class="truncate text-xs text-faint">{project.path}</span>
 							</button>
 						{/each}
-						<div class="my-1 h-px bg-line"></div>
+						<div class="mx-1 my-1 h-px bg-line"></div>
 					{/if}
-					<button
-						type="button"
-						class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 hover:bg-hover"
-						onclick={() => pick(() => editor.open())}
-					>
-						<FolderOpen class="size-4 text-muted" /> Open another project…
-					</button>
-					<button
-						type="button"
-						class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 hover:bg-hover"
-						onclick={() =>
-							pick(() => editor.project && window.smartify.projects.reveal(editor.project.path))}
-					>
-						<ExternalLink class="size-4 text-muted" />
-						{revealLabel}
-					</button>
-					<button
-						type="button"
-						class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 hover:bg-hover"
-						onclick={() => pick(() => editor.close())}
-					>
-						<FolderX class="size-4 text-muted" /> Close project
-					</button>
+					{@render item(FolderOpen, 'Open another project…', () => editor.open())}
+					{@render item(ExternalLink, revealLabel, () => {
+						if (editor.project) window.smartify.projects.reveal(editor.project.path);
+					})}
+					{@render item(FolderX, 'Close project', () => editor.close())}
 				</div>
 			{/if}
 		</div>
 
 		<!-- The run controls, centered on the window like Unity's play bar. -->
-		<div
-			class="absolute left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-lg bg-frame p-0.5"
-		>
-			<button
-				type="button"
-				title={editor.running ? `Stop (${mod}P)` : `Run your car's app (${mod}P)`}
+		<div class="absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5">
+			<Button
+				variant={editor.running ? 'outline' : 'primary'}
+				size="sm"
+				class="min-w-28 pr-1.5"
 				disabled={status === 'stopping'}
-				class={[
-					'flex h-7 items-center gap-1.5 rounded-md px-3 font-medium transition-colors no-drag disabled:opacity-50',
-					editor.running
-						? 'bg-active text-fg hover:bg-line-strong'
-						: 'bg-accent text-frame hover:bg-accent-strong'
-				]}
 				onclick={() => editor.toggleRun()}
 			>
 				{#if status === 'starting' || status === 'stopping'}
-					<LoaderCircle class="size-3.5 animate-spin" />
+					<LoaderCircle class="animate-spin" />
 					{status === 'starting' ? 'Starting' : 'Stopping'}
 				{:else if status === 'running'}
-					<Square class="size-3" /> Stop
+					<Square class="size-3.5!" /> Stop
 				{:else}
-					<Play class="size-3.5" /> Run
+					<Play /> Run
 				{/if}
-			</button>
-			<IconButton
-				label={`Hot reload, shows your changes (${mod}R)`}
+				<Kbd keys={shortcut('P')} class="ml-auto" />
+			</Button>
+			<Button
+				variant="outline"
+				size="icon-sm"
+				label={`Hot reload, shows your changes (${shortcut('R')})`}
 				disabled={status !== 'running'}
 				onclick={() => editor.reload()}
 			>
-				<Zap class="size-4" />
-			</IconButton>
-			<IconButton
-				label={`Restart the app (${platform === 'darwin' ? '⇧⌘R' : 'Ctrl+Shift+R'})`}
+				<Zap />
+			</Button>
+			<Button
+				variant="outline"
+				size="icon-sm"
+				label={`Restart the app (${shortcut('R', { shift: true })})`}
 				disabled={status !== 'running'}
 				onclick={() => editor.restart()}
 			>
-				<RotateCw class="size-4" />
-			</IconButton>
+				<RotateCcw />
+			</Button>
 		</div>
+	{:else}
+		<span class="text-sm font-medium">SmartifyOS Editor</span>
 	{/if}
 
 	<div class="flex-1"></div>
 
 	{#if editor.cli?.found}
-		<span class="text-xs text-faint" title={editor.cli.path}>CLI {editor.cli.version}</span>
+		<span
+			class="rounded-md border border-line px-2 py-0.5 font-mono text-xs text-muted no-drag"
+			title={editor.cli.path}
+		>
+			CLI {editor.cli.version}
+		</span>
 	{/if}
 </header>
+
+{#snippet item(Icon: typeof FolderOpen, text: string, action: () => void)}
+	<button
+		type="button"
+		class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-hover"
+		onclick={() => pick(action)}
+	>
+		<Icon class="size-4 text-muted" />
+		{text}
+	</button>
+{/snippet}

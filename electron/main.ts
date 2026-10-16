@@ -33,6 +33,8 @@ import { read, update } from './store.ts';
 const devServer = process.env.DEV_SERVER_URL;
 const rendererDir = join(__dirname, '..', 'renderer');
 const isMac = process.platform === 'darwin';
+/** The app icon, rounded for macOS (resources/, made by scripts/make-icons.py). */
+const iconPath = join(app.getAppPath(), 'resources', isMac ? 'icon-macos.png' : 'icon.png');
 
 // On Wayland no program may own another's window, which the live preview needs. Running the
 // editor through XWayland (and the app too, see preview/session.ts) keeps it possible.
@@ -83,12 +85,15 @@ function createWindow(): BrowserWindow {
 		minWidth: 960,
 		minHeight: 600,
 		show: false,
-		title: 'SmartifyOS',
-		backgroundColor: '#0e0f11',
+		title: 'SmartifyOS Editor',
+		backgroundColor: '#0a0a0a',
+		icon: iconPath,
 		titleBarStyle: 'hidden',
+		// macOS draws its window buttons in the middle of a 16pt tall frame, so y 16 puts them
+		// at 24, the middle of the title bar's 48px (TitleBar.svelte) above its border.
 		...(isMac
-			? { trafficLightPosition: { x: 14, y: 13 } }
-			: { titleBarOverlay: { color: '#16171a', symbolColor: '#a1a1aa', height: 40 } }),
+			? { trafficLightPosition: { x: 18, y: 16 } }
+			: { titleBarOverlay: { color: '#0a0a0a', symbolColor: '#a1a1aa', height: 48 } }),
 		webPreferences: {
 			preload: join(__dirname, 'preload.cjs'),
 			contextIsolation: true,
@@ -227,6 +232,8 @@ function setMenu(): void {
 }
 
 app.whenReady().then(() => {
+	// A packaged app has its icon in the bundle, running from source shows Electron's.
+	if (isMac && !app.isPackaged) app.dock?.setIcon(iconPath);
 	setMenu();
 	serveRenderer();
 	registerIpc();

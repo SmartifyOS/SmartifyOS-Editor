@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { Glob } from 'bun';
 
 /**
- * Guards the writing style rule from CLAUDE.md: no em dashes and no en dashes, anywhere,
+ * Guards the writing style rule from AGENTS.md: no em dashes and no en dashes, anywhere,
  * UI strings included. No linter checks prose, so it is checked here. The characters are
  * built from their code points so that this file does not trip its own check.
  */
@@ -22,7 +22,7 @@ const patterns = [
 ];
 const ignored = ['node_modules/', 'out/', 'release/', '.svelte-kit/', '.git/', 'bun.lock'];
 /** Only files that have to name the characters to do their job. */
-const exempt = ['CLAUDE.md', 'scripts/check-dashes.ts'];
+const exempt = ['AGENTS.md', 'scripts/check-dashes.ts'];
 
 const offenders: string[] = [];
 for (const pattern of patterns) {

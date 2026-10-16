@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head>
-	<title>SmartifyOS</title>
+	<title>SmartifyOS Editor</title>
 </svelte:head>
 
 {@render children()}

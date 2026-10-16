@@ -1,5 +1,5 @@
 {
-	"name": "smartify-os-desktop",
+	"name": "smartify-os-editor",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -46,7 +46,7 @@
 	"trustedDependencies": [
 		"koffi"
 	],
-	"productName": "SmartifyOS",
+	"productName": "SmartifyOS Editor",
 	"description": "The SmartifyOS editor: build your car's infotainment system with a live preview",
 	"author": {
 		"name": "SmartifyOS"

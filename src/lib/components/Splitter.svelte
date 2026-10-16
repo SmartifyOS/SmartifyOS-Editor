@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
-	 * The handle between two panels. Dragging it changes `size`, the size of the panel on the
-	 * side named by `edge`, within `min` and `max`.
+	 * The hairline between two areas, which can be dragged. Dragging it changes `size`, the
+	 * size of the area on the side named by `edge`, within `min` and `max`.
 	 */
 	let {
 		size = $bindable(),
@@ -10,7 +10,7 @@
 		max
 	}: {
 		size: number;
-		/** Which panel `size` is: the one to the left, right or below the handle. */
+		/** Which area `size` is: the one to the left, right or below the line. */
 		edge: 'left' | 'right' | 'bottom';
 		min: number;
 		max: number;
@@ -46,19 +46,24 @@
 <div
 	role="separator"
 	aria-orientation={vertical ? 'horizontal' : 'vertical'}
-	class={[
-		'group relative z-10 shrink-0',
-		vertical ? '-my-1 h-2 cursor-row-resize' : '-mx-1 w-2 cursor-col-resize'
-	]}
-	onpointerdown={start}
+	class={['group relative z-10 shrink-0 bg-line', vertical ? 'h-px' : 'w-px']}
 >
+	<!-- A wider, invisible grip around the hairline. Mouse only, like every splitter. -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class={[
-			'absolute transition-colors group-hover:bg-accent/60',
-			dragging && 'bg-accent',
+			'absolute',
 			vertical
-				? 'inset-x-0 top-1/2 h-px -translate-y-1/2'
-				: 'inset-y-0 left-1/2 w-px -translate-x-1/2'
+				? 'inset-x-0 -inset-y-1.5 cursor-row-resize'
+				: '-inset-x-1.5 inset-y-0 cursor-col-resize'
+		]}
+		onpointerdown={start}
+	></div>
+	<div
+		class={[
+			'pointer-events-none absolute transition-colors delay-75 group-hover:bg-primary/70',
+			dragging && 'bg-primary',
+			vertical ? 'inset-x-0 -inset-y-px' : '-inset-x-px inset-y-0'
 		]}
 	></div>
 </div>

@@ -15,6 +15,8 @@ const kAXValueCGSizeType = 2;
 export const kAXErrorSuccess = 0;
 export const kAXErrorInvalidUIElement = -25202;
 export const kAXErrorAPIDisabled = -25211;
+const kCGWindowListOptionOnScreenAboveWindow = 1 << 1;
+const NSWindowBelow = -1;
 
 type Ref = bigint;
 
@@ -53,6 +55,30 @@ function load() {
 	);
 	const AXValueCreatePoint = ax.func('void *AXValueCreate(int type, CGPoint *value)');
 	const AXValueCreateSize = ax.func('void *AXValueCreate(int type, CGSize *value)');
+	// Private, but what every window manager for macOS uses to match an AX window to its
+	// window server number, and unchanged for over a decade.
+	const AXUIElementGetWindow = ax.func(
+		'int _AXUIElementGetWindow(void *element, _Out_ uint32_t *windowId)'
+	);
+
+	const cg = koffi.load('/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics');
+	const CGWindowListCreate = cg.func(
+		'void *CGWindowListCreate(uint32_t option, uint32_t relativeTo)'
+	);
+
+	// Our own window is ordered with AppKit, which takes Objective-C messages.
+	const objc = koffi.load('/usr/lib/libobjc.A.dylib');
+	const sel = objc.func('void *sel_registerName(const char *name)');
+	const sendPointer = objc.func('void *objc_msgSend(void *self, void *op)');
+	const sendLong = objc.func('long objc_msgSend(void *self, void *op)');
+	const sendOrder = objc.func(
+		'void objc_msgSend(void *self, void *op, long place, long relativeTo)'
+	);
+	const selectors = {
+		window: sel('window'),
+		windowNumber: sel('windowNumber'),
+		orderWindow: sel('orderWindow:relativeTo:')
+	};
 
 	/** Internal: CFStrings for the attribute names, made once and kept. */
 	const names = new Map<string, Ref>();
@@ -149,6 +175,43 @@ function load() {
 			} finally {
 				CFRelease(app);
 			}
+		},
+
+		/** The window server's number for an AX window, which other windows are ordered by. */
+		windowNumber(element: Ref): number | undefined {
+			const id = [0];
+			return AXUIElementGetWindow(element, id) === kAXErrorSuccess ? (id[0] as number) : undefined;
+		},
+
+		/** The NSWindow of one of our own windows, from Electron's handle (its NSView). */
+		ownWindow(view: Ref): { window: Ref; number: number } {
+			const window = sendPointer(view, selectors.window) as Ref;
+			return { window, number: Number(sendLong(window, selectors.windowNumber)) };
+		},
+
+		/**
+		 * The windows on screen in front of `number`, front to back. Only numbers: reading
+		 * them needs no permission.
+		 */
+		windowsAbove(number: number): number[] {
+			const list = CGWindowListCreate(kCGWindowListOptionOnScreenAboveWindow, number) as Ref | null;
+			if (!list) return [];
+			try {
+				const count = Number(CFArrayGetCount(list));
+				const ids: number[] = [];
+				// The array holds the numbers themselves where an array would hold pointers.
+				for (let index = 0; index < count; index++) {
+					ids.push(Number(CFArrayGetValueAtIndex(list, index) as Ref));
+				}
+				return ids;
+			} finally {
+				CFRelease(list);
+			}
+		},
+
+		/** Puts one of our own windows directly behind another window, of any app. */
+		orderBelow(ownWindow: Ref, number: number): void {
+			sendOrder(ownWindow, selectors.orderWindow, NSWindowBelow, number);
 		},
 
 		release(ref: Ref): void {
