@@ -183,7 +183,8 @@
 			{/if}
 		</div>
 	{/if}
-	{#if !onSettings}
+	<!-- With a project open the settings are at the bottom of the car panel. -->
+	{#if !editor.project && !onSettings}
 		<Button
 			variant="ghost-muted"
 			size="icon-sm"

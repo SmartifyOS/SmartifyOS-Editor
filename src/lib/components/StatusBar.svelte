@@ -4,13 +4,16 @@
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import RefreshCw from '~icons/lucide/refresh-cw';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
+	import Discord from '~icons/logos/discord-icon';
 	import { editor } from '#lib/state/editor.svelte.ts';
 
 	/**
-	 * The strip along the bottom of the window: a task moved out of the way and updates on
-	 * the left, which only show when there is something to say, and on the right the versions
-	 * of the CLI and the editor, which checks for updates when clicked.
+	 * The strip along the bottom of the window: a way to ask for help on the left, then a task
+	 * moved out of the way and updates, which only show when there is something to say, and on the right the versions of the CLI and the editor, which checks
+	 * for updates when clicked.
 	 */
+
+	const discord = 'https://discord.gg/bRw7wJMnPZ';
 
 	const update = $derived(editor.update);
 	// "Up to date" is said for a moment after a check the user asked for.
@@ -20,6 +23,16 @@
 <footer
 	class="flex h-8 shrink-0 items-center gap-3 border-t border-line bg-bg px-3 text-[12.5px] text-muted"
 >
+	<a
+		href={discord}
+		target="_blank"
+		rel="noreferrer"
+		class="-ml-1.5 flex h-6 items-center gap-1.5 rounded-md px-1.5 hover:bg-hover hover:text-fg"
+		title="Ask a question on the SmartifyOS Discord"
+	>
+		<Discord class="size-4" /> Get help
+	</a>
+
 	{#if editor.task?.hidden}
 		<button
 			type="button"

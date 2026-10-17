@@ -11,6 +11,7 @@
 	import RefreshCw from '~icons/lucide/refresh-cw';
 	import type { Component, Snippet } from 'svelte';
 	import type { DeviceCreated } from '../../../shared/cli.ts';
+	import { goto } from '$app/navigation';
 	import { commands } from '#lib/commands.ts';
 	import { iconFor, kindWords, partKinds } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
@@ -18,13 +19,14 @@
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import { editor, type Selection } from '#lib/state/editor.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
+	import { shortcut } from '#lib/shortcuts.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
 
 	/**
 	 * The car's parts, like Unity's hierarchy, all under the car: what it runs, its own windows,
 	 * tiles and widgets, and the devices on its CAN bus, each section folding away. Picking one
-	 * shows it in the inspector.
+	 * shows it in the inspector. The editor's own settings sit at the bottom.
 	 */
 
 	let refreshing = $state(false);
@@ -202,6 +204,17 @@
 			</div>
 		</div>
 	{/if}
+
+	<div class="mt-auto flex shrink-0 px-2 py-1.5">
+		<Button
+			variant="ghost-muted"
+			size="icon-sm"
+			label={`Settings (${shortcut(',')})`}
+			onclick={() => goto('#/settings')}
+		>
+			<SettingsIcon class="size-5!" />
+		</Button>
+	</div>
 </Panel>
 
 {#snippet row(
