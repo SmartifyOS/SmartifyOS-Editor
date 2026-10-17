@@ -18,6 +18,9 @@ import { type Embedder, handleFromBuffer, type Placement } from './embedder.ts';
  *
  * Moving another program's window needs the Accessibility permission, asked for once.
  */
+/** How long the app's window has to stay where something else put it before it is put back. */
+const settleMs = 1000;
+
 export class MacEmbedder implements Embedder {
 	readonly mode = 'overlay' as const;
 	private window: bigint | undefined;
@@ -29,8 +32,11 @@ export class MacEmbedder implements Embedder {
 	private last: Placement['screen'] | undefined;
 	/** Where the window was last put, so only what changed is sent (every call waits on the app). */
 	private applied: Placement['screen'] | undefined;
-	/** Where {@link recheck} last found the window. */
-	private seen: { x: number; y: number } | undefined;
+	/** Where {@link recheck} last found the window, how big it was, and since when. */
+	private seen: Placement['screen'] | undefined;
+	private seenSince = 0;
+	/** Where it was last put back from, so a window that will not go is not asked again. */
+	private tried: Placement['screen'] | undefined;
 	private asked = false;
 
 	constructor(host: BrowserWindow) {
@@ -70,6 +76,7 @@ export class MacEmbedder implements Embedder {
 			this.pid = pid;
 			this.applied = undefined;
 			this.seen = undefined;
+			this.tried = undefined;
 			if (this.last) this.place({ screen: this.last, client: this.last });
 			this.setVisible(this.visible);
 			return true;
@@ -129,15 +136,29 @@ export class MacEmbedder implements Embedder {
 		const frame = macos().frameOf(this.number);
 		const put = this.applied;
 		if (!frame || !put) return;
-		const near = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-			Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+		const near = (a: Placement['screen'], b: Placement['screen']) =>
+			Math.abs(a.x - b.x) <= 1 &&
+			Math.abs(a.y - b.y) <= 1 &&
+			Math.abs(a.width - b.width) <= 1 &&
+			Math.abs(a.height - b.height) <= 1;
 		// Core keeps the window from being dragged, but macOS has other ways to move one (like
-		// Ctrl and Cmd while dragging). Only the position: an app may not go to every size. And
-		// only once it moved, since macOS does not let a window go everywhere (above the menu
-		// bar, for one) and would be asked again and again.
-		const away = !near(frame, put) && !(this.seen && near(frame, this.seen));
+		// Ctrl and Cmd while dragging), and the app sizes its window again when a hot restart
+		// runs its main (a core from before the editor did). Only once it stayed that way for a
+		// while: Flutter draws nothing during a restart, and sizing the window again too soon
+		// after the restart did can crash it. And only once for each place it went, since macOS
+		// does not let a window go everywhere (above the menu bar, for one) and an app may not go
+		// to every size.
+		if (!this.seen || !near(frame, this.seen)) this.seenSince = Date.now();
 		this.seen = frame;
-		if (away) {
+		const settled = Date.now() - this.seenSince >= settleMs;
+		if (near(frame, put)) {
+			// Back where it belongs, so the same thing happening again is put right again too.
+			this.tried = undefined;
+			return;
+		}
+		const tried = this.tried !== undefined && near(frame, this.tried);
+		if (settled && !tried) {
+			this.tried = frame;
 			this.applied = undefined;
 			this.place({ screen: this.last, client: this.last });
 		}
@@ -150,5 +171,6 @@ export class MacEmbedder implements Embedder {
 		this.pid = undefined;
 		this.applied = undefined;
 		this.seen = undefined;
+		this.tried = undefined;
 	}
 }
