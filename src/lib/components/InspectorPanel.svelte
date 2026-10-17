@@ -14,7 +14,7 @@
 	import Undo from '~icons/lucide/undo-2';
 	import Usb from '~icons/lucide/usb';
 	import type { Component, Snippet } from 'svelte';
-	import type { DeviceInfo, PackageInfo, Part } from '../../../shared/cli.ts';
+	import type { DeviceInfo, PackageInfo, Part, SettingsPageInfo } from '../../../shared/cli.ts';
 	import { commands } from '#lib/commands.ts';
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
@@ -25,6 +25,8 @@
 	import TextField from './ui/TextField.svelte';
 	import BusSimulator from './BusSimulator.svelte';
 	import CarLook from './CarLook.svelte';
+	import SettingsPageInspector from './SettingsPageInspector.svelte';
+	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
 
@@ -47,10 +49,15 @@
 			| { kind: 'device'; info: DeviceInfo }
 			| { kind: 'canDevice'; name: string; title: string; node: number }
 			| { kind: 'part'; part: Part }
+			| { kind: 'settings'; page: SettingsPageInfo }
 			| undefined => {
 			const picked = editor.selection;
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
+			if (picked.kind === 'settings') {
+				const page = settingsPages.find(picked.file);
+				return page && { kind: 'settings', page };
+			}
 			if (picked.kind === 'part') {
 				const part = parts.find(picked.part, picked.file);
 				return part && { kind: 'part', part };
@@ -100,6 +107,8 @@
 				{@render canDeviceView(item.name, item.title, item.node)}
 			{:else if item.kind === 'part'}
 				{@render partView(item.part)}
+			{:else if item.kind === 'settings'}
+				<SettingsPageInspector page={item.page} />
 			{:else}
 				{@render deviceView(item.info)}
 			{/if}

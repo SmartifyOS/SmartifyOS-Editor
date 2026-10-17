@@ -5,6 +5,7 @@
 	import AddExtensionDialog from '#lib/components/AddExtensionDialog.svelte';
 	import NewCarDialog from '#lib/components/NewCarDialog.svelte';
 	import NewPartDialog from '#lib/components/NewPartDialog.svelte';
+	import NewSettingsPageDialog from '#lib/components/NewSettingsPageDialog.svelte';
 	import PromptDialog from '#lib/components/PromptDialog.svelte';
 	import StatusBar from '#lib/components/StatusBar.svelte';
 	import TaskDialog from '#lib/components/TaskDialog.svelte';
@@ -14,6 +15,7 @@
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
+	import { settingsPages } from '#lib/state/settings.svelte.ts';
 
 	/** The window around every page: the title bar, the status bar, and the dialogs. */
 	let { children }: LayoutProps = $props();
@@ -57,6 +59,10 @@
 
 {#if parts.dialog}
 	<NewPartDialog kind={parts.dialog} />
+{/if}
+
+{#if settingsPages.dialog}
+	<NewSettingsPageDialog />
 {/if}
 
 {#if editor.task && !editor.task.hidden}

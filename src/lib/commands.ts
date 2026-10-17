@@ -4,10 +4,13 @@ import type {
 	DoctorCheck,
 	Part,
 	PartKind,
-	PartVariant
+	PartVariant,
+	RowKind,
+	SettingsPageInfo
 } from '../../shared/cli.ts';
 import { carLooks } from './look.ts';
 import { kindWords } from './parts.ts';
+import { rowWords } from './settings.ts';
 import type { TaskSpec } from './state/task.svelte.ts';
 
 /**
@@ -164,6 +167,104 @@ export const partCommands = {
 /** Internal: what the CLI finds a part by, its id, or its file when it has none. */
 function partQuery(part: Part): string {
 	return part.id ?? part.file.split('/').pop() ?? part.file;
+}
+
+/** A change to a row of a settings page. Anything left out stays as it is. */
+export interface RowEdit {
+	title?: string;
+	/** Empty takes it off. */
+	subtitle?: string;
+	/** Empty takes it off. */
+	section?: string;
+	remember?: boolean;
+	code?: boolean;
+	/** For a switch true or false, for a choice an option's value. */
+	default?: boolean | string;
+	/** A choice: every option, by label. */
+	options?: string[];
+	value?: string;
+}
+
+/** Internal: a row edit as flags of `settings add-row` and `edit-row`. */
+function rowFlags(edit: RowEdit): string[] {
+	const flags: string[] = [];
+	if (edit.title !== undefined) flags.push('--title', edit.title);
+	if (edit.subtitle !== undefined) flags.push('--subtitle', edit.subtitle);
+	if (edit.section !== undefined) flags.push('--section', edit.section);
+	if (edit.remember !== undefined) flags.push('--remember', edit.remember ? 'on' : 'off');
+	if (edit.code !== undefined) flags.push('--code', edit.code ? 'on' : 'off');
+	if (edit.default !== undefined) {
+		flags.push(
+			'--default',
+			typeof edit.default === 'boolean' ? (edit.default ? 'on' : 'off') : edit.default
+		);
+	}
+	for (const option of edit.options ?? []) flags.push('--option', option);
+	if (edit.value !== undefined) flags.push('--value', edit.value);
+	return flags;
+}
+
+/**
+ * The commands for the car's own settings pages and their rows, run without the task dialog.
+ * Removing a page asks first, in the prompt dialog. Data: `{ page }`, `{ pages }` for `list`.
+ */
+export const settingsCommands = {
+	list: (): string[] => ['settings', 'list'],
+	create: (title: string, parent: string, icon: string): string[] => [
+		'settings',
+		'create',
+		title,
+		'--in',
+		parent,
+		'--icon',
+		icon
+	],
+	edit: (
+		page: SettingsPageInfo,
+		change: { title?: string; subtitle?: string; icon?: string; parent?: string }
+	): string[] => [
+		'settings',
+		'edit',
+		pageQuery(page),
+		...(change.title !== undefined ? ['--title', change.title] : []),
+		...(change.subtitle !== undefined ? ['--subtitle', change.subtitle] : []),
+		...(change.icon !== undefined ? ['--icon', change.icon] : []),
+		...(change.parent !== undefined ? ['--in', change.parent] : [])
+	],
+	remove: (page: SettingsPageInfo): string[] => ['settings', 'remove', pageQuery(page)],
+	addRow: (page: SettingsPageInfo, kind: RowKind, title: string): string[] => [
+		'settings',
+		'add-row',
+		pageQuery(page),
+		title,
+		'--kind',
+		rowWords[kind].flag
+	],
+	editRow: (page: SettingsPageInfo, row: string, edit: RowEdit): string[] => [
+		'settings',
+		'edit-row',
+		pageQuery(page),
+		row,
+		...rowFlags(edit)
+	],
+	removeRow: (page: SettingsPageInfo, row: string): string[] => [
+		'settings',
+		'remove-row',
+		pageQuery(page),
+		row
+	],
+	moveRow: (page: SettingsPageInfo, row: string, direction: 'up' | 'down'): string[] => [
+		'settings',
+		'move-row',
+		pageQuery(page),
+		row,
+		`--${direction}`
+	]
+};
+
+/** Internal: what the CLI finds a page by, its id, or its file when it has none. */
+function pageQuery(page: SettingsPageInfo): string {
+	return page.id ?? page.file.split('/').pop() ?? page.file;
 }
 
 /** Commands about this computer rather than the car. */

@@ -160,8 +160,8 @@ export interface SmartifyApi {
 		stop(): Promise<void>;
 		/** Hot reload, what `r` does in the terminal. */
 		reload(): void;
-		/** Hot restart, what `R` does in the terminal. */
-		restart(): void;
+		/** Hot restart, what `R` does in the terminal. Resolves once it is done. */
+		restart(): Promise<void>;
 		/**
 		 * Asks the running app something (`describe`, `configure`), see `call` in the CLI's
 		 * README. Resolves with why not when it is not running.

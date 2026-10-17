@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Box from '~icons/lucide/box';
+	import SettingsIcon from '~icons/lucide/settings';
 	import Car from '~icons/lucide/car-front';
 	import CircleArrowUp from '~icons/lucide/circle-arrow-up';
 	import VsCode from '~icons/logos/visual-studio-code';
@@ -14,6 +15,7 @@
 	import { iconFor, kindWords, partKinds } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
+	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import { editor, type Selection } from '#lib/state/editor.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import Panel from './Panel.svelte';
@@ -65,6 +67,9 @@
 			return picked.name === selection.name;
 		}
 		if (picked.kind === 'part' && selection.kind === 'part') {
+			return picked.file === selection.file;
+		}
+		if (picked.kind === 'settings' && selection.kind === 'settings') {
 			return picked.file === selection.file;
 		}
 		return true;
@@ -154,6 +159,20 @@
 					{/snippet}
 					{@render group(kind, words.plural, list.length, items)}
 				{/each}
+
+				{#snippet settings()}
+					{#each settingsPages.pages ?? [] as page (page.file)}
+						{@render row(
+							{ kind: 'settings', file: page.file },
+							page.title ?? page.id ?? page.file,
+							null,
+							page.icon ? iconFor('window', page.icon) : SettingsIcon,
+							{ faint: !page.registered, hint: 'It is not in lib/main.dart' }
+						)}
+					{/each}
+					{@render add('New settings page', () => (settingsPages.dialog = true))}
+				{/snippet}
+				{@render group('settings', 'Settings pages', settingsPages.pages?.length ?? 0, settings)}
 
 				{#snippet devices()}
 					{#each project.devices as device (device.folder)}

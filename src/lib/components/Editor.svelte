@@ -4,6 +4,7 @@
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
+	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import CarPanel from './CarPanel.svelte';
 	import ConsolePanel from './ConsolePanel.svelte';
@@ -19,6 +20,7 @@
 		if (!editor.project) return;
 		void look.read();
 		void parts.read();
+		void settingsPages.read();
 	});
 	// Only when it starts or stops, not on every change of how it is shown.
 	const appRunning = $derived(editor.preview.status === 'running');

@@ -1,6 +1,6 @@
 import { type BrowserWindow, screen } from 'electron';
 import type { PreviewState, Rect } from '../../shared/api.ts';
-import type { AppReply } from '../../shared/cli.ts';
+import type { AppReply, CliEvent } from '../../shared/cli.ts';
 import { cliEnv } from '../cli/environment.ts';
 import { CliJob } from '../cli/job.ts';
 import { track, writeConsole } from '../cli/jobs.ts';
@@ -21,6 +21,9 @@ const raiseForMs = 300;
 
 /** How long a stop may take before everything is killed. */
 const stopTimeoutMs = 5000;
+
+/** How long a hot restart is waited for before it is taken as done. */
+const restartTimeoutMs = 15000;
 
 export class PreviewSession {
 	private job: CliJob | undefined;
@@ -218,8 +221,23 @@ export class PreviewSession {
 		this.job?.input('r');
 	}
 
-	restart(): void {
-		this.job?.input('R');
+	/** Hot restart, resolved once Flutter says it is done (or after a while, if it never does). */
+	restart(): Promise<void> {
+		const job = this.job;
+		if (!job?.running) return Promise.resolve();
+		return new Promise((resolve) => {
+			const done = () => {
+				clearTimeout(timer);
+				job.off('event', listen);
+				resolve();
+			};
+			const listen = (event: CliEvent) => {
+				if (event.type === 'output' && /Restarted application/.test(event.text)) done();
+			};
+			const timer = setTimeout(done, restartTimeoutMs);
+			job.on('event', listen);
+			job.input('R');
+		});
 	}
 
 	/** Asks the running app something, see `call` in the CLI's README. */

@@ -218,7 +218,7 @@ function registerIpc(): void {
 	});
 	ipcMain.handle(channels.previewStop, () => preview?.stop());
 	ipcMain.on(channels.previewReload, () => preview?.reload());
-	ipcMain.on(channels.previewRestart, () => preview?.restart());
+	ipcMain.handle(channels.previewRestart, () => preview?.restart());
 	ipcMain.handle(
 		channels.previewCall,
 		(_event, name: string, params?: Record<string, unknown>): Promise<AppReply> =>

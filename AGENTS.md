@@ -63,6 +63,10 @@ The inspector edits how the car looks (layout, theme, driver's side, bar, the 3D
 
 The car panel lists the app's own windows, quick settings tiles and home screen widgets, each with a "New" row opening `NewPartDialog` (a name, what kind, an icon). The CLI makes, reads, renames and removes them (`window`, `tile`, `widget`, see `partCommands`), and `state/parts.svelte.ts` restarts the running app after every change, since new code only runs after a restart. Making one opens it in VS Code at the line where what it shows or does is written. The inspector explains each one, puts it on screen in the preview (`show`), and edits its name and icon. The words for each kind and the icons are in `src/lib/parts.ts`, the icons a copy of the CLI's list.
 
+## Settings pages
+
+The car's own settings pages are a section of the car panel, made in `NewSettingsPageDialog` and edited in `SettingsPageInspector` (the page) and `SettingsRowCard` (each row), all through the CLI's `settings` commands (see `settingsCommands`). `state/settings.svelte.ts` runs changes one at a time, and after each restarts the running app and opens the page in it again (`show`, asked again until the restarted app knows it), so the preview follows the page being made. A switch or a choice can remember its value (a `SavedValue` in core, which the app reads as `<name>.value`) and run code of the owner's, the two independent of each other.
+
 ## Trying out the CAN bus
 
 While the app runs, `state/bus.svelte.ts` follows its CAN bus through `preview.call` (`canDescribe` every two seconds, `canTraffic` every half second), and the car panel lists every device on it, the ones without a program too (selection `canDevice`), with a dot for the ones that are there. `BusSimulator.svelte` in the inspector sends a device's messages into the app as if the device had (`canSend`, the messages whose `from` is that device), pretends the device is connected (`canDevice`, switched on again after a restart of the app), and logs what went each way. All of it is core's `EditorBridge`, nothing goes through the CLI's commands.

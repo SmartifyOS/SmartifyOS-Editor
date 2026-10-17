@@ -213,6 +213,8 @@ export interface AppDescription {
 		current: CarLookName | null;
 	};
 	about: { deviceName: string; model: string | null; extra: Record<string, string> };
+	/** Every settings page a page of the car's own can go in. Missing from an older SmartifyOS. */
+	settingsPages?: { id: string; title: string; parent: string }[];
 }
 
 /** One field of a CAN message, as the running app describes it, with what it can hold. */
@@ -270,5 +272,41 @@ export interface Part {
 	/** Whether `lib/main.dart` hands it to SmartifyOS. */
 	registered: boolean;
 	/** Where what it shows or does is written. */
+	line: number;
+}
+
+/** The kinds of settings rows the CLI writes: a switch, a choice, a button and information. */
+export type RowKind = 'toggle' | 'choice' | 'action' | 'info';
+
+/** One row of a settings page of the car's own, as `settings list` reports it. */
+export interface SettingsRow {
+	id: string | null;
+	/** Null for a row written in code, which the editor leaves to VS Code. */
+	kind: RowKind | null;
+	title: string | null;
+	subtitle: string | null;
+	section: string | null;
+	icon: string | null;
+	/** The value it keeps between drives, which the app reads as `<name>.value`. */
+	saved: { name: string; key: string | null; default: boolean | number | string | null } | null;
+	/** The function of the owner's it runs, and whether they wrote anything in it yet. */
+	code: { name: string; line: number; written: boolean } | null;
+	options: { value: string; label: string }[];
+	value: string | null;
+	line: number;
+}
+
+/** A settings page of the car's own, as `settings list` reports it. */
+export interface SettingsPageInfo {
+	id: string | null;
+	title: string | null;
+	subtitle: string | null;
+	icon: string | null;
+	/** The page it goes in, by id. */
+	parent: string | null;
+	file: string;
+	symbol: string | null;
+	registered: boolean;
+	rows: SettingsRow[];
 	line: number;
 }
