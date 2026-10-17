@@ -214,3 +214,38 @@ export interface AppDescription {
 	};
 	about: { deviceName: string; model: string | null; extra: Record<string, string> };
 }
+
+/** One field of a CAN message, as the running app describes it, with what it can hold. */
+export type CanFieldInfo = { name: string } & (
+	| { kind: 'bool' }
+	| { kind: 'int'; min: number; max: number }
+	| { kind: 'number'; min: number; max: number; step: number }
+	| { kind: 'float' }
+	| { kind: 'choice'; choices: string[] }
+);
+
+/** What the running app answers to `canDescribe`: the car's CAN bus. */
+export interface CanNetwork {
+	devices: { node: number; name: string; title: string; online: boolean; pretending: boolean }[];
+	messages: {
+		id: number;
+		extended: boolean;
+		name: string;
+		/** The node of the device that sends it, null for the screen's own or one not said. */
+		from: number | null;
+		fields: CanFieldInfo[];
+	}[];
+}
+
+/** One frame the app sent on the bus, as `canTraffic` lists it. */
+export interface CanSentFrame {
+	seq: number;
+	/** Milliseconds since 1970. */
+	at: number;
+	id: number;
+	extended: boolean;
+	data: number[];
+	/** The message it is, null when the bus has none with its id. */
+	message: string | null;
+	values: Record<string, unknown> | null;
+}

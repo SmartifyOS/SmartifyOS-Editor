@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CircleArrowUp from '~icons/lucide/circle-arrow-up';
+	import Cpu from '~icons/lucide/cpu';
 	import VsCode from '~icons/logos/visual-studio-code';
 	import FolderInput from '~icons/lucide/folder-input';
 	import HardDriveDownload from '~icons/lucide/hard-drive-download';
@@ -15,6 +16,8 @@
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
+	import { bus } from '#lib/state/bus.svelte.ts';
+	import BusSimulator from './BusSimulator.svelte';
 	import CarLook from './CarLook.svelte';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
@@ -36,10 +39,15 @@
 			| { kind: 'car' }
 			| { kind: 'package'; info: Package }
 			| { kind: 'device'; info: DeviceInfo }
+			| { kind: 'canDevice'; name: string; title: string; node: number }
 			| undefined => {
 			const picked = editor.selection;
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
+			if (picked.kind === 'canDevice') {
+				const device = bus.network?.devices.find((known) => known.name === picked.name);
+				return device && { kind: 'canDevice', ...device };
+			}
 			if (picked.kind === 'device') {
 				const info = project.devices.find((device) => device.folder === picked.folder);
 				return info && { kind: 'device', info };
@@ -77,6 +85,8 @@
 				{@render carView()}
 			{:else if item.kind === 'package'}
 				{@render packageView(item.info)}
+			{:else if item.kind === 'canDevice'}
+				{@render canDeviceView(item.name, item.title, item.node)}
 			{:else}
 				{@render deviceView(item.info)}
 			{/if}
@@ -222,6 +232,22 @@
 		)}
 	{/snippet}
 	{@render section('Firmware', firmware)}
+
+	<BusSimulator name={info.name} />
+{/snippet}
+
+{#snippet canDeviceView(name: string, title: string, node: number)}
+	{@render heading(title, `${name}, node ${node}`)}
+
+	{#snippet program()}
+		<p class="text-[13px] text-muted">
+			It is on your car's CAN bus, but has no program yet. Make one to put it on a board.
+		</p>
+		{@render action(Cpu, 'Make its program', run(commands.createDevice()))}
+	{/snippet}
+	{@render section(undefined, program)}
+
+	<BusSimulator {name} />
 {/snippet}
 
 {#snippet heading(title: string, detail: string)}

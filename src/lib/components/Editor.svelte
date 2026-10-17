@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import { bus } from '#lib/state/bus.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import CarPanel from './CarPanel.svelte';
@@ -16,9 +17,16 @@
 	$effect(() => {
 		if (editor.project) void look.read();
 	});
+	// Only when it starts or stops, not on every change of how it is shown.
+	const appRunning = $derived(editor.preview.status === 'running');
 	$effect(() => {
-		if (editor.preview.status === 'running') void look.describe();
-		else look.forgetApp();
+		if (appRunning) {
+			void look.describe();
+			bus.follow();
+		} else {
+			look.forgetApp();
+			bus.stop();
+		}
 	});
 
 	const left = remembered('layout.left', 272);

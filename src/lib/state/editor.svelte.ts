@@ -41,9 +41,15 @@ export interface Problem {
 	hint?: string;
 }
 
-/** What is picked in the car panel, and shown in the inspector. */
+/**
+ * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the
+ * running app has on its CAN bus that has no program yet, by its name.
+ */
 export type Selection =
-	{ kind: 'car' } | { kind: 'package'; name: string } | { kind: 'device'; folder: string };
+	| { kind: 'car' }
+	| { kind: 'package'; name: string }
+	| { kind: 'device'; folder: string }
+	| { kind: 'canDevice'; name: string };
 
 /** Newer versions there are for the car, by what they are for. */
 export interface CarUpdates {
@@ -261,7 +267,7 @@ class Editor {
 	private selectionExists(): boolean {
 		const picked = this.selection;
 		const project = this.project;
-		if (picked.kind === 'car' || !project) return true;
+		if (picked.kind === 'car' || picked.kind === 'canDevice' || !project) return true;
 		if (picked.kind === 'device') return project.devices.some((d) => d.folder === picked.folder);
 		const { smartifyOs, extensions } = project.car;
 		return smartifyOs.name === picked.name || extensions.some((e) => e.name === picked.name);

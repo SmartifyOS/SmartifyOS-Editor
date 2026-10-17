@@ -10,6 +10,7 @@
 	import type { Component } from 'svelte';
 	import type { DeviceCreated } from '../../../shared/cli.ts';
 	import { commands } from '#lib/commands.ts';
+	import { bus } from '#lib/state/bus.svelte.ts';
 	import { editor, type Selection } from '#lib/state/editor.svelte.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
@@ -46,8 +47,20 @@
 		if (picked.kind === 'device' && selection.kind === 'device') {
 			return picked.folder === selection.folder;
 		}
+		if (picked.kind === 'canDevice' && selection.kind === 'canDevice') {
+			return picked.name === selection.name;
+		}
 		return true;
 	}
+
+	/** The running app's devices on the bus, by name, to show which are there. */
+	const onBus = $derived(new Map(bus.network?.devices.map((device) => [device.name, device])));
+	/** Devices the running app has on its bus that have no program yet. */
+	const withoutProgram = $derived(
+		bus.network?.devices.filter(
+			(device) => !editor.project?.devices.some((known) => known.name === device.name)
+		) ?? []
+	);
 
 	const project = $derived(editor.project);
 	const updates = $derived(editor.carUpdates);
@@ -103,7 +116,21 @@
 			<h3 class="px-2.5 pt-4 pb-1 text-xs font-medium text-faint">Devices on the CAN bus</h3>
 			<div class="ml-[17px] flex flex-col gap-0.5 border-l border-line pl-2">
 				{#each project.devices as device (device.folder)}
-					{@render row({ kind: 'device', folder: device.folder }, device.name, device.version, Cpu)}
+					{@render row(
+						{ kind: 'device', folder: device.folder },
+						device.name,
+						device.version,
+						Cpu,
+						{
+							online: onBus.get(device.name)?.online
+						}
+					)}
+				{/each}
+				{#each withoutProgram as device (device.name)}
+					{@render row({ kind: 'canDevice', name: device.name }, device.title, null, Cpu, {
+						online: device.online,
+						faint: true
+					})}
 				{/each}
 				{@render add('Make a device', makeDevice)}
 			</div>
@@ -116,7 +143,12 @@
 	title: string,
 	version: string | null,
 	Icon: Component,
-	{ off = false, update }: { off?: boolean; update?: string } = {}
+	{
+		off = false,
+		update,
+		online = false,
+		faint = false
+	}: { off?: boolean; update?: string; online?: boolean; faint?: boolean } = {}
 )}
 	{@const picked = isPicked(selection)}
 	<button
@@ -129,7 +161,13 @@
 		onclick={() => (editor.selection = selection)}
 	>
 		<Icon class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']} />
-		<span class={['truncate', off && 'text-faint line-through']}>{title}</span>
+		<span
+			class={['truncate', off && 'text-faint line-through', faint && !picked && 'text-muted']}
+			title={faint ? 'It has no program yet' : undefined}>{title}</span
+		>
+		{#if online}
+			<span class="size-1.5 shrink-0 rounded-full bg-good" title="It is there"></span>
+		{/if}
 		{#if update}
 			<span class="ml-auto" title={`${update} is out`}>
 				<CircleArrowUp class="size-3.5 text-primary" />
