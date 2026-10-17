@@ -3,7 +3,9 @@
 appId: com.smartify-os.editor
 productName: SmartifyOS Editor
 copyright: Copyright © SmartifyOS contributors
-artifactName: smartify-os-editor-${version}-${os}-${arch}.${ext}
+# No version in the name, so the README's download buttons can always point at the newest
+# release (releases/latest/download/<name>). The release's tag carries the version.
+artifactName: smartify-os-editor-${os}-${arch}.${ext}
 
 directories:
   output: release

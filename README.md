@@ -7,25 +7,32 @@ The editor for [SmartifyOS](https://smartify-os.com/), the open source car infot
 
 ## Install
 
-Download the editor for your computer from the [newest release](https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest):
+Click the button for your computer, it downloads the newest version.
 
-| Computer                              | Download the file ending in                                                                  |
-| ------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Mac with Apple Silicon (M1 and newer) | `mac-arm64.dmg`                                                                              |
-| Mac with Intel                        | `mac-x64.dmg`                                                                                |
-| Windows                               | `win-x64.exe`, or `win-arm64.exe` on an ARM PC                                               |
-| Linux                                 | `linux-x86_64.AppImage`, or `linux-amd64.deb` for Debian and Ubuntu (`arm64` instead on ARM) |
+<p align="center">
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-mac-arm64.dmg"><img alt="Download for macOS, Apple Silicon" src="https://img.shields.io/badge/macOS-Apple_Silicon-000000?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-mac-x64.dmg"><img alt="Download for macOS, Intel" src="https://img.shields.io/badge/macOS-Intel-555555?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-win-x64.exe"><img alt="Download for Windows, x64" src="https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0zIDEyVjYuNzVsNi0xLjMydjYuNDh6bTE3LTl2OC43NWwtMTAgLjE1VjUuMjF6TTMgMTNsNiAuMDl2Ni44MWwtNi0xLjE1em0xNyAuMjVWMjJsLTEwLTEuOTFWMTMuMXoiLz48L3N2Zz4="></a>
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-win-arm64.exe"><img alt="Download for Windows, ARM64" src="https://img.shields.io/badge/Windows-ARM64-005A9E?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0zIDEyVjYuNzVsNi0xLjMydjYuNDh6bTE3LTl2OC43NWwtMTAgLjE1VjUuMjF6TTMgMTNsNiAuMDl2Ni44MWwtNi0xLjE1em0xNyAuMjVWMjJsLTEwLTEuOTFWMTMuMXoiLz48L3N2Zz4="></a>
+</p>
+<p align="center">
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-linux-x86_64.AppImage"><img alt="Download the AppImage for Linux, x64" src="https://img.shields.io/badge/Linux-AppImage_x64-E95420?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-linux-arm64.AppImage"><img alt="Download the AppImage for Linux, ARM64" src="https://img.shields.io/badge/Linux-AppImage_ARM64-C34113?style=for-the-badge&logo=linux&logoColor=white"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-linux-amd64.deb"><img alt="Download the .deb for Debian and Ubuntu, x64" src="https://img.shields.io/badge/Debian,_Ubuntu-x64-A81D33?style=for-the-badge&logo=debian&logoColor=white"></a>
+  <a href="https://github.com/SmartifyOS/SmartifyOS-Editor/releases/latest/download/smartify-os-editor-linux-arm64.deb"><img alt="Download the .deb for Debian and Ubuntu, ARM64" src="https://img.shields.io/badge/Debian,_Ubuntu-ARM64-7A1525?style=for-the-badge&logo=debian&logoColor=white"></a>
+</p>
+
+Not sure which one? A Mac from 2021 or later is almost always Apple Silicon (Apple menu, About This Mac says "Apple M1" or newer). Almost every Windows and Linux computer is x64. Older versions are on the [releases page](https://github.com/SmartifyOS/SmartifyOS-Editor/releases).
 
 - **macOS**: open the `.dmg` and drag SmartifyOS Editor into Applications.
-- **Windows**: run the `.exe` and follow the installer.
+- **Windows**: run the `.exe` and follow the installer. The editor is not signed, so the first time Windows warns you about it: click More info and then Run anyway.
 - **Linux**: make the `.AppImage` runnable (right click, Properties, allow executing, or `chmod +x` it) and open it, or install the `.deb`.
 
-On Windows the editor is not signed, so the first time you open it Windows warns you about it: click More info and then Run anyway.
-
-### What else you need
-
-- The [SmartifyOS CLI](https://github.com/SmartifyOS/SmartifyOS-CLI), which does the actual work behind the editor. The editor tells you how to install it if it is missing.
-- [Flutter](https://docs.flutter.dev/get-started/install), the same as for the CLI.
+That is all. The first time it starts, the editor installs everything else it needs by itself: the [SmartifyOS CLI](https://github.com/SmartifyOS/SmartifyOS-CLI), which does the work behind the editor, and [Flutter](https://flutter.dev), which builds your car's app (unless this computer has it already). Both go into your home folder and need no administrator rights.
 
 ## Using it
 
