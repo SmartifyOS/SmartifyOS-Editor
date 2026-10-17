@@ -141,6 +141,11 @@ export interface SmartifyApi {
 		open(path?: string): Promise<OpenResult>;
 		/** Reads the open project again, for example after the CLI changed it. */
 		refresh(): Promise<OpenResult>;
+		/**
+		 * Called when files of the open project changed, in VS Code or anywhere else, with their
+		 * paths relative to it: `lib/main.dart`, `pubspec.yaml`.
+		 */
+		onFilesChanged(listener: (paths: string[]) => void): () => void;
 		forget(path: string): Promise<RecentProject[]>;
 		/** Empties the list of recent projects. */
 		forgetAll(): Promise<RecentProject[]>;
@@ -226,6 +231,7 @@ export const channels = {
 	projectsCurrent: 'projects:current',
 	projectsOpen: 'projects:open',
 	projectsRefresh: 'projects:refresh',
+	projectsFilesChanged: 'projects:files-changed',
 	projectsForget: 'projects:forget',
 	projectsForgetAll: 'projects:forget-all',
 	projectsNewLocation: 'projects:new-location',

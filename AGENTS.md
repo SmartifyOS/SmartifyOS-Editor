@@ -26,6 +26,7 @@ electron/cli/        finding the CLI, running jobs with --json, the console
 electron/preview/    the live preview: session.ts runs `smartify-os run`, one embedder per system
 electron/native/     the koffi bindings, each loaded only on its own system
 electron/projects.ts the open project and the recent ones, read through the CLI
+electron/watch.ts    the open project's lib/ and pubspec.yaml, so an edit in VS Code shows in the window
 electron/vscode.ts   finding VS Code where it installs itself, and opening a folder in it
 electron/store.ts    what the editor remembers, one JSON file in userData
 electron/settings.ts what the settings page changes, and what each is by default

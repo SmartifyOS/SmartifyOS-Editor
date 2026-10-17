@@ -91,6 +91,8 @@ class Editor {
 	updateDialog = $state(false);
 	private updateDialogShownFor: string | undefined;
 	selection = $state<Selection>({ kind: 'car' });
+	/** The files of the car's app that changed last, in VS Code or anywhere else, and when. */
+	filesChanged = $state<{ paths: string[]; at: number } | undefined>();
 	settings = $state<Settings | undefined>();
 	/** What the doctor said about this computer, unknown until it answered. */
 	computer = $state<DoctorReport | undefined>();
@@ -141,6 +143,7 @@ class Editor {
 
 		const unsubscribe = [
 			api.preview.onState((state) => (this.preview = state)),
+			api.projects.onFilesChanged((paths) => (this.filesChanged = { paths, at: Date.now() })),
 			api.updates.onState((state) => this.setUpdate(state)),
 			api.console.onLine((line) => {
 				this.consoleLines.push(line);

@@ -34,6 +34,7 @@ const api: SmartifyApi = {
 		current: () => ipcRenderer.invoke(channels.projectsCurrent),
 		open: (path) => ipcRenderer.invoke(channels.projectsOpen, path),
 		refresh: () => ipcRenderer.invoke(channels.projectsRefresh),
+		onFilesChanged: (listener) => subscribe(channels.projectsFilesChanged, listener),
 		forget: (path) => ipcRenderer.invoke(channels.projectsForget, path),
 		forgetAll: () => ipcRenderer.invoke(channels.projectsForgetAll),
 		newLocation: () => ipcRenderer.invoke(channels.projectsNewLocation),

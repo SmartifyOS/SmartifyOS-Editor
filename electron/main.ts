@@ -31,6 +31,7 @@ import { changeSettings, settings } from './settings.ts';
 import { read, update } from './store.ts';
 import { Updates } from './updates.ts';
 import { openInVsCode } from './vscode.ts';
+import { ProjectWatcher } from './watch.ts';
 
 /**
  * The main process: one editor window, the IPC the window talks through (contract in
@@ -135,6 +136,9 @@ function createWindow(): BrowserWindow {
 	return win;
 }
 
+/** Tells the window when files of the open car's app change. */
+const watcher = new ProjectWatcher((paths) => send(channels.projectsFilesChanged, paths));
+
 /** Internal: sends to the window, if there still is one. */
 function send(channel: string, payload: unknown): void {
 	if (window && !window.isDestroyed()) window.webContents.send(channel, payload);
@@ -179,7 +183,9 @@ function registerIpc(): void {
 	ipcMain.handle(channels.projectsOpen, async (_event, path?: string) => {
 		if (!window) return { ok: false, cancelled: true };
 		await preview?.stop();
-		return openProject(window, path);
+		const result = await openProject(window, path);
+		if (result.ok) watcher.watch(result.project.path);
+		return result;
 	});
 	ipcMain.handle(channels.projectsRefresh, () => refreshProject());
 	ipcMain.handle(channels.projectsForget, (_event, path: string) => forgetProject(path));
@@ -187,6 +193,7 @@ function registerIpc(): void {
 	ipcMain.handle(channels.projectsClose, async () => {
 		await preview?.stop();
 		closeProject();
+		watcher.watch(undefined);
 	});
 	ipcMain.on(channels.projectsReveal, (_event, path: string) => shell.showItemInFolder(path));
 	ipcMain.handle(channels.projectsNewLocation, () => newProjectLocation());

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
@@ -22,6 +23,23 @@
 		void parts.read();
 		void settingsPages.read();
 	});
+	// A file changed outside the editor, in VS Code most likely: what it shows from that file is
+	// read again, so the inspector never shows something the file no longer says.
+	$effect(() => {
+		const paths = editor.filesChanged?.paths;
+		if (!paths) return;
+		const any = (...prefixes: string[]) =>
+			paths.some((path) => prefixes.some((prefix) => path.startsWith(prefix)));
+		const main = any('lib/main.dart', 'pubspec.yaml');
+		untrack(() => {
+			if (main) void look.read();
+			if (main || any('lib/windows/', 'lib/quick_settings/', 'lib/home_widgets/')) {
+				void parts.read();
+			}
+			if (main || any('lib/settings/')) void settingsPages.read();
+		});
+	});
+
 	// Only when it starts or stops, not on every change of how it is shown.
 	const appRunning = $derived(editor.preview.status === 'running');
 	$effect(() => {
