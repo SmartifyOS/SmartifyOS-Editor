@@ -1,7 +1,10 @@
 <script lang="ts">
 	import CircleArrowUp from '~icons/lucide/circle-arrow-up';
 	import Cpu from '~icons/lucide/cpu';
+	import Eye from '~icons/lucide/eye';
+	import TriangleAlert from '~icons/lucide/triangle-alert';
 	import VsCode from '~icons/logos/visual-studio-code';
+	import VsCodeMono from '~icons/mdi/microsoft-visual-studio-code';
 	import FolderInput from '~icons/lucide/folder-input';
 	import HardDriveDownload from '~icons/lucide/hard-drive-download';
 	import LoaderCircle from '~icons/lucide/loader-circle';
@@ -11,12 +14,15 @@
 	import Undo from '~icons/lucide/undo-2';
 	import Usb from '~icons/lucide/usb';
 	import type { Component, Snippet } from 'svelte';
-	import type { DeviceInfo, PackageInfo } from '../../../shared/cli.ts';
+	import type { DeviceInfo, PackageInfo, Part } from '../../../shared/cli.ts';
 	import { commands } from '#lib/commands.ts';
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
+	import { kindWords, partIcons } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
+	import { parts } from '#lib/state/parts.svelte.ts';
+	import TextField from './ui/TextField.svelte';
 	import BusSimulator from './BusSimulator.svelte';
 	import CarLook from './CarLook.svelte';
 	import Panel from './Panel.svelte';
@@ -40,10 +46,15 @@
 			| { kind: 'package'; info: Package }
 			| { kind: 'device'; info: DeviceInfo }
 			| { kind: 'canDevice'; name: string; title: string; node: number }
+			| { kind: 'part'; part: Part }
 			| undefined => {
 			const picked = editor.selection;
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
+			if (picked.kind === 'part') {
+				const part = parts.find(picked.part, picked.file);
+				return part && { kind: 'part', part };
+			}
 			if (picked.kind === 'canDevice') {
 				const device = bus.network?.devices.find((known) => known.name === picked.name);
 				return device && { kind: 'canDevice', ...device };
@@ -87,6 +98,8 @@
 				{@render packageView(item.info)}
 			{:else if item.kind === 'canDevice'}
 				{@render canDeviceView(item.name, item.title, item.node)}
+			{:else if item.kind === 'part'}
+				{@render partView(item.part)}
 			{:else}
 				{@render deviceView(item.info)}
 			{/if}
@@ -234,6 +247,103 @@
 	{@render section('Firmware', firmware)}
 
 	<BusSimulator name={info.name} />
+{/snippet}
+
+{#snippet partView(part: Part)}
+	{@const words = kindWords[part.kind]}
+	{@const variant = words.variants.find((known) => known.id === part.variant)}
+	{@const showable = part.kind !== 'widget' || part.variant === 'card'}
+	{@render heading(part.name ?? part.id ?? part.file, part.file)}
+
+	{#snippet what()}
+		<p class="text-[13px] text-muted">{words.about} {variant?.describe ?? ''}</p>
+		{#if !part.registered}
+			<p class="flex items-start gap-2 text-[13px] text-warn">
+				<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+				lib/main.dart does not hand it to SmartifyOS, so your app does not have it.
+			</p>
+		{/if}
+		<Button
+			variant="primary"
+			size="sm"
+			class="w-full justify-start"
+			onclick={() => editor.openInVsCode(undefined, part.file, part.line)}
+		>
+			<VsCodeMono />
+			{words.write}
+		</Button>
+		{#if editor.preview.status === 'running' && showable}
+			{@render action(
+				Eye,
+				part.kind === 'window'
+					? 'Open it in the preview'
+					: part.kind === 'tile'
+						? 'Show the quick settings in the preview'
+						: 'Show it on the home screen',
+				() => void parts.show(part),
+				'outline',
+				false
+			)}
+		{:else if editor.preview.status === 'running'}
+			<p class="text-[13px] text-muted">
+				To see it, hold an area of the home screen in the preview and add it there.
+			</p>
+		{/if}
+		{#if parts.showProblem?.file === part.file}
+			<p class="text-[13px] text-bad">{parts.showProblem.message}</p>
+		{/if}
+	{/snippet}
+	{@render section(undefined, what)}
+
+	{#snippet looks()}
+		<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3">
+			<span class="text-[13px] text-muted">Name</span>
+			<TextField
+				value={part.name ?? ''}
+				placeholder={part.name === null ? 'Set in code' : ''}
+				onchange={(name) => {
+					if (name.trim()) void parts.edit(part, { name: name.trim() });
+				}}
+			/>
+		</div>
+		<div class="grid grid-cols-9 gap-1">
+			{#each partIcons as choice (choice.id)}
+				{@const picked = part.icon === choice.id}
+				<button
+					type="button"
+					title={choice.label}
+					aria-label={choice.label}
+					aria-pressed={picked}
+					disabled={!canRun || parts.busy > 0}
+					class={[
+						'grid aspect-square place-items-center rounded-md border transition-colors disabled:opacity-50',
+						picked
+							? 'border-primary/60 bg-primary/10 text-primary'
+							: 'border-transparent text-muted hover:bg-hover hover:text-fg'
+					]}
+					onclick={() => {
+						if (!picked) void parts.edit(part, { icon: choice.id });
+					}}
+				>
+					<choice.icon class="size-4" />
+				</button>
+			{/each}
+		</div>
+		{#if part.icon && !partIcons.some((known) => known.id === part.icon)}
+			<p class="text-xs text-faint">Its icon is Icons.{part.icon}, set in code.</p>
+		{/if}
+	{/snippet}
+	{@render section('Name and icon', looks)}
+
+	{#snippet danger()}
+		{@render action(
+			Trash,
+			`Remove this ${words.one}`,
+			() => void parts.remove(part),
+			'ghost-muted'
+		)}
+	{/snippet}
+	{@render section(undefined, danger)}
 {/snippet}
 
 {#snippet canDeviceView(name: string, title: string, node: number)}

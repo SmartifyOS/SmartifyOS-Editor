@@ -1,5 +1,13 @@
-import type { BarChoice, CarLookName, DoctorCheck } from '../../shared/cli.ts';
+import type {
+	BarChoice,
+	CarLookName,
+	DoctorCheck,
+	Part,
+	PartKind,
+	PartVariant
+} from '../../shared/cli.ts';
 import { carLooks } from './look.ts';
+import { kindWords } from './parts.ts';
 import type { TaskSpec } from './state/task.svelte.ts';
 
 /**
@@ -125,6 +133,37 @@ export function lookCommands(change: LookChange): { appearance?: string[]; about
 		...(appearance.length > 0 ? { appearance: ['appearance', ...appearance] } : {}),
 		...(about.length > 0 ? { about: ['about', ...about] } : {})
 	};
+}
+
+/**
+ * The commands for the windows, quick settings tiles and home screen widgets of the car's app,
+ * run without the task dialog. A question they ask (removing one asks first) goes to the
+ * prompt dialog. Data: `{ part: Part }`, and `{ parts: Part[] }` for `list`.
+ */
+export const partCommands = {
+	list: (kind: PartKind): string[] => [kind, 'list'],
+	create: (kind: PartKind, name: string, variant: PartVariant, icon: string): string[] => [
+		kind,
+		'create',
+		name,
+		'--kind',
+		kindWords[kind].variants.find((known) => known.id === variant)?.flag ?? variant,
+		'--icon',
+		icon
+	],
+	edit: (part: Part, change: { name?: string; icon?: string }): string[] => [
+		part.kind,
+		'edit',
+		partQuery(part),
+		...(change.name !== undefined ? ['--name', change.name] : []),
+		...(change.icon !== undefined ? ['--icon', change.icon] : [])
+	],
+	remove: (part: Part): string[] => [part.kind, 'remove', partQuery(part)]
+};
+
+/** Internal: what the CLI finds a part by, its id, or its file when it has none. */
+function partQuery(part: Part): string {
+	return part.id ?? part.file.split('/').pop() ?? part.file;
 }
 
 /** Commands about this computer rather than the car. */

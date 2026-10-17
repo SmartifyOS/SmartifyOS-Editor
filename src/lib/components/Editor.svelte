@@ -3,6 +3,7 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
+	import { parts } from '#lib/state/parts.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import CarPanel from './CarPanel.svelte';
 	import ConsolePanel from './ConsolePanel.svelte';
@@ -15,7 +16,9 @@
 	// How the car looks, read again whenever the car is (a task may have changed it), and what
 	// the running app has to offer.
 	$effect(() => {
-		if (editor.project) void look.read();
+		if (!editor.project) return;
+		void look.read();
+		void parts.read();
 	});
 	// Only when it starts or stops, not on every change of how it is shown.
 	const appRunning = $derived(editor.preview.status === 'running');

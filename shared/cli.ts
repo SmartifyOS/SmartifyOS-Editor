@@ -249,3 +249,26 @@ export interface CanSentFrame {
 	message: string | null;
 	values: Record<string, unknown> | null;
 }
+
+/** What the CLI calls the kinds of things it makes in a car's app (`window`, `tile`, `widget`). */
+export type PartKind = 'window' | 'tile' | 'widget';
+
+export type PartVariant = 'fullscreen' | 'floating' | 'toggle' | 'button' | 'card' | 'pinned';
+
+/** One window, quick settings tile or home screen widget, as `<kind> list` and the others report it. */
+export interface Part {
+	kind: PartKind;
+	id: string | null;
+	/** What the driver reads, null when it is not plain text in its file. */
+	name: string | null;
+	variant: PartVariant | null;
+	/** Its name in Flutter's `Icons`, null when it is anything else. */
+	icon: string | null;
+	/** Relative to the car's app: `lib/windows/trip_computer_window.dart`. */
+	file: string;
+	symbol: string | null;
+	/** Whether `lib/main.dart` hands it to SmartifyOS. */
+	registered: boolean;
+	/** Where what it shows or does is written. */
+	line: number;
+}

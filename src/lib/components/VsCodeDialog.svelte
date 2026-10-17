@@ -33,7 +33,12 @@
 	 * Says VS Code is needed to edit the car's app or a device's program, with where to get it
 	 * and what to add to it. Opened when VS Code is not found, or could not be started.
 	 */
-	let { folder, file, message }: { folder?: string; file?: string; message?: string } = $props();
+	let {
+		folder,
+		file,
+		line,
+		message
+	}: { folder?: string; file?: string; line?: number; message?: string } = $props();
 
 	const hasDevices = $derived((editor.project?.devices.length ?? 0) > 0);
 	const wanted = $derived(vsCodeExtensions.filter((e) => !e.forDevices || hasDevices));
@@ -107,7 +112,7 @@
 
 		<div class="flex justify-end gap-2 border-t border-line px-6 py-4">
 			<Button variant="ghost" size="sm" onclick={close}>Close</Button>
-			<Button variant="primary" size="sm" onclick={() => editor.openInVsCode(folder, file)}>
+			<Button variant="primary" size="sm" onclick={() => editor.openInVsCode(folder, file, line)}>
 				Try again
 			</Button>
 		</div>

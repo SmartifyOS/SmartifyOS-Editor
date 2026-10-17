@@ -192,9 +192,9 @@ export interface SmartifyApi {
 	vscode: {
 		/**
 		 * Opens the car's app in VS Code, or a folder inside it (like a device's) with one of its
-		 * files. Both are relative to the car's app.
+		 * files, at `line` when given. Both are relative to the car's app.
 		 */
-		open(folder?: string, file?: string): Promise<VsCodeResult>;
+		open(folder?: string, file?: string, line?: number): Promise<VsCodeResult>;
 	};
 	updates: {
 		state(): Promise<UpdateState>;

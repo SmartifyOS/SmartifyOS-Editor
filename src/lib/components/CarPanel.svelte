@@ -6,21 +6,35 @@
 	import Cpu from '~icons/lucide/cpu';
 	import Plus from '~icons/lucide/plus';
 	import Puzzle from '~icons/lucide/puzzle';
+	import ChevronRight from '~icons/lucide/chevron-right';
 	import RefreshCw from '~icons/lucide/refresh-cw';
-	import type { Component } from 'svelte';
+	import type { Component, Snippet } from 'svelte';
 	import type { DeviceCreated } from '../../../shared/cli.ts';
 	import { commands } from '#lib/commands.ts';
+	import { iconFor, kindWords, partKinds } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
+	import { parts } from '#lib/state/parts.svelte.ts';
 	import { editor, type Selection } from '#lib/state/editor.svelte.ts';
+	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
 
 	/**
-	 * The car's parts, like Unity's hierarchy: what it runs, and the devices on its CAN bus.
-	 * Picking one shows it in the inspector.
+	 * The car's parts, like Unity's hierarchy, all under the car: what it runs, its own windows,
+	 * tiles and widgets, and the devices on its CAN bus, each section folding away. Picking one
+	 * shows it in the inspector.
 	 */
 
 	let refreshing = $state(false);
+
+	/** The sections folded away, which the window remembers. */
+	const collapsed = remembered<string[]>('car.collapsed', []);
+
+	function toggle(key: string) {
+		collapsed.value = collapsed.value.includes(key)
+			? collapsed.value.filter((known) => known !== key)
+			: [...collapsed.value, key];
+	}
 
 	async function refresh() {
 		refreshing = true;
@@ -49,6 +63,9 @@
 		}
 		if (picked.kind === 'canDevice' && selection.kind === 'canDevice') {
 			return picked.name === selection.name;
+		}
+		if (picked.kind === 'part' && selection.kind === 'part') {
+			return picked.file === selection.file;
 		}
 		return true;
 	}
@@ -93,46 +110,76 @@
 		<div class="flex flex-col gap-0.5 overflow-auto px-2 pb-2">
 			{@render row({ kind: 'car' }, project.name, null, Car)}
 
-			<div class="ml-[17px] flex flex-col gap-0.5 border-l border-line pl-2">
-				{@render row(
-					{ kind: 'package', name: car.smartifyOs.name },
-					car.smartifyOs.title,
-					car.smartifyOs.version,
-					Box,
-					{ update: updates?.smartifyOs ?? undefined }
+			<div class="ml-[17px] flex flex-col border-l border-line pl-1.5">
+				{#snippet components()}
+					{@render row(
+						{ kind: 'package', name: car.smartifyOs.name },
+						car.smartifyOs.title,
+						car.smartifyOs.version,
+						Box,
+						{ update: updates?.smartifyOs ?? undefined }
+					)}
+					{#each car.extensions as extension (extension.name)}
+						{@render row(
+							{ kind: 'package', name: extension.name },
+							extension.title,
+							extension.version,
+							Puzzle,
+							{ off: extension.switchedOn === false, update: updates?.extensions[extension.name] }
+						)}
+					{/each}
+					{@render add('Add an extension', () => (editor.addExtensionDialog = true))}
+				{/snippet}
+				{@render group(
+					'components',
+					'SmartifyOS and extensions',
+					1 + car.extensions.length,
+					components
 				)}
-				{#each car.extensions as extension (extension.name)}
-					{@render row(
-						{ kind: 'package', name: extension.name },
-						extension.title,
-						extension.version,
-						Puzzle,
-						{ off: extension.switchedOn === false, update: updates?.extensions[extension.name] }
-					)}
-				{/each}
-				{@render add('Add an extension', () => (editor.addExtensionDialog = true))}
-			</div>
 
-			<h3 class="px-2.5 pt-4 pb-1 text-xs font-medium text-faint">Devices on the CAN bus</h3>
-			<div class="ml-[17px] flex flex-col gap-0.5 border-l border-line pl-2">
-				{#each project.devices as device (device.folder)}
-					{@render row(
-						{ kind: 'device', folder: device.folder },
-						device.name,
-						device.version,
-						Cpu,
-						{
-							online: onBus.get(device.name)?.online
-						}
-					)}
+				{#each partKinds as kind (kind)}
+					{@const words = kindWords[kind]}
+					{@const list = parts.lists?.[kind] ?? []}
+					{#snippet items()}
+						{#each list as part (part.file)}
+							{@render row(
+								{ kind: 'part', part: kind, file: part.file },
+								part.name ?? part.id ?? part.file,
+								null,
+								iconFor(kind, part.icon),
+								{ faint: !part.registered, hint: 'It is not in lib/main.dart' }
+							)}
+						{/each}
+						{@render add(words.create, () => (parts.dialog = kind))}
+					{/snippet}
+					{@render group(kind, words.plural, list.length, items)}
 				{/each}
-				{#each withoutProgram as device (device.name)}
-					{@render row({ kind: 'canDevice', name: device.name }, device.title, null, Cpu, {
-						online: device.online,
-						faint: true
-					})}
-				{/each}
-				{@render add('Make a device', makeDevice)}
+
+				{#snippet devices()}
+					{#each project.devices as device (device.folder)}
+						{@render row(
+							{ kind: 'device', folder: device.folder },
+							device.name,
+							device.version,
+							Cpu,
+							{ online: onBus.get(device.name)?.online }
+						)}
+					{/each}
+					{#each withoutProgram as device (device.name)}
+						{@render row({ kind: 'canDevice', name: device.name }, device.title, null, Cpu, {
+							online: device.online,
+							faint: true,
+							hint: 'It has no program yet'
+						})}
+					{/each}
+					{@render add('Make a device', makeDevice)}
+				{/snippet}
+				{@render group(
+					'devices',
+					'Devices on the CAN bus',
+					project.devices.length + withoutProgram.length,
+					devices
+				)}
 			</div>
 		</div>
 	{/if}
@@ -147,8 +194,9 @@
 		off = false,
 		update,
 		online = false,
-		faint = false
-	}: { off?: boolean; update?: string; online?: boolean; faint?: boolean } = {}
+		faint = false,
+		hint
+	}: { off?: boolean; update?: string; online?: boolean; faint?: boolean; hint?: string } = {}
 )}
 	{@const picked = isPicked(selection)}
 	<button
@@ -163,7 +211,7 @@
 		<Icon class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']} />
 		<span
 			class={['truncate', off && 'text-faint line-through', faint && !picked && 'text-muted']}
-			title={faint ? 'It has no program yet' : undefined}>{title}</span
+			title={faint ? hint : undefined}>{title}</span
 		>
 		{#if online}
 			<span class="size-1.5 shrink-0 rounded-full bg-good" title="It is there"></span>
@@ -177,6 +225,29 @@
 			<span class={['shrink-0 font-mono text-xs text-faint', !update && 'ml-auto']}>{version}</span>
 		{/if}
 	</button>
+{/snippet}
+
+{#snippet group(key: string, title: string, count: number, children: Snippet)}
+	{@const open = !collapsed.value.includes(key)}
+	<button
+		type="button"
+		aria-expanded={open}
+		class="mt-1 flex h-8 items-center gap-1.5 rounded-lg pr-2.5 pl-1.5 text-xs font-medium text-faint transition-colors hover:bg-hover hover:text-muted"
+		onclick={() => toggle(key)}
+	>
+		<ChevronRight
+			class={['size-3.5 shrink-0 transition-transform duration-150', open && 'rotate-90']}
+		/>
+		<span class="truncate">{title}</span>
+		{#if count > 0}
+			<span class="ml-auto font-mono">{count}</span>
+		{/if}
+	</button>
+	{#if open}
+		<div class="mb-1 ml-[13px] flex flex-col gap-0.5 border-l border-line pl-1.5">
+			{@render children()}
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet add(label: string, onclick: () => void)}

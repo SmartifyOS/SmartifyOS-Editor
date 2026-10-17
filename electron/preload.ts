@@ -68,7 +68,7 @@ const api: SmartifyApi = {
 		extensions: () => ipcRenderer.invoke(channels.catalogExtensions)
 	},
 	vscode: {
-		open: (folder, file) => ipcRenderer.invoke(channels.vscodeOpen, folder, file)
+		open: (folder, file, line) => ipcRenderer.invoke(channels.vscodeOpen, folder, file, line)
 	},
 	updates: {
 		state: () => ipcRenderer.invoke(channels.updatesState),

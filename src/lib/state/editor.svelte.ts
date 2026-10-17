@@ -10,6 +10,7 @@ import type {
 } from '../../../shared/api.ts';
 import type {
 	AppReply,
+	PartKind,
 	CliEvent,
 	CoreUpdateCheck,
 	ExtensionUpdates,
@@ -43,13 +44,15 @@ export interface Problem {
 
 /**
  * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the
- * running app has on its CAN bus that has no program yet, by its name.
+ * running app has on its CAN bus that has no program yet, by its name. A `part` is one of the
+ * app's windows, quick settings tiles or home screen widgets, by its file.
  */
 export type Selection =
 	| { kind: 'car' }
 	| { kind: 'package'; name: string }
 	| { kind: 'device'; folder: string }
-	| { kind: 'canDevice'; name: string };
+	| { kind: 'canDevice'; name: string }
+	| { kind: 'part'; part: PartKind; file: string };
 
 /** Newer versions there are for the car, by what they are for. */
 export interface CarUpdates {
@@ -98,7 +101,9 @@ class Editor {
 	 * Set while the dialog about VS Code is open: what was being opened, and why it could not
 	 * be (no message means it is not installed).
 	 */
-	vscodeDialog = $state<{ folder?: string; file?: string; message?: string } | undefined>();
+	vscodeDialog = $state<
+		{ folder?: string; file?: string; line?: number; message?: string } | undefined
+	>();
 
 	readonly running = $derived(
 		this.preview.status === 'starting' ||
@@ -267,7 +272,8 @@ class Editor {
 	private selectionExists(): boolean {
 		const picked = this.selection;
 		const project = this.project;
-		if (picked.kind === 'car' || picked.kind === 'canDevice' || !project) return true;
+		if (picked.kind === 'car' || picked.kind === 'canDevice' || picked.kind === 'part') return true;
+		if (!project) return true;
 		if (picked.kind === 'device') return project.devices.some((d) => d.folder === picked.folder);
 		const { smartifyOs, extensions } = project.car;
 		return smartifyOs.name === picked.name || extensions.some((e) => e.name === picked.name);
@@ -363,11 +369,17 @@ class Editor {
 		if (!this.busy) this.task = undefined;
 	}
 
-	/** Opens the car's app, or a folder in it, in VS Code, or says what is missing for that. */
-	async openInVsCode(folder?: string, file?: string): Promise<void> {
-		const result = await window.smartify.vscode.open(folder, file);
+	/**
+	 * Opens the car's app, or a folder in it, in VS Code (at a file's line when given), or says
+	 * what is missing for that.
+	 */
+	async openInVsCode(folder?: string, file?: string, line?: number): Promise<void> {
+		const result = await window.smartify.vscode.open(folder, file, line);
 		if (result.ok) this.vscodeDialog = undefined;
-		else this.vscodeDialog = { folder, file, message: result.missing ? undefined : result.message };
+		else {
+			const message = result.missing ? undefined : result.message;
+			this.vscodeDialog = { folder, file, line, message };
+		}
 	}
 
 	/** Runs a command quietly that asks nothing and changes nothing, undefined when it could not. */

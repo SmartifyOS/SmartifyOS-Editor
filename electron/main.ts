@@ -239,7 +239,7 @@ function registerIpc(): void {
 		})
 	);
 	ipcMain.handle(channels.catalogExtensions, () => catalogExtensions());
-	ipcMain.handle(channels.vscodeOpen, (_event, folder?: string, file?: string) => {
+	ipcMain.handle(channels.vscodeOpen, (_event, folder?: string, file?: string, line?: number) => {
 		const project = currentProject();
 		if (!project) return { ok: false, missing: false, message: 'No project is open.' };
 		const dir = resolve(project.path, folder ?? '.');
@@ -252,7 +252,10 @@ function registerIpc(): void {
 		if (paths.some(outside)) {
 			return { ok: false, missing: false, message: `${folder} is not inside your car's app.` };
 		}
-		return openInVsCode(paths);
+		// `-g file:line` opens the file at that line.
+		const [, path] = paths;
+		const where = path && line ? [dir, '-g', `${path}:${Math.max(1, Math.floor(line))}`] : paths;
+		return openInVsCode(where);
 	});
 
 	ipcMain.handle(channels.appVersion, () => app.getVersion());

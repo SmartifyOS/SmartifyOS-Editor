@@ -12,7 +12,7 @@ It is for people doing something like programming for the first time. The CLI (t
 - **SvelteKit** (Svelte 5, runes only) for the window, as a static single page with the hash router, served by Electron from `app://editor/`.
 - **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only: near black surfaces edge to edge, hairline borders of white at a few percent, rounded controls with a faint top highlight, glass for menus and dialogs. Text is 14px and controls 32 to 36px tall; nothing smaller than 12px.
 - **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices, `ui/Switch.svelte` for on and off and `ui/TextField.svelte` for a line of text (taken on Enter or when left, not on every key).
-- **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. A brand's own logo comes from the `logos` set (`~icons/logos/visual-studio-code`). Never draw an icon by hand.
+- **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. A brand's own logo comes from the `logos` set (`~icons/logos/visual-studio-code`), and from `mdi` in one colour where it sits on the accent colour (`~icons/mdi/microsoft-visual-studio-code`). Never draw an icon by hand.
 - **koffi** for the few native calls the live preview needs (Win32, Xlib, macOS Accessibility). The only runtime dependency.
 - **Bun** for installing, scripts and the dev runner. **esbuild** bundles the main process and preload. **electron-builder** packages.
 
@@ -58,6 +58,10 @@ Opening in VS Code looks where its installers put it on every system before PATH
 ## How the car looks
 
 The inspector edits how the car looks (layout, theme, driver's side, bar, the 3D model, drawing or picture) and its About page, in `CarLook.svelte` with its state in `state/look.svelte.ts`. Two sources: `lib/main.dart`, read with `appearance --show` and written by `appearance` and `about` (which is what lasts), and the running app, asked through `preview.call` (`describe`, `configure`, see `call` in the CLI's README) for its own layouts and themes and to show a change at once. A change goes to the running app first and is then written by the CLI, one at a time, with no task dialog. A new picture of the car only shows after a hot restart, which the editor does by itself. Something new the editor should change live is a parameter of `configure` in core's `EditorBridge` first, then a flag of a CLI command.
+
+## Windows, tiles and widgets
+
+The car panel lists the app's own windows, quick settings tiles and home screen widgets, each with a "New" row opening `NewPartDialog` (a name, what kind, an icon). The CLI makes, reads, renames and removes them (`window`, `tile`, `widget`, see `partCommands`), and `state/parts.svelte.ts` restarts the running app after every change, since new code only runs after a restart. Making one opens it in VS Code at the line where what it shows or does is written. The inspector explains each one, puts it on screen in the preview (`show`), and edits its name and icon. The words for each kind and the icons are in `src/lib/parts.ts`, the icons a copy of the CLI's list.
 
 ## Trying out the CAN bus
 
