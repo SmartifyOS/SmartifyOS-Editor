@@ -15,11 +15,12 @@
 	import Usb from '~icons/lucide/usb';
 	import type { Component, Snippet } from 'svelte';
 	import type { DeviceInfo, PackageInfo, Part, SettingsPageInfo } from '../../../shared/cli.ts';
+	import { linkCopy } from '#lib/carActions.ts';
 	import { commands } from '#lib/commands.ts';
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
-	import { kindWords, partIcons } from '#lib/parts.ts';
+	import { canShow, kindWords, partIcons } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import TextField from './ui/TextField.svelte';
@@ -80,13 +81,6 @@
 	);
 
 	const run = (spec: TaskSpec) => () => void editor.runTask(spec);
-
-	async function link() {
-		const folder = await window.smartify.files.pickFolder(
-			'The folder with the copy, the one with its pubspec.yaml'
-		);
-		if (folder) await editor.runTask(commands.link(folder));
-	}
 
 	function source(info: PackageInfo): string {
 		const from = info.source;
@@ -216,7 +210,7 @@
 			)}
 		{/if}
 		{#if !info.linkedTo}
-			{@render action(FolderInput, 'Use a copy from a folder…', link, 'ghost-muted')}
+			{@render action(FolderInput, 'Use a copy from a folder…', linkCopy, 'ghost-muted')}
 		{/if}
 	{/snippet}
 	{@render section(undefined, actions)}
@@ -261,7 +255,6 @@
 {#snippet partView(part: Part)}
 	{@const words = kindWords[part.kind]}
 	{@const variant = words.variants.find((known) => known.id === part.variant)}
-	{@const showable = part.kind !== 'widget' || part.variant === 'card'}
 	{@render heading(part.name ?? part.id ?? part.file, part.file)}
 
 	{#snippet what()}
@@ -281,18 +274,8 @@
 			<VsCodeMono />
 			{words.write}
 		</Button>
-		{#if editor.preview.status === 'running' && showable}
-			{@render action(
-				Eye,
-				part.kind === 'window'
-					? 'Open it in the preview'
-					: part.kind === 'tile'
-						? 'Show the quick settings in the preview'
-						: 'Show it on the home screen',
-				() => void parts.show(part),
-				'outline',
-				false
-			)}
+		{#if editor.preview.status === 'running' && canShow(part)}
+			{@render action(Eye, words.show, () => void parts.show(part), 'outline', false)}
 		{:else if editor.preview.status === 'running'}
 			<p class="text-[13px] text-muted">
 				To see it, hold an area of the home screen in the preview and add it there.

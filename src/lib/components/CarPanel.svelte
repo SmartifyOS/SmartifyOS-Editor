@@ -10,6 +10,7 @@
 	import ChevronRight from '~icons/lucide/chevron-right';
 	import RefreshCw from '~icons/lucide/refresh-cw';
 	import type { Component, Snippet } from 'svelte';
+	import { actionsFor } from '#lib/carActions.ts';
 	import type { DeviceCreated } from '../../../shared/cli.ts';
 	import { goto } from '$app/navigation';
 	import { commands } from '#lib/commands.ts';
@@ -22,14 +23,23 @@
 	import { shortcut } from '#lib/shortcuts.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
+	import ContextMenu, { type MenuItem } from './ui/ContextMenu.svelte';
 
 	/**
 	 * The car's parts, like Unity's hierarchy, all under the car: what it runs, its own windows,
 	 * tiles and widgets, and the devices on its CAN bus, each section folding away. Picking one
-	 * shows it in the inspector. The editor's own settings sit at the bottom.
+	 * shows it in the inspector, and right clicking it offers what its inspector does. The
+	 * editor's own settings sit at the bottom.
 	 */
 
 	let refreshing = $state(false);
+	/** The right click menu that is open, where it was opened. */
+	let menu = $state<{ x: number; y: number; items: MenuItem[] }>();
+
+	function openMenu(event: MouseEvent, items: MenuItem[]) {
+		event.preventDefault();
+		if (items.length > 0) menu = { x: event.clientX, y: event.clientY, items };
+	}
 
 	/** The sections folded away, which the window remembers. */
 	const collapsed = remembered<string[]>('car.collapsed', []);
@@ -49,6 +59,9 @@
 			refreshing = false;
 		}
 	}
+
+	const addExtension = () => (editor.addExtensionDialog = true);
+	const newSettingsPage = () => (settingsPages.dialog = true);
 
 	async function makeDevice() {
 		const result = await editor.runTask(commands.createDevice());
@@ -135,13 +148,14 @@
 							{ off: extension.switchedOn === false, update: updates?.extensions[extension.name] }
 						)}
 					{/each}
-					{@render add('Add an extension', () => (editor.addExtensionDialog = true))}
+					{@render add('Add an extension', addExtension)}
 				{/snippet}
 				{@render group(
 					'components',
 					'SmartifyOS and extensions',
 					1 + car.extensions.length,
-					components
+					components,
+					{ icon: Plus, label: 'Add an extension…', run: addExtension, disabled: !canRun }
 				)}
 
 				{#each partKinds as kind (kind)}
@@ -159,7 +173,12 @@
 						{/each}
 						{@render add(words.create, () => (parts.dialog = kind))}
 					{/snippet}
-					{@render group(kind, words.plural, list.length, items)}
+					{@render group(kind, words.plural, list.length, items, {
+						icon: Plus,
+						label: `${words.create}…`,
+						run: () => (parts.dialog = kind),
+						disabled: !canRun
+					})}
 				{/each}
 
 				{#snippet settings()}
@@ -172,9 +191,14 @@
 							{ faint: !page.registered, hint: 'It is not in lib/main.dart' }
 						)}
 					{/each}
-					{@render add('New settings page', () => (settingsPages.dialog = true))}
+					{@render add('New settings page', newSettingsPage)}
 				{/snippet}
-				{@render group('settings', 'Settings pages', settingsPages.pages?.length ?? 0, settings)}
+				{@render group('settings', 'Settings pages', settingsPages.pages?.length ?? 0, settings, {
+					icon: Plus,
+					label: 'New settings page…',
+					run: newSettingsPage,
+					disabled: !canRun
+				})}
 
 				{#snippet devices()}
 					{#each project.devices as device (device.folder)}
@@ -199,7 +223,8 @@
 					'devices',
 					'Devices on the CAN bus',
 					project.devices.length + withoutProgram.length,
-					devices
+					devices,
+					{ icon: Plus, label: 'Make a device', run: () => void makeDevice(), disabled: !canRun }
 				)}
 			</div>
 		</div>
@@ -216,6 +241,13 @@
 		</Button>
 	</div>
 </Panel>
+
+<!-- Made anew for each right click, as one can close the last and open the next at once. -->
+{#if menu}
+	{#key menu}
+		<ContextMenu {...menu} onclose={() => (menu = undefined)} />
+	{/key}
+{/if}
 
 {#snippet row(
 	selection: Selection,
@@ -239,6 +271,10 @@
 			selection.kind === 'car' && 'font-medium'
 		]}
 		onclick={() => (editor.selection = selection)}
+		oncontextmenu={(event) => {
+			editor.selection = selection;
+			openMenu(event, actionsFor(selection));
+		}}
 	>
 		<Icon class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']} />
 		<span
@@ -259,13 +295,14 @@
 	</button>
 {/snippet}
 
-{#snippet group(key: string, title: string, count: number, children: Snippet)}
+{#snippet group(key: string, title: string, count: number, children: Snippet, create: MenuItem)}
 	{@const open = !collapsed.value.includes(key)}
 	<button
 		type="button"
 		aria-expanded={open}
 		class="mt-1 flex h-8 items-center gap-1.5 rounded-lg pr-2.5 pl-1.5 text-xs font-medium text-faint transition-colors hover:bg-hover hover:text-muted"
 		onclick={() => toggle(key)}
+		oncontextmenu={(event) => openMenu(event, [create])}
 	>
 		<ChevronRight
 			class={['size-3.5 shrink-0 transition-transform duration-150', open && 'rotate-90']}

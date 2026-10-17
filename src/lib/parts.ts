@@ -32,7 +32,7 @@ import Volume from '~icons/lucide/volume-2';
 import Wrench from '~icons/lucide/wrench';
 import Zap from '~icons/lucide/zap';
 import type { Component } from 'svelte';
-import type { PartKind, PartVariant } from '../../shared/cli.ts';
+import type { Part, PartKind, PartVariant } from '../../shared/cli.ts';
 
 /**
  * The editor's words for the windows, quick settings tiles and home screen widgets the CLI
@@ -51,6 +51,8 @@ export interface KindWords {
 	about: string;
 	/** What filling it in is called: `Write what it shows`. */
 	write: string;
+	/** What putting one on screen in the preview is called: `Open it in the preview`. */
+	show: string;
 	/** What the dialog suggests as a name. */
 	example: string;
 	/** Shown when there is none of them. */
@@ -74,6 +76,7 @@ export const kindWords: Record<PartKind, KindWords> = {
 		about:
 			'A screen of its own, like an app on a phone. The driver opens it from its icon in the app list, the grid button in the bar.',
 		write: 'Write what it shows',
+		show: 'Open it in the preview',
 		example: 'Trip computer',
 		icon: AppWindow,
 		variants: [
@@ -102,6 +105,7 @@ export const kindWords: Record<PartKind, KindWords> = {
 		about:
 			'A quick switch or button in the quick settings, the shade the driver pulls down from the top of the screen. For things they reach for while driving.',
 		write: 'Write what it does',
+		show: 'Show the quick settings in the preview',
 		example: 'Interior light',
 		icon: ToggleRight,
 		variants: [
@@ -129,6 +133,7 @@ export const kindWords: Record<PartKind, KindWords> = {
 		create: 'New widget',
 		about: 'Something on the home screen, next to the car.',
 		write: 'Write what it shows',
+		show: 'Show it on the home screen',
 		example: 'Oil temperature',
 		icon: LayoutGrid,
 		variants: [
@@ -199,4 +204,12 @@ export const defaultIcons: Record<PartKind, string> = {
 /** What the editor draws for an icon from Flutter's `Icons`, the kind's own for any other. */
 export function iconFor(kind: PartKind, icon: string | null): Component {
 	return partIcons.find((known) => known.id === icon)?.icon ?? kindWords[kind].icon;
+}
+
+/**
+ * Whether `show` can put one on screen in the running app. A widget that is not a card is
+ * only on the home screen once the driver adds it there.
+ */
+export function canShow(part: Part): boolean {
+	return part.kind !== 'widget' || part.variant === 'card';
 }

@@ -34,6 +34,7 @@ resources/           the app icons, made from icon-source.png by scripts/make-ic
 src/lib/state/       the window's reactive state (editor.svelte.ts), the only user of window.smartify
 src/lib/commands.ts  every CLI command the window runs on the car, with its arguments
 src/lib/exports.ts   what the Export menu (and the inspector) can put on a USB stick
+src/lib/carActions.ts what the right click menu of each row in the car panel offers
 src/lib/look.ts      the built-in layouts, themes, bars and ways to draw the car, a copy of the CLI's
 shared/next-steps.ts the editor's words for the steps the CLI suggests after a command
 electron/catalog.ts  the recommended extensions, catalog/extensions.json for now
@@ -48,7 +49,7 @@ scripts/             dev runner, build, the dash check, the icons, the new car s
 
 ## Working on the car
 
-Everything the car panel and the inspector do (extensions, updating SmartifyOS, linking, devices, the USB sticks) is a command in `src/lib/commands.ts`, run with `editor.runTask`. The task dialog shows its steps and asks its questions inline (`PromptForm`), and once it is over the car is read again, the running app restarted when the car changed. A new command is one entry there and a button. Whether there are updates is asked quietly with `cli.query` (`update --check`, `extension update --check`), which prints nothing to the console.
+Everything the car panel and the inspector do (extensions, updating SmartifyOS, linking, devices, the USB sticks) is a command in `src/lib/commands.ts`, run with `editor.runTask`. The task dialog shows its steps and asks its questions inline (`PromptForm`), and once it is over the car is read again, the running app restarted when the car changed. A new command is one entry there and a button. Every row of the car panel also has a right click menu (`ui/ContextMenu.svelte`) with what its inspector does, listed in `src/lib/carActions.ts`, so a new action for a row goes there too. Whether there are updates is asked quietly with `cli.query` (`update --check`, `extension update --check`), which prints nothing to the console.
 
 What the CLI says to do next comes as `data.steps` on a `note`, each with a `kind`. The CLI's words name commands to type, so `shared/next-steps.ts` says each kind the editor's way (a kind it does not know is said the CLI's way).
 

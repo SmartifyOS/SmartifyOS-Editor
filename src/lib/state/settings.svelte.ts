@@ -63,6 +63,14 @@ class SettingsPages {
 		return undefined;
 	}
 
+	/** Takes a page out of the app, once the CLI has asked whether to. */
+	async remove(page: SettingsPageInfo): Promise<void> {
+		const result = await this.run(settingsCommands.remove(page));
+		if (result.ok && (result.data as { changed: boolean }).changed) {
+			editor.selection = { kind: 'car' };
+		}
+	}
+
 	/**
 	 * Runs a command that changes a page, after the ones before it, then reads the pages again
 	 * and shows `page` in the running app.

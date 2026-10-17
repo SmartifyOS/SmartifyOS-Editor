@@ -212,12 +212,7 @@
 		variant="ghost-muted"
 		size="sm"
 		class="w-full justify-start"
-		onclick={async () => {
-			const result = await settingsPages.change(settingsCommands.remove(page));
-			if (result.ok && (result.data as { changed: boolean }).changed) {
-				editor.selection = { kind: 'car' };
-			}
-		}}
+		onclick={() => void settingsPages.remove(page)}
 	>
 		<Trash /> Remove this page
 	</Button>
