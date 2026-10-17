@@ -69,6 +69,10 @@ export class X11Embedder implements Embedder {
 		// A child window moves with its parent, nothing to do.
 	}
 
+	recheck(): void {
+		// A child window can not be dragged out of the editor's.
+	}
+
 	detach(): void {
 		this.window = 0;
 	}

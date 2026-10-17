@@ -29,6 +29,8 @@ export class MacEmbedder implements Embedder {
 	private last: Placement['screen'] | undefined;
 	/** Where the window was last put, so only what changed is sent (every call waits on the app). */
 	private applied: Placement['screen'] | undefined;
+	/** Where {@link recheck} last found the window. */
+	private seen: { x: number; y: number } | undefined;
 	private asked = false;
 
 	constructor(host: BrowserWindow) {
@@ -67,6 +69,7 @@ export class MacEmbedder implements Embedder {
 			this.number = chosen === undefined ? undefined : api.windowNumber(chosen);
 			this.pid = pid;
 			this.applied = undefined;
+			this.seen = undefined;
 			if (this.last) this.place({ screen: this.last, client: this.last });
 			this.setVisible(this.visible);
 			return true;
@@ -121,11 +124,31 @@ export class MacEmbedder implements Embedder {
 		api.orderBelow(this.host.window, this.number);
 	}
 
+	recheck(): void {
+		if (!this.window || this.number === undefined || !this.visible || !this.last) return;
+		const frame = macos().frameOf(this.number);
+		const put = this.applied;
+		if (!frame || !put) return;
+		const near = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+			Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+		// Core keeps the window from being dragged, but macOS has other ways to move one (like
+		// Ctrl and Cmd while dragging). Only the position: an app may not go to every size. And
+		// only once it moved, since macOS does not let a window go everywhere (above the menu
+		// bar, for one) and would be asked again and again.
+		const away = !near(frame, put) && !(this.seen && near(frame, this.seen));
+		this.seen = frame;
+		if (away) {
+			this.applied = undefined;
+			this.place({ screen: this.last, client: this.last });
+		}
+	}
+
 	detach(): void {
 		if (this.window) macos().release(this.window);
 		this.window = undefined;
 		this.number = undefined;
 		this.pid = undefined;
 		this.applied = undefined;
+		this.seen = undefined;
 	}
 }

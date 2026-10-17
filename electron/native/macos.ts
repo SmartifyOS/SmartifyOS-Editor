@@ -31,6 +31,7 @@ function load() {
 
 	const CGPoint = koffi.struct('CGPoint', { x: 'double', y: 'double' });
 	const CGSize = koffi.struct('CGSize', { width: 'double', height: 'double' });
+	const CGRect = koffi.struct('CGRect', { origin: CGPoint, size: CGSize });
 
 	const CFStringCreateWithCString = cf.func(
 		'void *CFStringCreateWithCString(void *alloc, const char *cStr, uint32_t encoding)'
@@ -75,7 +76,11 @@ function load() {
 	const CGWindowListCopyWindowInfo = cg.func(
 		'void *CGWindowListCopyWindowInfo(uint32_t option, uint32_t relativeTo)'
 	);
+	const CGRectMakeWithDictionaryRepresentation = cg.func(
+		'bool CGRectMakeWithDictionaryRepresentation(void *dict, _Out_ CGRect *rect)'
+	);
 	const windowLayerKey = koffi.decode(cg.symbol('kCGWindowLayer'), 'void *') as Ref;
+	const windowBoundsKey = koffi.decode(cg.symbol('kCGWindowBounds'), 'void *') as Ref;
 
 	// Our own window is ordered with AppKit, which takes Objective-C messages.
 	const objc = koffi.load('/usr/lib/libobjc.A.dylib');
@@ -125,6 +130,21 @@ function load() {
 				ids.push(Number(CFArrayGetValueAtIndex(list, index) as Ref));
 			}
 			return ids;
+		} finally {
+			CFRelease(list);
+		}
+	}
+
+	/** Internal: reads from the window server's description of one window. */
+	function windowInfo<T>(number: number, read: (info: Ref) => T): T | undefined {
+		const list = CGWindowListCopyWindowInfo(
+			kCGWindowListOptionIncludingWindow,
+			number
+		) as Ref | null;
+		if (!list) return undefined;
+		try {
+			if (Number(CFArrayGetCount(list)) === 0) return undefined;
+			return read(CFArrayGetValueAtIndex(list, 0) as Ref);
 		} finally {
 			CFRelease(list);
 		}
@@ -232,20 +252,26 @@ function load() {
 		 * and the menu bar. Needs no permission either.
 		 */
 		layerOf(number: number): number {
-			const list = CGWindowListCopyWindowInfo(
-				kCGWindowListOptionIncludingWindow,
-				number
-			) as Ref | null;
-			if (!list) return 0;
-			try {
-				if (Number(CFArrayGetCount(list)) === 0) return 0;
-				const info = CFArrayGetValueAtIndex(list, 0) as Ref;
-				const layer = CFDictionaryGetValue(info, windowLayerKey) as Ref | null;
-				const out = [0];
-				return layer && CFNumberGetValue(layer, kCFNumberIntType, out) ? (out[0] as number) : 0;
-			} finally {
-				CFRelease(list);
-			}
+			return (
+				windowInfo(number, (info) => {
+					const layer = CFDictionaryGetValue(info, windowLayerKey) as Ref | null;
+					const out = [0];
+					return layer && CFNumberGetValue(layer, kCFNumberIntType, out) ? (out[0] as number) : 0;
+				}) ?? 0
+			);
+		},
+
+		/** Where a window is on screen, in points from the top left like `setPosition`. */
+		frameOf(number: number): { x: number; y: number; width: number; height: number } | undefined {
+			return windowInfo(number, (info) => {
+				const bounds = CFDictionaryGetValue(info, windowBoundsKey) as Ref | null;
+				const rect = {} as {
+					origin: { x: number; y: number };
+					size: { width: number; height: number };
+				};
+				if (!bounds || !CGRectMakeWithDictionaryRepresentation(bounds, rect)) return undefined;
+				return { x: rect.origin.x, y: rect.origin.y, ...rect.size };
+			});
 		},
 
 		/** Puts one of our own windows directly behind another window, of any app. */

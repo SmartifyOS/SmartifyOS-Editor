@@ -40,6 +40,8 @@ export interface Embedder {
 	setVisible(visible: boolean): void;
 	/** The editor came to the front (macOS: the app has to come along). */
 	raise(): void;
+	/** Asked every few hundred milliseconds: puts back whatever moved the window away. */
+	recheck(): void;
 	/** Lets go of the window, for example before the app is stopped. */
 	detach(): void;
 }

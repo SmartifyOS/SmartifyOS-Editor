@@ -160,6 +160,7 @@ export class PreviewSession {
 			if (embedder.alive()) {
 				// Anything that slipped past the focus event (a drag, another app) is put right.
 				if (this.host.isFocused()) embedder.raise();
+				embedder.recheck();
 				return;
 			}
 			// The window went (the app quit, or opened a new one). Look for it again.
