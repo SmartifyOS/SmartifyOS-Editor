@@ -8,9 +8,13 @@ import type { AppReply, CarInfo, CliEvent, DeviceInfo, ResultEvent } from './cli
 
 export type Platform = 'darwin' | 'win32' | 'linux';
 
-/** Where the CLI is, or why it could not be used. */
+/**
+ * Where the CLI is, or why it could not be used, and whether the editor can install it (not
+ * over one pointed at with `SMARTIFY_OS_CLI`).
+ */
 export type CliStatus =
-	{ found: true; path: string; version: string; sha: string } | { found: false; reason: string };
+	| { found: true; path: string; version: string; sha: string }
+	| { found: false; reason: string; canInstall: boolean };
 
 export interface RecentProject {
 	path: string;
@@ -132,6 +136,11 @@ export interface SmartifyApi {
 		 * nothing and changes nothing (like `update --check`): nothing goes to the console.
 		 */
 		query(args: string[]): Promise<ResultEvent>;
+		/**
+		 * Installs the CLI with its own installer, when it is missing. Resolves with the job id,
+		 * whose events (steps, output, the result) come through `onEvent` like a command's.
+		 */
+		install(): Promise<string>;
 	};
 	projects: {
 		recent(): Promise<RecentProject[]>;
@@ -227,6 +236,7 @@ export const channels = {
 	cliCancel: 'cli:cancel',
 	cliEvent: 'cli:event',
 	cliQuery: 'cli:query',
+	cliInstall: 'cli:install',
 	projectsRecent: 'projects:recent',
 	projectsCurrent: 'projects:current',
 	projectsOpen: 'projects:open',

@@ -37,10 +37,13 @@ export function cliStatus(refresh = false): Promise<CliStatus> {
 
 async function readStatus(): Promise<CliStatus> {
 	const path = await findCli();
+	// One pointed at with SMARTIFY_OS_CLI is someone's own, the editor never installs over it.
+	const canInstall = !process.env.SMARTIFY_OS_CLI;
 	if (!path) {
 		return {
 			found: false,
-			reason: 'The SmartifyOS CLI is not installed on this computer.'
+			reason: 'The SmartifyOS CLI is not installed on this computer.',
+			canInstall
 		};
 	}
 	try {
@@ -49,8 +52,12 @@ async function readStatus(): Promise<CliStatus> {
 			const data = result.data as { version: string; sha: string };
 			return { found: true, path, version: data.version, sha: data.sha };
 		}
-		return { found: false, reason: result.error.message };
+		return { found: false, reason: result.error.message, canInstall };
 	} catch (error) {
-		return { found: false, reason: `The CLI at ${path} could not be started: ${String(error)}` };
+		return {
+			found: false,
+			reason: `The CLI at ${path} could not be started: ${String(error)}`,
+			canInstall
+		};
 	}
 }

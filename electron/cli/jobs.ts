@@ -1,7 +1,8 @@
 import type { ConsoleLine, JobEvent } from '../../shared/api.ts';
 import type { CliEvent } from '../../shared/cli.ts';
 import { nextSteps } from '../../shared/next-steps.ts';
-import type { CliJob } from './job.ts';
+import type { InstallJob } from './install.ts';
+import { CliJob } from './job.ts';
 
 /**
  * Every CLI job the window can see: its events go to the window, which answers questions
@@ -10,7 +11,7 @@ import type { CliJob } from './job.ts';
 
 type Listener = (event: JobEvent) => void;
 
-const jobs = new Map<string, CliJob>();
+const jobs = new Map<string, CliJob | InstallJob>();
 const listeners = new Set<Listener>();
 
 export function onJobEvent(listener: Listener): () => void {
@@ -19,7 +20,7 @@ export function onJobEvent(listener: Listener): () => void {
 }
 
 /** Makes a job visible to the window, and writes what it says into the console. */
-export function track(job: CliJob, source: ConsoleLine['source']): void {
+export function track(job: CliJob | InstallJob, source: ConsoleLine['source']): void {
 	jobs.set(job.id, job);
 	job.on('event', (event) => {
 		for (const listener of listeners) listener({ jobId: job.id, event });
@@ -32,8 +33,10 @@ export function track(job: CliJob, source: ConsoleLine['source']): void {
 	});
 }
 
+/** A CLI job by its id, which questions are answered through. */
 export function findJob(id: string): CliJob | undefined {
-	return jobs.get(id);
+	const job = jobs.get(id);
+	return job instanceof CliJob ? job : undefined;
 }
 
 /** Whether any job is still running, which an update of the CLI itself has to wait for. */

@@ -130,6 +130,7 @@ class Editor {
 		void api.cli.status().then((status) => {
 			this.cli = status;
 			if (status.found) void this.firstSetup();
+			else if (status.canInstall) void this.installCli();
 		});
 		void api.settings.get().then((settings) => (this.settings = settings));
 		void api.projects.recent().then((recent) => (this.recent = recent));
@@ -196,6 +197,26 @@ class Editor {
 		if (!(await window.smartify.setup.needed())) return void this.checkComputer();
 		window.smartify.setup.done();
 		await this.setUpComputer();
+	}
+
+	/**
+	 * Installs SmartifyOS (the CLI) in the task dialog, and once it is there gets this computer
+	 * ready for it (Flutter) the same as on the first start. Runs by itself when it is missing.
+	 */
+	async installCli(): Promise<void> {
+		// Not a command of the CLI's, there is none yet: the main process runs its installer.
+		const task = new Task({ title: 'Install SmartifyOS', args: [], changes: 'nothing' });
+		this.task = task;
+		try {
+			const job = await this.follow(window.smartify.cli.install(), (event) => task.handle(event));
+			task.jobId = job.jobId;
+			await job.result;
+		} catch (error) {
+			task.handle(failure(error));
+		}
+		task.hidden = false;
+		await this.refreshCli();
+		if (this.cli?.found) await this.firstSetup();
 	}
 
 	/** Asks the doctor quietly what this computer has. */
@@ -347,12 +368,7 @@ class Editor {
 			task.jobId = job.jobId;
 			result = await job.result;
 		} catch (error) {
-			result = {
-				type: 'result',
-				ok: false,
-				exitCode: 1,
-				error: { kind: 'bug', message: String(error) }
-			};
+			result = failure(error);
 			task.handle(result);
 		}
 
@@ -414,9 +430,17 @@ class Editor {
 		onEvent?: (event: CliEvent) => void
 	): Promise<{ jobId: string; result: Promise<ResultEvent> }> {
 		// Arguments can come out of state (a doctor's fix), which IPC cannot send as it is.
-		const jobId = await window.smartify.cli.start($state.snapshot(args));
+		return await this.follow(window.smartify.cli.start($state.snapshot(args)), onEvent);
+	}
+
+	/** Internal: follows the job whose id `started` resolves with, until its result. */
+	private async follow(
+		started: Promise<string>,
+		onEvent?: (event: CliEvent) => void
+	): Promise<{ jobId: string; result: Promise<ResultEvent> }> {
+		const jobId = await started;
 		// The id arrives before the job's first event: both come over the same IPC pipe, and the
-		// main process replies before the CLI has had a chance to print anything.
+		// main process replies before the job has had a chance to say anything.
 		const result = new Promise<ResultEvent>((resolve) => {
 			this.jobListeners.set(jobId, (event) => {
 				onEvent?.(event);
@@ -443,6 +467,11 @@ class Editor {
 		window.smartify.console.clear();
 		this.consoleLines = [];
 	}
+}
+
+/** Internal: a job that could not even start, as its result. */
+function failure(error: unknown): ResultEvent {
+	return { type: 'result', ok: false, exitCode: 1, error: { kind: 'bug', message: String(error) } };
 }
 
 export const editor = new Editor();

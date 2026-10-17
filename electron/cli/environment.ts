@@ -31,9 +31,14 @@ function readShellPath(): Promise<string | undefined> {
 	});
 }
 
-/** The folder the CLI's installer puts it in. */
+/** The folder the CLI's installer puts it in (install.sh, or install.ps1 on Windows). */
 export function cliInstallDir(): string {
-	return process.env.SMARTIFY_OS_INSTALL_DIR || join(homedir(), '.smartify-os', 'bin');
+	if (process.env.SMARTIFY_OS_INSTALL_DIR) return process.env.SMARTIFY_OS_INSTALL_DIR;
+	if (process.platform === 'win32') {
+		const local = process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local');
+		return join(local, 'SmartifyOS', 'bin');
+	}
+	return join(homedir(), '.smartify-os', 'bin');
 }
 
 /** PATH with the login shell's entries and the CLI's install folder added, nothing twice. */

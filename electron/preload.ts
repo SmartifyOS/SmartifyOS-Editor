@@ -27,7 +27,8 @@ const api: SmartifyApi = {
 			ipcRenderer.send(channels.cliAnswer, jobId, promptId, value),
 		cancel: (jobId, promptId) => ipcRenderer.send(channels.cliCancel, jobId, promptId),
 		onEvent: (listener) => subscribe(channels.cliEvent, listener),
-		query: (args) => ipcRenderer.invoke(channels.cliQuery, args)
+		query: (args) => ipcRenderer.invoke(channels.cliQuery, args),
+		install: () => ipcRenderer.invoke(channels.cliInstall)
 	},
 	projects: {
 		recent: () => ipcRenderer.invoke(channels.projectsRecent),

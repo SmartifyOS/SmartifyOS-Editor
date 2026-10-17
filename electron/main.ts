@@ -5,6 +5,7 @@ import { channels, type Rect, type Settings } from '../shared/api.ts';
 import type { AppReply } from '../shared/cli.ts';
 import { catalogExtensions } from './catalog.ts';
 import { cliEnv } from './cli/environment.ts';
+import { InstallJob } from './cli/install.ts';
 import { CliJob, runCli } from './cli/job.ts';
 import {
 	clearConsole,
@@ -176,6 +177,13 @@ function registerIpc(): void {
 		const cli = await cliStatus();
 		if (!cli.found) throw new Error(cli.reason);
 		return runCli(cli.path, args, { cwd: currentProject()?.path, env: await cliEnv() });
+	});
+	ipcMain.handle(channels.cliInstall, async () => {
+		const cli = await cliStatus(true);
+		if (cli.found || !cli.canInstall) throw new Error('There is nothing to install.');
+		const job = new InstallJob();
+		track(job, 'cli');
+		return job.id;
 	});
 
 	ipcMain.handle(channels.projectsRecent, () => recentProjects());

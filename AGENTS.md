@@ -22,7 +22,7 @@ It is for people doing something like programming for the first time. The CLI (t
 shared/              the IPC contract (api.ts) and the CLI's JSON protocol (cli.ts), used by both sides
 electron/main.ts     the window, the app:// protocol, the menu, every IPC handler
 electron/preload.ts  puts window.smartify on the page, nothing else
-electron/cli/        finding the CLI, running jobs with --json, the console
+electron/cli/        finding the CLI, installing it, running jobs with --json, the console
 electron/preview/    the live preview: session.ts runs `smartify-os run`, one embedder per system
 electron/native/     the koffi bindings, each loaded only on its own system
 electron/projects.ts the open project and the recent ones, read through the CLI
@@ -74,7 +74,7 @@ While the app runs, `state/bus.svelte.ts` follows its CAN bus through `preview.c
 
 ## This computer and the settings
 
-The first time the editor finds the CLI it runs `smartify-os setup` in the task dialog (Flutter unless there is one, PlatformIO if wanted), and remembers that it did (`setUp` in the store), however it went. After that it only asks `doctor` quietly, and the start screen says when something SmartifyOS cannot work without is missing. The settings page (`#/settings`, the gear in the title bar, Cmd+, or Ctrl+,) has the doctor first: every check, with a button for the ones a command puts right (`fix` in the CLI's report). A new setting goes into `Settings` in `shared/api.ts`, its default into `electron/settings.ts`, and a row into `settings/Settings.svelte`.
+When the editor finds no CLI at all it installs it, by itself and in the task dialog: `InstallJob` (`electron/cli/install.ts`) runs the CLI's own installer from smartify-os.com (`install.sh`, or `install.ps1` on Windows), which puts it where `findCli` looks first and on PATH for a terminal. It never installs over one pointed at with `SMARTIFY_OS_CLI`. The first time the editor finds the CLI it runs `smartify-os setup` in the task dialog (Flutter unless there is one, PlatformIO if wanted), and remembers that it did (`setUp` in the store), however it went. After that it only asks `doctor` quietly, and the start screen says when something SmartifyOS cannot work without is missing. The settings page (`#/settings`, the gear in the title bar, Cmd+, or Ctrl+,) has the doctor first: every check, with a button for the ones a command puts right (`fix` in the CLI's report). A new setting goes into `Settings` in `shared/api.ts`, its default into `electron/settings.ts`, and a row into `settings/Settings.svelte`.
 
 ## Creating a car
 

@@ -11,11 +11,6 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Button from './ui/Button.svelte';
 
-	const installCommand =
-		window.smartify.platform === 'win32'
-			? 'irm https://smartify-os.com/install.ps1 | iex'
-			: 'curl -fsSL https://smartify-os.com/install.sh | bash';
-
 	function ago(iso: string): string {
 		const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
 		if (minutes < 1) return 'just now';
@@ -40,18 +35,30 @@
 		{#if editor.cli && !editor.cli.found}
 			<div class="rounded-xl border border-warn/25 bg-warn/[0.07] p-4">
 				<div class="flex items-center gap-2 font-medium text-warn">
-					<TriangleAlert class="size-4" /> The SmartifyOS CLI is needed
+					<TriangleAlert class="size-4" /> SmartifyOS is not installed yet
 				</div>
-				<p class="mt-1.5 text-muted">
-					The editor does its work through the SmartifyOS CLI. Install it by running this in a
-					terminal, then come back here.
-				</p>
-				<code
-					class="selectable mt-3 block rounded-lg border border-line bg-bg px-3 py-2.5 font-mono text-[13px]"
-				>
-					{installCommand}
-				</code>
-				<Button size="sm" class="mt-3" onclick={() => editor.refreshCli()}>Check again</Button>
+				{#if editor.cli.canInstall}
+					<p class="mt-1.5 text-muted">
+						The editor builds your car's app with SmartifyOS. It installs it for you, and Flutter
+						with it if this computer does not have it.
+					</p>
+					<div class="mt-3 flex gap-2">
+						<Button
+							size="sm"
+							variant="primary"
+							disabled={editor.busy}
+							onclick={() => editor.installCli()}
+						>
+							Install SmartifyOS
+						</Button>
+						<Button size="sm" variant="ghost" onclick={() => editor.refreshCli()}>
+							Check again
+						</Button>
+					</div>
+				{:else}
+					<p class="selectable mt-1.5 text-muted">{editor.cli.reason}</p>
+					<Button size="sm" class="mt-3" onclick={() => editor.refreshCli()}>Check again</Button>
+				{/if}
 			</div>
 		{/if}
 
