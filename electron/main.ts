@@ -43,7 +43,7 @@ const isMac = process.platform === 'darwin';
 const iconPath = join(app.getAppPath(), 'resources', isMac ? 'icon-macos.png' : 'icon.png');
 
 // On Wayland no program may own another's window, which the live preview needs. Running the
-// editor through XWayland (and the app too, see preview/session.ts) keeps it possible.
+// editor through XWayland (and the app too, see preview/embed-x11.ts) keeps it possible.
 if (process.platform === 'linux') app.commandLine.appendSwitch('ozone-platform', 'x11');
 
 protocol.registerSchemesAsPrivileged([

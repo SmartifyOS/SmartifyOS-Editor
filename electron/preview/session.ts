@@ -15,6 +15,9 @@ import { createEmbedder, EmbedUnavailable, type Embedder, type Placement } from 
 /** Flutter prints one of these once the app is up and taking hot reloads. */
 const appIsUp = /Dart VM Service .* is available at|Flutter run key commands/;
 
+/** How long after the editor came to the front the app's window is checked on every frame. */
+const raiseForMs = 300;
+
 /** How long a stop may take before everything is killed. */
 const stopTimeoutMs = 5000;
 
@@ -27,6 +30,9 @@ export class PreviewSession {
 	private stopping = false;
 	private looking = false;
 	private poll: NodeJS.Timeout | undefined;
+	private raising: NodeJS.Timeout | undefined;
+	/** A sheet (a native dialog like choosing a folder) hangs over the editor. */
+	private sheet = false;
 	private viewport: Rect | null = null;
 	private current: PreviewState = { status: 'idle' };
 
@@ -40,16 +46,19 @@ export class PreviewSession {
 		}
 		host.on('enter-full-screen', replace);
 		host.on('leave-full-screen', replace);
-		// Clicking the editor brings it in front of the app's window, and macOS finishes doing
-		// so a moment after telling us. Asked again a little later to win that race.
-		host.on('focus', () => {
-			this.embedder?.raise();
-			for (const delay of [50, 200])
-				setTimeout(() => this.attached && this.embedder?.raise(), delay);
-		});
+		host.on('focus', () => this.raiseForAWhile());
 		host.on('minimize', () => this.embedder?.setVisible(false));
 		host.on('hide', () => this.embedder?.setVisible(false));
 		host.on('restore', () => this.showIfWanted());
+		// macOS only: the app's window would be in front of it.
+		host.on('sheet-begin', () => {
+			this.sheet = true;
+			this.embedder?.setVisible(false);
+		});
+		host.on('sheet-end', () => {
+			this.sheet = false;
+			this.showIfWanted();
+		});
 		host.on('show', () => this.showIfWanted());
 		host.webContents.on('zoom-changed', replace);
 	}
@@ -90,10 +99,10 @@ export class PreviewSession {
 
 		// Tells SmartifyOS it runs in the preview, so it leaves out its title bar and window
 		// buttons and lets the editor place it (see _initWindow in smartify_os_core).
-		const extra: Record<string, string> = { SMARTIFY_OS_EDITOR: '1' };
-		// The editor runs through XWayland on Linux (see main.ts), and the app has to as well,
-		// since only an X11 window can be taken into another X11 window.
-		if (process.platform === 'linux') extra.GDK_BACKEND = 'x11';
+		const extra: Record<string, string> = {
+			SMARTIFY_OS_EDITOR: '1',
+			...this.embedder?.appEnv()
+		};
 
 		writeConsole('preview', 'info', "Starting your car's app");
 		const job = new CliJob(cli.path, ['run'], {
@@ -227,8 +236,28 @@ export class PreviewSession {
 		this.showIfWanted();
 	}
 
+	/**
+	 * Internal: clicking the editor brings it in front of the app's window, and macOS may only
+	 * finish doing so a moment after telling us. Checked on every frame for a little while, so
+	 * the app is back in front before it can be seen gone.
+	 */
+	private raiseForAWhile(): void {
+		if (!this.attached) return;
+		this.embedder?.raise();
+		clearInterval(this.raising);
+		const until = Date.now() + raiseForMs;
+		this.raising = setInterval(() => {
+			if (!this.attached || Date.now() > until) {
+				clearInterval(this.raising);
+				this.raising = undefined;
+				return;
+			}
+			this.embedder?.raise();
+		}, 16);
+	}
+
 	private hostShown(): boolean {
-		return this.host.isVisible() && !this.host.isMinimized();
+		return this.host.isVisible() && !this.host.isMinimized() && !this.sheet;
 	}
 
 	private showIfWanted(): void {
@@ -265,6 +294,8 @@ export class PreviewSession {
 	private cleanUp(): void {
 		if (this.poll) clearInterval(this.poll);
 		this.poll = undefined;
+		clearInterval(this.raising);
+		this.raising = undefined;
 		this.embedder?.detach();
 		this.attached = false;
 		this.job = undefined;

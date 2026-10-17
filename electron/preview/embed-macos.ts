@@ -7,9 +7,14 @@ import { type Embedder, handleFromBuffer, type Placement } from './embedder.ts';
  * window and the editor lays it over the viewport: moved and sized with it, kept directly in
  * front of the editor, and hidden when the viewport is.
  *
- * Keeping it in front works from our side: AppKit lets an app order its own window relative
- * to any other window, so the editor puts itself directly behind the app's window whenever
- * something else got in between (the editor being clicked, most of all).
+ * Keeping it in front is the app's own job where it can: SmartifyOS core floats its window
+ * above every normal one while the editor or the app is in front, and puts it back directly
+ * above the editor's window otherwise, so clicking the editor never covers it. It learns who
+ * the editor is from {@link appEnv}.
+ *
+ * For an app on an older core the editor does it from its side: AppKit lets an app order its
+ * own window relative to any other window, so the editor puts itself directly behind the app's
+ * window whenever something else got in between (the editor being clicked, most of all).
  *
  * Moving another program's window needs the Accessibility permission, asked for once.
  */
@@ -22,6 +27,8 @@ export class MacEmbedder implements Embedder {
 	private readonly host: { window: bigint; number: number };
 	private visible = true;
 	private last: Placement['screen'] | undefined;
+	/** Where the window was last put, so only what changed is sent (every call waits on the app). */
+	private applied: Placement['screen'] | undefined;
 	private asked = false;
 
 	constructor(host: BrowserWindow) {
@@ -41,6 +48,13 @@ export class MacEmbedder implements Embedder {
 		};
 	}
 
+	appEnv(): Record<string, string> {
+		return {
+			SMARTIFY_OS_EDITOR_PID: String(process.pid),
+			SMARTIFY_OS_EDITOR_WINDOW: String(this.host.number)
+		};
+	}
+
 	attach(pids: number[]): boolean {
 		const api = macos();
 		for (const pid of pids) {
@@ -52,6 +66,7 @@ export class MacEmbedder implements Embedder {
 			this.window = chosen;
 			this.number = chosen === undefined ? undefined : api.windowNumber(chosen);
 			this.pid = pid;
+			this.applied = undefined;
 			if (this.last) this.place({ screen: this.last, client: this.last });
 			this.setVisible(this.visible);
 			return true;
@@ -66,8 +81,18 @@ export class MacEmbedder implements Embedder {
 	place(placement: Placement): void {
 		this.last = placement.screen;
 		if (!this.window || !this.visible) return;
-		const { x, y, width, height } = placement.screen;
-		macos().setFrame(this.window, x, y, width, height);
+		const frame = placement.screen;
+		const before = this.applied;
+		const moved = before?.x !== frame.x || before.y !== frame.y;
+		const resized = before?.width !== frame.width || before.height !== frame.height;
+		if (!moved && !resized) return;
+		const api = macos();
+		// Size before and after moving: a window can not always move where its old size would
+		// reach off the screen, and can not always grow before it has moved.
+		if (resized) api.setSize(this.window, frame.width, frame.height);
+		if (moved) api.setPosition(this.window, frame.x, frame.y);
+		if (moved && resized) api.setSize(this.window, frame.width, frame.height);
+		this.applied = frame;
 	}
 
 	setVisible(visible: boolean): void {
@@ -84,9 +109,15 @@ export class MacEmbedder implements Embedder {
 	raise(): void {
 		if (!this.window || this.number === undefined || !this.visible) return;
 		const api = macos();
+		// Floating, so the app keeps itself in front (see above).
+		if (api.layerOf(this.number) > 0) return;
 		// Nothing to do while it already is directly in front of the editor.
 		if (api.windowsAbove(this.host.number).at(-1) === this.number) return;
-		api.raise(this.window);
+		// A click into the editor puts it in front of the app's window, which is then directly
+		// behind it. Swapping the two back is one call to the window server, much quicker than
+		// raising the app's window, which waits on the app. Only needed when something else
+		// came in between.
+		if (api.windowsBelow(this.host.number)[0] !== this.number) api.raise(this.window);
 		api.orderBelow(this.host.window, this.number);
 	}
 
@@ -95,5 +126,6 @@ export class MacEmbedder implements Embedder {
 		this.window = undefined;
 		this.number = undefined;
 		this.pid = undefined;
+		this.applied = undefined;
 	}
 }

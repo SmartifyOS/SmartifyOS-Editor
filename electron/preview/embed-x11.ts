@@ -25,6 +25,12 @@ export class X11Embedder implements Embedder {
 		return undefined;
 	}
 
+	appEnv(): Record<string, string> {
+		// The editor runs through XWayland (see main.ts), and the app has to as well, since only
+		// an X11 window can be taken into another X11 window.
+		return { GDK_BACKEND: 'x11' };
+	}
+
 	attach(pids: number[]): boolean {
 		const wanted = new Set(pids);
 		const found = x11()

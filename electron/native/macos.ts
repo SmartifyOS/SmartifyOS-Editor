@@ -16,6 +16,9 @@ export const kAXErrorSuccess = 0;
 export const kAXErrorInvalidUIElement = -25202;
 export const kAXErrorAPIDisabled = -25211;
 const kCGWindowListOptionOnScreenAboveWindow = 1 << 1;
+const kCGWindowListOptionOnScreenBelowWindow = 1 << 2;
+const kCGWindowListOptionIncludingWindow = 1 << 3;
+const kCFNumberIntType = 9;
 const NSWindowBelow = -1;
 
 type Ref = bigint;
@@ -39,6 +42,10 @@ function load() {
 	const CFArrayGetValueAtIndex = cf.func('void *CFArrayGetValueAtIndex(void *array, long index)');
 	const CFRetain = cf.func('void *CFRetain(void *cf)');
 	const CFRelease = cf.func('void CFRelease(void *cf)');
+	const CFDictionaryGetValue = cf.func('void *CFDictionaryGetValue(void *dict, void *key)');
+	const CFNumberGetValue = cf.func(
+		'bool CFNumberGetValue(void *number, long type, _Out_ int32_t *value)'
+	);
 	const booleanTrue = koffi.decode(cf.symbol('kCFBooleanTrue'), 'void *') as Ref;
 	const booleanFalse = koffi.decode(cf.symbol('kCFBooleanFalse'), 'void *') as Ref;
 
@@ -65,6 +72,10 @@ function load() {
 	const CGWindowListCreate = cg.func(
 		'void *CGWindowListCreate(uint32_t option, uint32_t relativeTo)'
 	);
+	const CGWindowListCopyWindowInfo = cg.func(
+		'void *CGWindowListCopyWindowInfo(uint32_t option, uint32_t relativeTo)'
+	);
+	const windowLayerKey = koffi.decode(cg.symbol('kCGWindowLayer'), 'void *') as Ref;
 
 	// Our own window is ordered with AppKit, which takes Objective-C messages.
 	const objc = koffi.load('/usr/lib/libobjc.A.dylib');
@@ -101,6 +112,22 @@ function load() {
 		const buffer = ['\0'.repeat(256)];
 		if (!CFStringGetCString(ref, buffer, 256, kCFStringEncodingUTF8)) return '';
 		return (buffer[0] ?? '').replace(/\0.*$/s, '');
+	}
+
+	function windowList(option: number, number: number): number[] {
+		const list = CGWindowListCreate(option, number) as Ref | null;
+		if (!list) return [];
+		try {
+			const count = Number(CFArrayGetCount(list));
+			const ids: number[] = [];
+			// The array holds the numbers themselves where an array would hold pointers.
+			for (let index = 0; index < count; index++) {
+				ids.push(Number(CFArrayGetValueAtIndex(list, index) as Ref));
+			}
+			return ids;
+		} finally {
+			CFRelease(list);
+		}
 	}
 
 	return {
@@ -145,18 +172,20 @@ function load() {
 			return error !== kAXErrorInvalidUIElement && error !== kAXErrorAPIDisabled;
 		},
 
-		setFrame(element: Ref, x: number, y: number, width: number, height: number): number {
+		setPosition(element: Ref, x: number, y: number): number {
 			const position = AXValueCreatePoint(kAXValueCGPointType, { x, y }) as Ref;
-			const size = AXValueCreateSize(kAXValueCGSizeType, { width, height }) as Ref;
 			try {
-				// Size before and after: a window can not always move where its old size would
-				// reach off the screen, and can not always grow before it has moved.
-				AXUIElementSetAttributeValue(element, name('AXSize'), size);
-				const error = AXUIElementSetAttributeValue(element, name('AXPosition'), position) as number;
-				AXUIElementSetAttributeValue(element, name('AXSize'), size);
-				return error;
+				return AXUIElementSetAttributeValue(element, name('AXPosition'), position) as number;
 			} finally {
 				CFRelease(position);
+			}
+		},
+
+		setSize(element: Ref, width: number, height: number): number {
+			const size = AXValueCreateSize(kAXValueCGSizeType, { width, height }) as Ref;
+			try {
+				return AXUIElementSetAttributeValue(element, name('AXSize'), size) as number;
+			} finally {
 				CFRelease(size);
 			}
 		},
@@ -193,17 +222,27 @@ function load() {
 		 * The windows on screen in front of `number`, front to back. Only numbers: reading
 		 * them needs no permission.
 		 */
-		windowsAbove(number: number): number[] {
-			const list = CGWindowListCreate(kCGWindowListOptionOnScreenAboveWindow, number) as Ref | null;
-			if (!list) return [];
+		windowsAbove: (number: number) => windowList(kCGWindowListOptionOnScreenAboveWindow, number),
+
+		/** The windows on screen behind `number`, front to back. */
+		windowsBelow: (number: number) => windowList(kCGWindowListOptionOnScreenBelowWindow, number),
+
+		/**
+		 * The level a window is shown at: 0 for normal windows, higher for floating ones (3)
+		 * and the menu bar. Needs no permission either.
+		 */
+		layerOf(number: number): number {
+			const list = CGWindowListCopyWindowInfo(
+				kCGWindowListOptionIncludingWindow,
+				number
+			) as Ref | null;
+			if (!list) return 0;
 			try {
-				const count = Number(CFArrayGetCount(list));
-				const ids: number[] = [];
-				// The array holds the numbers themselves where an array would hold pointers.
-				for (let index = 0; index < count; index++) {
-					ids.push(Number(CFArrayGetValueAtIndex(list, index) as Ref));
-				}
-				return ids;
+				if (Number(CFArrayGetCount(list)) === 0) return 0;
+				const info = CFArrayGetValueAtIndex(list, 0) as Ref;
+				const layer = CFDictionaryGetValue(info, windowLayerKey) as Ref | null;
+				const out = [0];
+				return layer && CFNumberGetValue(layer, kCFNumberIntType, out) ? (out[0] as number) : 0;
 			} finally {
 				CFRelease(list);
 			}

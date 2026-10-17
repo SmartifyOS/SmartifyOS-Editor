@@ -27,6 +27,8 @@ export interface Embedder {
 	 * like a permission not given yet. Asked again on every try, so it can clear up.
 	 */
 	blocker(): { message: string; hint?: string } | undefined;
+	/** What the app has to be started with to work with this, added to its environment. */
+	appEnv(): Record<string, string>;
 	/**
 	 * Looks for the app's window among these processes and takes it in.
 	 * @returns false while no window has turned up yet.

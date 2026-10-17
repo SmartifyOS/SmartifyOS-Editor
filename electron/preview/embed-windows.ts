@@ -42,6 +42,10 @@ export class WindowsEmbedder implements Embedder {
 		return undefined;
 	}
 
+	appEnv(): Record<string, string> {
+		return {};
+	}
+
 	attach(pids: number[]): boolean {
 		const api = win32();
 		const wanted = new Set(pids);
