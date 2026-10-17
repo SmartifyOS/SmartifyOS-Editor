@@ -27,6 +27,8 @@
 	let menuOpen = $state(false);
 	const onSettings = $derived(page.route.id === '/settings');
 	let exportOpen = $state(false);
+	let projectMenu = $state<HTMLElement>();
+	let exportMenu = $state<HTMLElement>();
 
 	const others = $derived(editor.recent.filter((p) => p.path !== editor.project?.path).slice(0, 8));
 	const status = $derived(editor.preview.status);
@@ -51,7 +53,9 @@
 <header
 	class={[
 		// 48px of content and its 1px border, centered on the macOS window buttons.
-		'relative flex h-[49px] shrink-0 items-center gap-1 border-b border-line bg-bg drag',
+		'relative flex h-[49px] shrink-0 items-center gap-1 border-b border-line bg-bg',
+		// A click on a drag area never reaches the page, so it could not close an open menu.
+		menuOpen || exportOpen ? 'no-drag' : 'drag',
 		platform === 'darwin' ? 'pr-3 pl-[84px]' : 'pr-36 pl-3'
 	]}
 >
@@ -60,7 +64,7 @@
 	{#if onSettings}
 		<span class="text-sm font-medium">Settings</span>
 	{:else if editor.project}
-		<div class="relative">
+		<div class="relative" bind:this={projectMenu}>
 			<Button
 				variant="ghost"
 				size="sm"
@@ -75,7 +79,7 @@
 			{#if menuOpen}
 				<div
 					{@attach coversViewport}
-					{@attach clickOutside(() => (menuOpen = false))}
+					{@attach clickOutside(() => (menuOpen = false), projectMenu)}
 					class="absolute top-10 left-0 z-50 w-[22rem] rounded-xl p-1 shadow-float glass no-drag"
 				>
 					{#if others.length > 0}
@@ -149,7 +153,7 @@
 	<div class="flex-1"></div>
 
 	{#if editor.project && !onSettings}
-		<div class="relative">
+		<div class="relative" bind:this={exportMenu}>
 			<Button
 				size="sm"
 				aria-expanded={exportOpen}
@@ -163,7 +167,7 @@
 			{#if exportOpen}
 				<div
 					{@attach coversViewport}
-					{@attach clickOutside(() => (exportOpen = false))}
+					{@attach clickOutside(() => (exportOpen = false), exportMenu)}
 					class="absolute top-10 right-0 z-50 w-[19rem] rounded-xl p-1 shadow-float glass no-drag"
 				>
 					{#each exportable as choice (choice.label)}

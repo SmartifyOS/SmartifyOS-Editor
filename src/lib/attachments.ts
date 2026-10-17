@@ -14,11 +14,15 @@ export const coversViewport: Attachment = () => {
 	};
 };
 
-/** Calls `onOutside` when a click lands outside the element, for menus. */
-export function clickOutside(onOutside: () => void): Attachment<HTMLElement> {
+/**
+ * Calls `onOutside` when a click lands outside the element, for menus. `inside` widens what
+ * counts as inside, to the button that opens the menu as well, so a click on that button
+ * only closes the menu instead of closing it and opening it again.
+ */
+export function clickOutside(onOutside: () => void, inside?: HTMLElement): Attachment<HTMLElement> {
 	return (element) => {
 		const handler = (event: PointerEvent) => {
-			if (!element.contains(event.target as Node)) onOutside();
+			if (!(inside ?? element).contains(event.target as Node)) onOutside();
 		};
 		// On the next tick, so the click that opened the menu does not close it again.
 		const timer = setTimeout(() => window.addEventListener('pointerdown', handler, true));
