@@ -1,7 +1,7 @@
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { createInterface } from 'node:readline';
-import type { CliEvent, ResultEvent } from '../../shared/cli.ts';
+import type { AppReply, CliEvent, ResultEvent } from '../../shared/cli.ts';
 import { killTree } from '../system/processes.ts';
 
 /**
@@ -29,6 +29,9 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 	readonly result: Promise<ResultEvent>;
 	private readonly child: ChildProcessWithoutNullStreams;
 	private finished = false;
+	private nextCall = 0;
+	/** The calls into the running app waiting for their reply, by id. */
+	private readonly calls = new Map<string, (reply: AppReply) => void>();
 
 	constructor(cliPath: string, args: string[], options: JobOptions = {}) {
 		super();
@@ -50,6 +53,12 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 		createInterface({ input: this.child.stdout }).on('line', (line) => {
 			const event = parseEvent(line);
 			if (event.type === 'result') result = event;
+			if (event.type === 'reply' && event.id !== null) {
+				const resolve = this.calls.get(event.id);
+				this.calls.delete(event.id);
+				resolve?.(event.ok ? { ok: true, data: event.data } : { ok: false, error: event.error });
+				return;
+			}
 			this.emit('event', event);
 		});
 		// In JSON mode the CLI prints nothing to stderr, so anything there is worth showing.
@@ -61,6 +70,10 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 			const finish = (exitCode: number, message?: string) => {
 				if (this.finished) return;
 				this.finished = true;
+				for (const resolve of this.calls.values()) {
+					resolve({ ok: false, error: "Your car's app has stopped." });
+				}
+				this.calls.clear();
 				if (result) return resolve(result);
 				// It ended without saying how, a crash or a kill.
 				const event: ResultEvent = {
@@ -105,6 +118,21 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 	/** Types into the tool the CLI is running, like `r` into `flutter run`. */
 	input(text: string): void {
 		this.send({ input: text });
+	}
+
+	/**
+	 * Asks the car's app something while `run` runs it, see `call` in the CLI's README.
+	 * Resolves with its reply, or why there is none.
+	 */
+	call(name: string, params: Record<string, unknown> = {}): Promise<AppReply> {
+		if (this.finished)
+			return Promise.resolve({ ok: false, error: "Your car's app is not running." });
+		this.nextCall += 1;
+		const id = `call${this.nextCall}`;
+		return new Promise((resolve) => {
+			this.calls.set(id, resolve);
+			this.send({ call: name, params, id });
+		});
 	}
 
 	/** Stops it and everything it started, at once. */

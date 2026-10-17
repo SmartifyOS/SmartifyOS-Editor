@@ -11,7 +11,7 @@ It is for people doing something like programming for the first time. The CLI (t
 - **Electron** for the window on macOS, Windows and Linux.
 - **SvelteKit** (Svelte 5, runes only) for the window, as a static single page with the hash router, served by Electron from `app://editor/`.
 - **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only: near black surfaces edge to edge, hairline borders of white at a few percent, rounded controls with a faint top highlight, glass for menus and dialogs. Text is 14px and controls 32 to 36px tall; nothing smaller than 12px.
-- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices and `ui/Switch.svelte` for on and off.
+- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices, `ui/Switch.svelte` for on and off and `ui/TextField.svelte` for a line of text (taken on Enter or when left, not on every key).
 - **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. A brand's own logo comes from the `logos` set (`~icons/logos/visual-studio-code`). Never draw an icon by hand.
 - **koffi** for the few native calls the live preview needs (Win32, Xlib, macOS Accessibility). The only runtime dependency.
 - **Bun** for installing, scripts and the dev runner. **esbuild** bundles the main process and preload. **electron-builder** packages.
@@ -33,6 +33,7 @@ resources/           the app icons, made from icon-source.png by scripts/make-ic
 src/lib/state/       the window's reactive state (editor.svelte.ts), the only user of window.smartify
 src/lib/commands.ts  every CLI command the window runs on the car, with its arguments
 src/lib/exports.ts   what the Export menu (and the inspector) can put on a USB stick
+src/lib/look.ts      the built-in layouts, themes, bars and ways to draw the car, a copy of the CLI's
 shared/next-steps.ts the editor's words for the steps the CLI suggests after a command
 electron/catalog.ts  the recommended extensions, catalog/extensions.json for now
 src/lib/components/  the panels, the title bar, the start screen, the dialogs, settings/
@@ -53,6 +54,10 @@ What the CLI says to do next comes as `data.steps` on a `note`, each with a `kin
 The add extension dialog lists the extensions the editor recommends, from `catalog.extensions()`. They ship with the editor in `electron/catalog/extensions.json` (a GitHub address, a title and a description each), until the list moves to a server where people can send in their own.
 
 Opening in VS Code looks where its installers put it on every system before PATH, since `code` is not on PATH by default. When it is not there, `VsCodeDialog` links the download and the VS Code extensions worth adding.
+
+## How the car looks
+
+The inspector edits how the car looks (layout, theme, driver's side, bar, the 3D model, drawing or picture) and its About page, in `CarLook.svelte` with its state in `state/look.svelte.ts`. Two sources: `lib/main.dart`, read with `appearance --show` and written by `appearance` and `about` (which is what lasts), and the running app, asked through `preview.call` (`describe`, `configure`, see `call` in the CLI's README) for its own layouts and themes and to show a change at once. A change goes to the running app first and is then written by the CLI, one at a time, with no task dialog. A new picture of the car only shows after a hot restart, which the editor does by itself. Something new the editor should change live is a parameter of `configure` in core's `EditorBridge` first, then a flag of a CLI command.
 
 ## This computer and the settings
 

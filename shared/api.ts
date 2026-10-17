@@ -1,4 +1,4 @@
-import type { CarInfo, CliEvent, DeviceInfo, ResultEvent } from './cli.ts';
+import type { AppReply, CarInfo, CliEvent, DeviceInfo, ResultEvent } from './cli.ts';
 
 /**
  * The contract between the main process and the window: what the preload script puts on
@@ -162,6 +162,11 @@ export interface SmartifyApi {
 		reload(): void;
 		/** Hot restart, what `R` does in the terminal. */
 		restart(): void;
+		/**
+		 * Asks the running app something (`describe`, `configure`), see `call` in the CLI's
+		 * README. Resolves with why not when it is not running.
+		 */
+		call(name: string, params?: Record<string, unknown>): Promise<AppReply>;
 		/** Where the viewport is, or null while it is hidden (a dialog over it, another page). */
 		setViewport(rect: Rect | null): void;
 		state(): Promise<PreviewState>;
@@ -232,6 +237,7 @@ export const channels = {
 	previewStop: 'preview:stop',
 	previewReload: 'preview:reload',
 	previewRestart: 'preview:restart',
+	previewCall: 'preview:call',
 	previewViewport: 'preview:viewport',
 	previewState: 'preview:state',
 	previewStateChanged: 'preview:state-changed',

@@ -46,10 +46,15 @@ export type CliEvent =
 	| PromptEvent
 	| { type: 'prompt-invalid'; id: string; message: string }
 	| { type: 'output'; stream: 'stdout' | 'stderr'; text: string }
+	| { type: 'reply'; id: string | null; ok: true; data: unknown }
+	| { type: 'reply'; id: string | null; ok: false; error: string }
 	| { type: 'result'; ok: true; exitCode: number; data: unknown }
 	| { type: 'result'; ok: false; exitCode: number; error: ErrorPayload };
 
 export type ResultEvent = Extract<CliEvent, { type: 'result' }>;
+
+/** What the running app answered to a `call`, while `run` runs it. */
+export type AppReply = { ok: true; data: unknown } | { ok: false; error: string };
 
 /** Whatever `extension list --json` returns as data, the parts the app uses. */
 export interface PackageInfo {
@@ -143,4 +148,69 @@ export interface DoctorReport {
 	errors: number;
 	warnings: number;
 	checks: DoctorCheck[];
+}
+
+/** What sits in the bar, by the name of its `BarContent` constructor. */
+export type BarChoice = 'infoDisplay' | 'dock' | 'infoDisplayAndDock';
+
+/** The ways a car can be drawn, by their names in `CarLook`. */
+export type CarLookName = 'model3D' | 'drawing2D' | 'image';
+
+/** What the About page says about the car, as `appearance` and `about` report it. */
+export interface AboutInfo {
+	/** What the car is called, null when it is written as code. */
+	name: string | null;
+	model: string | null;
+	extra: Record<string, string>;
+}
+
+/** How the car's app looks, as `appearance` reads it from `lib/main.dart`. */
+export interface Appearance {
+	/** The layout it starts with, null when it is written as code (see `code`). */
+	layout: string | null;
+	/** The theme every layout wears until the driver picks one, null for each layout's own. */
+	theme: string | null;
+	driverSide: 'left' | 'right' | null;
+	bar: BarChoice | null;
+	/** The pictures of the car, as paths inside the app, and which it starts with. */
+	car: Record<CarLookName, string | null> & { look: CarLookName | null };
+	about: AboutInfo;
+	/** Settings written as code the CLI cannot read, as written: `{ layout: 'myLayout' }`. */
+	code: Record<string, string>;
+}
+
+/** What `appearance` returns, `--show` included. */
+export interface AppearanceResult {
+	changed: boolean;
+	appearance: Appearance;
+	/** What has no clear place in `lib/main.dart`, as the line to add by hand. */
+	manual: string[];
+	/** The pictures copied into the app. */
+	assets: string[];
+	/** The running app only shows it after a restart. */
+	restart: boolean;
+}
+
+/** What `about` returns, `--show` included. */
+export interface AboutResult {
+	changed: boolean;
+	about: AboutInfo;
+	manual: string[];
+}
+
+/** What the running app answers to `describe` and `configure`. */
+export interface AppDescription {
+	layouts: { id: string; title: string; description: string | null; theme: string | null }[];
+	layout: { default: string | null; picked: string | null; current: string | null };
+	themes: { id: string; title: string }[];
+	theme: { default: string | null; picked: string | null; current: string };
+	driverSide: 'left' | 'right';
+	bar: BarChoice | 'custom';
+	car: {
+		looks: CarLookName[];
+		default: CarLookName | null;
+		picked: CarLookName | null;
+		current: CarLookName | null;
+	};
+	about: { deviceName: string; model: string | null; extra: Record<string, string> };
 }

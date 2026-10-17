@@ -27,7 +27,7 @@
 >
 	<select
 		bind:value
-		class="h-full cursor-default appearance-none bg-transparent pr-8 pl-2.5 text-fg outline-none"
+		class="h-full w-full min-w-0 cursor-default appearance-none truncate bg-transparent pr-8 pl-2.5 text-fg outline-none"
 	>
 		{#each options as option (option.value)}
 			<option value={option.value}>{option.label}</option>

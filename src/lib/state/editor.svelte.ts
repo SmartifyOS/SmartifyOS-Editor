@@ -9,6 +9,7 @@ import type {
 	UpdateState
 } from '../../../shared/api.ts';
 import type {
+	AppReply,
 	CliEvent,
 	CoreUpdateCheck,
 	ExtensionUpdates,
@@ -361,6 +362,16 @@ class Editor {
 		const result = await window.smartify.vscode.open(folder, file);
 		if (result.ok) this.vscodeDialog = undefined;
 		else this.vscodeDialog = { folder, file, message: result.missing ? undefined : result.message };
+	}
+
+	/** Runs a command quietly that asks nothing and changes nothing, undefined when it could not. */
+	async queryCli(args: string[]): Promise<ResultEvent | undefined> {
+		return await window.smartify.cli.query(args).catch(() => undefined);
+	}
+
+	/** Asks the running app something, see `call` in the CLI's README. */
+	async callApp(name: string, params?: Record<string, unknown>): Promise<AppReply> {
+		return await window.smartify.preview.call(name, $state.snapshot(params));
 	}
 
 	/**

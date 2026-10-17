@@ -17,6 +17,7 @@
 	import type { Component } from 'svelte';
 	import type { CliEvent } from '../../../shared/cli.ts';
 	import { coversViewport } from '#lib/attachments.ts';
+	import { layouts } from '#lib/look.ts';
 	import { editor, type Problem } from '#lib/state/editor.svelte.ts';
 	import Button from './ui/Button.svelte';
 	import Select from './ui/Select.svelte';
@@ -45,19 +46,6 @@
 		return shots[`../assets/new-car/${layout}-${side}-${shotBar[bar]}.webp`];
 	}
 
-	// The same choices `smartify-os create` offers, and in the same words.
-	const layouts = [
-		{
-			id: 'classic',
-			label: 'Classic',
-			hint: 'The car filling the screen, cards sliding in above it'
-		},
-		{ id: 'split', label: 'Split', hint: 'The car in a panel, widgets next to it' },
-		{ id: 'sidebar', label: 'Sidebar', hint: "A bar down the driver's side, next to open apps" },
-		{ id: 'tiles', label: 'Tiles', hint: "A grid of widgets like a phone's, and a dock" },
-		{ id: 'focus', label: 'Focus', hint: 'The speed, big, and very little else' },
-		{ id: 'portrait', label: 'Portrait', hint: 'For a screen standing upright' }
-	];
 	const sides: { id: Side; label: string; hint: string }[] = [
 		{ id: 'left', label: 'Left', hint: 'Most of the world' },
 		{ id: 'right', label: 'Right', hint: 'The UK, Ireland, Japan, Australia, India and others' }

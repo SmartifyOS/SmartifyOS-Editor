@@ -1,5 +1,6 @@
 import { type BrowserWindow, screen } from 'electron';
 import type { PreviewState, Rect } from '../../shared/api.ts';
+import type { AppReply } from '../../shared/cli.ts';
 import { cliEnv } from '../cli/environment.ts';
 import { CliJob } from '../cli/job.ts';
 import { track, writeConsole } from '../cli/jobs.ts';
@@ -219,6 +220,14 @@ export class PreviewSession {
 
 	restart(): void {
 		this.job?.input('R');
+	}
+
+	/** Asks the running app something, see `call` in the CLI's README. */
+	call(name: string, params?: Record<string, unknown>): Promise<AppReply> {
+		if (!this.job?.running || !this.appUp) {
+			return Promise.resolve({ ok: false, error: "Your car's app is not running." });
+		}
+		return this.job.call(name, params);
 	}
 
 	/** Stops at once, for when the editor closes. */

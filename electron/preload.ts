@@ -50,6 +50,7 @@ const api: SmartifyApi = {
 		stop: () => ipcRenderer.invoke(channels.previewStop),
 		reload: () => ipcRenderer.send(channels.previewReload),
 		restart: () => ipcRenderer.send(channels.previewRestart),
+		call: (name, params) => ipcRenderer.invoke(channels.previewCall, name, params),
 		setViewport: (rect) => ipcRenderer.send(channels.previewViewport, rect),
 		state: () => ipcRenderer.invoke(channels.previewState),
 		onState: (listener) => subscribe(channels.previewStateChanged, listener)

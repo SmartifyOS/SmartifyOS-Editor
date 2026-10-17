@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import { look } from '#lib/state/look.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import CarPanel from './CarPanel.svelte';
 	import ConsolePanel from './ConsolePanel.svelte';
@@ -9,6 +10,16 @@
 	import Viewport from './Viewport.svelte';
 
 	/** The editor's areas around the live preview, laid out like Unity's. */
+
+	// How the car looks, read again whenever the car is (a task may have changed it), and what
+	// the running app has to offer.
+	$effect(() => {
+		if (editor.project) void look.read();
+	});
+	$effect(() => {
+		if (editor.preview.status === 'running') void look.describe();
+		else look.forgetApp();
+	});
 
 	const left = remembered('layout.left', 272);
 	const right = remembered('layout.right', 312);

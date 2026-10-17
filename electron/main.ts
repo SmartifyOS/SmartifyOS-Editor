@@ -2,6 +2,7 @@ import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, screen, shell } from 'electron';
 import { channels, type Rect, type Settings } from '../shared/api.ts';
+import type { AppReply } from '../shared/cli.ts';
 import { catalogExtensions } from './catalog.ts';
 import { cliEnv } from './cli/environment.ts';
 import { CliJob, runCli } from './cli/job.ts';
@@ -218,6 +219,12 @@ function registerIpc(): void {
 	ipcMain.handle(channels.previewStop, () => preview?.stop());
 	ipcMain.on(channels.previewReload, () => preview?.reload());
 	ipcMain.on(channels.previewRestart, () => preview?.restart());
+	ipcMain.handle(
+		channels.previewCall,
+		(_event, name: string, params?: Record<string, unknown>): Promise<AppReply> =>
+			preview?.call(name, params) ??
+			Promise.resolve({ ok: false, error: "Your car's app is not running." })
+	);
 	ipcMain.on(channels.previewViewport, (_event, rect: Rect | null) => preview?.setViewport(rect));
 	ipcMain.handle(channels.previewState, () => preview?.state ?? { status: 'idle' });
 

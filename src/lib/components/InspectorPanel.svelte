@@ -15,13 +15,14 @@
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
+	import CarLook from './CarLook.svelte';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
 
 	/**
 	 * What is picked in the car panel, and what can be done with it: the car as a whole, its
-	 * SmartifyOS or an extension, or a device. Later this is where their settings are edited,
-	 * with the change showing in the preview.
+	 * SmartifyOS or an extension, or a device. How the car looks is edited here too, with the
+	 * change showing in the preview.
 	 */
 
 	type Package = PackageInfo & { switchedOn?: boolean | null; core: boolean };
@@ -91,6 +92,8 @@
 {#snippet carView()}
 	{#if project}
 		{@render heading(project.name, project.path)}
+
+		<CarLook />
 
 		{#snippet updateList()}
 			{#if !updates}

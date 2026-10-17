@@ -1,4 +1,5 @@
-import type { DoctorCheck } from '../../shared/cli.ts';
+import type { BarChoice, CarLookName, DoctorCheck } from '../../shared/cli.ts';
+import { carLooks } from './look.ts';
 import type { TaskSpec } from './state/task.svelte.ts';
 
 /**
@@ -74,6 +75,58 @@ export const commands = {
 	})
 };
 
+/** A change to how the car looks, as the inspector makes it. Anything left out stays. */
+export interface LookChange {
+	layout?: string;
+	/** Null is each layout wearing its own. */
+	theme?: string | null;
+	driverSide?: 'left' | 'right';
+	bar?: BarChoice;
+	/** A file on this computer, or null to take that picture of the car out. */
+	files?: Partial<Record<CarLookName, string | null>>;
+	/** Null is the first picture there is. */
+	look?: CarLookName | null;
+	name?: string;
+	/** Empty leaves it out. */
+	model?: string;
+	/** Rows of the About page by label, an empty value takes one off. */
+	extra?: Record<string, string>;
+}
+
+/**
+ * The commands that write a {@link LookChange} into `lib/main.dart`, run without the task
+ * dialog: `appearance`, `about`, or both. Data: `AppearanceResult` and `AboutResult`.
+ */
+export function lookCommands(change: LookChange): { appearance?: string[]; about?: string[] } {
+	const appearance: string[] = [];
+	if (change.layout !== undefined) appearance.push('--layout', change.layout);
+	if (change.theme !== undefined) appearance.push('--theme', change.theme ?? 'none');
+	if (change.driverSide !== undefined) appearance.push('--driver-side', change.driverSide);
+	if (change.bar !== undefined) {
+		const flag = { infoDisplay: 'info-display', dock: 'dock', infoDisplayAndDock: 'both' };
+		appearance.push('--bar', flag[change.bar]);
+	}
+	for (const look of carLooks) {
+		const file = change.files?.[look.id];
+		if (file !== undefined) appearance.push(`--${look.flag}`, file ?? 'none');
+	}
+	if (change.look !== undefined) {
+		appearance.push('--look', carLooks.find((look) => look.id === change.look)?.flag ?? 'first');
+	}
+
+	const about: string[] = [];
+	if (change.name !== undefined) about.push('--name', change.name);
+	if (change.model !== undefined) about.push('--car', change.model);
+	for (const [label, value] of Object.entries(change.extra ?? {})) {
+		about.push('--extra', `${label}=${value}`);
+	}
+
+	return {
+		...(appearance.length > 0 ? { appearance: ['appearance', ...appearance] } : {}),
+		...(about.length > 0 ? { about: ['about', ...about] } : {})
+	};
+}
+
 /** Commands about this computer rather than the car. */
 export const computerCommands = {
 	/** Installs Flutter unless there is one, asks about PlatformIO, then checks everything. */
@@ -97,5 +150,7 @@ export const checks = {
 	/** Data: `ExtensionUpdates`. */
 	extensions: ['extension', 'update', '--check'],
 	/** Data: `DoctorReport`, or the same as `error.details` when something is missing. */
-	computer: ['doctor']
+	computer: ['doctor'],
+	/** Data: `AppearanceResult`, how the car looks and its About page. */
+	appearance: ['appearance', '--show']
 };
