@@ -4,6 +4,11 @@
 			"url": "https://github.com/Mauznemo/smartify_os_android_auto",
 			"title": "Android Auto",
 			"description": "Your phone's apps on the car's screen. Plug the phone in, or connect it over Bluetooth."
+		},
+		{
+			"url": "https://github.com/Mauznemo/smartify_os_voice_assistant",
+			"title": "Voice assistant",
+			"description": "Say what you want and the car does it and answers. Works without the internet, and you can teach it your own commands."
 		}
 	]
 }
