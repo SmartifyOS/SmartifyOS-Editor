@@ -20,6 +20,7 @@
 	/**
 	 * A settings page of the car's own in the inspector: the page itself, and its rows, each
 	 * changed with the CLI's `settings` commands. The running app shows the page as it changes.
+	 * One written some other way than the CLI writes them is only shown, and changed in VS Code.
 	 */
 
 	let { page }: { page: SettingsPageInfo } = $props();
@@ -66,7 +67,8 @@
 	{#if !page.registered}
 		<p class="flex items-start gap-2 text-[13px] text-warn">
 			<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
-			lib/main.dart does not hand it to SmartifyOS, so your app does not have it.
+			Nothing in your app hands it to SmartifyOS yet, so your app does not have it. It usually goes in
+			lib/main.dart.
 		</p>
 	{/if}
 	{#if running}
@@ -129,7 +131,27 @@
 		{/each}
 	</div>
 {/snippet}
-{@render section('Page', pageFields)}
+{#snippet pageWritten()}
+	<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-[13px]">
+		<span class="text-muted">Name</span>
+		<span class={['truncate', page.title === null && 'text-faint']}>
+			{page.title ?? 'Set in code'}
+		</span>
+		{#if page.subtitle}
+			<span class="text-muted">Under it</span>
+			<span class="truncate">{page.subtitle}</span>
+		{/if}
+		<span class="text-muted">Goes in</span>
+		<span class={['truncate', !parentTitle && !page.parent && 'text-faint']}>
+			{parentTitle ?? page.parent ?? 'Set in code'}
+		</span>
+	</div>
+	<p class="flex items-start gap-2 text-[13px] text-warn">
+		<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+		Written outside this editor, so change it in VS Code.
+	</p>
+{/snippet}
+{@render section('Page', page.editable ? pageFields : pageWritten)}
 
 {#snippet rows()}
 	{#if page.rows.length === 0 && !adding}
@@ -191,7 +213,26 @@
 		</div>
 	{/if}
 {/snippet}
-{@render section(`Rows${page.rows.length > 0 ? ` (${page.rows.length})` : ''}`, rows, busy)}
+{#snippet rowsWritten()}
+	{#each page.rows as row, index (row.id ?? index)}
+		{@const words = row.kind ? rowWords[row.kind] : undefined}
+		<Button
+			variant="ghost-muted"
+			size="sm"
+			class="w-full justify-start"
+			title="Open it in VS Code"
+			onclick={() => editor.openInVsCode(undefined, page.file, row.line)}
+		>
+			{#if words}<words.icon />{/if}
+			<span class="truncate">{row.title ?? 'Written in code'}</span>
+		</Button>
+	{/each}
+{/snippet}
+{#if page.editable}
+	{@render section(`Rows${page.rows.length > 0 ? ` (${page.rows.length})` : ''}`, rows, busy)}
+{:else if page.rows.length > 0}
+	{@render section(`Rows (${page.rows.length})`, rowsWritten)}
+{/if}
 
 {#snippet busy()}
 	{#if settingsPages.pending > 0}
@@ -208,14 +249,16 @@
 	>
 		<VsCode /> Open it in VS Code
 	</Button>
-	<Button
-		variant="ghost-muted"
-		size="sm"
-		class="w-full justify-start"
-		onclick={() => void settingsPages.remove(page)}
-	>
-		<Trash /> Remove this page
-	</Button>
+	{#if page.editable}
+		<Button
+			variant="ghost-muted"
+			size="sm"
+			class="w-full justify-start"
+			onclick={() => void settingsPages.remove(page)}
+		>
+			<Trash /> Remove this page
+		</Button>
+	{/if}
 {/snippet}
 {@render section(undefined, last)}
 

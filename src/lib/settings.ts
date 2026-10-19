@@ -3,7 +3,7 @@ import Info from '~icons/lucide/info';
 import MousePointerClick from '~icons/lucide/mouse-pointer-click';
 import ToggleRight from '~icons/lucide/toggle-right';
 import type { Component } from 'svelte';
-import type { RowKind } from '../../shared/cli.ts';
+import type { RowKind, SettingsPageInfo } from '../../shared/cli.ts';
 
 /**
  * The editor's words for the rows of a settings page of the car's own, and the pages
@@ -64,3 +64,8 @@ export const builtInPages: { id: string; title: string }[] = [
 	{ id: 'developer', title: 'Developer options' },
 	{ id: 'about', title: 'About' }
 ];
+
+/** What picks a page in the car panel: its file, and which one in it, since a file can have several. */
+export function pageKey(page: SettingsPageInfo): string {
+	return `${page.file}#${page.id ?? page.line}`;
+}

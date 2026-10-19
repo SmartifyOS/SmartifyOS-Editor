@@ -269,8 +269,15 @@ export interface Part {
 	/** Relative to the car's app: `lib/windows/trip_computer_window.dart`. */
 	file: string;
 	symbol: string | null;
-	/** Whether `lib/main.dart` hands it to SmartifyOS. */
+	/** Whether the app hands it to SmartifyOS, in `lib/main.dart` or any other file. */
 	registered: boolean;
+	/**
+	 * What of it the CLI can change: all of it for one in a file of its own, the way the CLI
+	 * makes them, nothing for one written some other way (several in a list, say).
+	 */
+	canChange: { name: boolean; icon: boolean; remove: boolean };
+	/** Where its name and icon are written, another file for a window in an app list of its own. */
+	nameAt: { file: string; line: number };
 	/** Where what it shows or does is written. */
 	line: number;
 }
@@ -307,6 +314,8 @@ export interface SettingsPageInfo {
 	file: string;
 	symbol: string | null;
 	registered: boolean;
+	/** Whether the CLI can change it, false for one written some other way than it writes them. */
+	editable: boolean;
 	rows: SettingsRow[];
 	line: number;
 }

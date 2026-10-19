@@ -14,7 +14,8 @@
 	import type { DeviceCreated } from '../../../shared/cli.ts';
 	import { goto } from '$app/navigation';
 	import { commands } from '#lib/commands.ts';
-	import { iconFor, kindWords, partKinds } from '#lib/parts.ts';
+	import { iconFor, kindWords, partKey, partKinds } from '#lib/parts.ts';
+	import { pageKey } from '#lib/settings.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
@@ -82,10 +83,10 @@
 			return picked.name === selection.name;
 		}
 		if (picked.kind === 'part' && selection.kind === 'part') {
-			return picked.file === selection.file;
+			return picked.key === selection.key;
 		}
 		if (picked.kind === 'settings' && selection.kind === 'settings') {
-			return picked.file === selection.file;
+			return picked.key === selection.key;
 		}
 		return true;
 	}
@@ -162,13 +163,13 @@
 					{@const words = kindWords[kind]}
 					{@const list = parts.lists?.[kind] ?? []}
 					{#snippet items()}
-						{#each list as part (part.file)}
+						{#each list as part (partKey(part))}
 							{@render row(
-								{ kind: 'part', part: kind, file: part.file },
+								{ kind: 'part', part: kind, key: partKey(part) },
 								part.name ?? part.id ?? part.file,
 								null,
 								iconFor(kind, part.icon),
-								{ faint: !part.registered, hint: 'It is not in lib/main.dart' }
+								{ faint: !part.registered, hint: 'Nothing in your app hands it to SmartifyOS' }
 							)}
 						{/each}
 						{@render add(words.create, () => (parts.dialog = kind))}
@@ -182,13 +183,13 @@
 				{/each}
 
 				{#snippet settings()}
-					{#each settingsPages.pages ?? [] as page (page.file)}
+					{#each settingsPages.pages ?? [] as page (pageKey(page))}
 						{@render row(
-							{ kind: 'settings', file: page.file },
+							{ kind: 'settings', key: pageKey(page) },
 							page.title ?? page.id ?? page.file,
 							null,
 							page.icon ? iconFor('window', page.icon) : SettingsIcon,
-							{ faint: !page.registered, hint: 'It is not in lib/main.dart' }
+							{ faint: !page.registered, hint: 'Nothing in your app hands it to SmartifyOS' }
 						)}
 					{/each}
 					{@render add('New settings page', newSettingsPage)}

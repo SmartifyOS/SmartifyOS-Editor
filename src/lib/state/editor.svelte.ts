@@ -46,15 +46,15 @@ export interface Problem {
  * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the
  * running app has on its CAN bus that has no program yet, by its name. A `part` is one of the
  * app's windows, quick settings tiles or home screen widgets, and `settings` one of its settings
- * pages, both by their file.
+ * pages, both by their key (`partKey`, `pageKey`), since a file can have several.
  */
 export type Selection =
 	| { kind: 'car' }
 	| { kind: 'package'; name: string }
 	| { kind: 'device'; folder: string }
 	| { kind: 'canDevice'; name: string }
-	| { kind: 'part'; part: PartKind; file: string }
-	| { kind: 'settings'; file: string };
+	| { kind: 'part'; part: PartKind; key: string }
+	| { kind: 'settings'; key: string };
 
 /** Newer versions there are for the car, by what they are for. */
 export interface CarUpdates {

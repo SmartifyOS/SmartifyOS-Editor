@@ -210,6 +210,11 @@ export function iconFor(kind: PartKind, icon: string | null): Component {
  * Whether `show` can put one on screen in the running app. A widget that is not a card is
  * only on the home screen once the driver adds it there.
  */
+/** What picks a part in the car panel: its file, and which one in it, since a file can have several. */
+export function partKey(part: Part): string {
+	return `${part.file}#${part.id ?? part.line}`;
+}
+
 export function canShow(part: Part): boolean {
 	return part.kind !== 'widget' || part.variant === 'card';
 }

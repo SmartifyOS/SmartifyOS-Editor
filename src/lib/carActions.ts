@@ -125,7 +125,7 @@ export function actionsFor(selection: Selection): MenuItem[] {
 		}
 
 		case 'part': {
-			const part = parts.find(selection.part, selection.file);
+			const part = parts.find(selection.part, selection.key);
 			if (!part) return [];
 			const words = kindWords[part.kind];
 			return [
@@ -137,19 +137,24 @@ export function actionsFor(selection: Selection): MenuItem[] {
 				...(running && canShow(part)
 					? [{ icon: Eye, label: words.show, run: () => void parts.show(part) }]
 					: []),
-				'separator',
-				{
-					icon: Trash,
-					label: `Remove this ${words.one}`,
-					run: () => void parts.remove(part),
-					disabled: !canRun || parts.busy > 0,
-					danger: true
-				}
+				// Only one the CLI made in a file of its own can be taken out by it.
+				...(part.canChange.remove
+					? [
+							'separator' as const,
+							{
+								icon: Trash,
+								label: `Remove this ${words.one}`,
+								run: () => void parts.remove(part),
+								disabled: !canRun || parts.busy > 0,
+								danger: true
+							}
+						]
+					: [])
 			];
 		}
 
 		case 'settings': {
-			const page = settingsPages.find(selection.file);
+			const page = settingsPages.find(selection.key);
 			if (!page) return [];
 			return [
 				{
@@ -166,14 +171,18 @@ export function actionsFor(selection: Selection): MenuItem[] {
 							}
 						]
 					: []),
-				'separator',
-				{
-					icon: Trash,
-					label: 'Remove this page',
-					run: () => void settingsPages.remove(page),
-					disabled: !canRun,
-					danger: true
-				}
+				...(page.editable
+					? [
+							'separator' as const,
+							{
+								icon: Trash,
+								label: 'Remove this page',
+								run: () => void settingsPages.remove(page),
+								disabled: !canRun,
+								danger: true
+							}
+						]
+					: [])
 			];
 		}
 

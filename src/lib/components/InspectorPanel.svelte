@@ -20,7 +20,7 @@
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
-	import { canShow, kindWords, partIcons } from '#lib/parts.ts';
+	import { canShow, iconFor, kindWords, partIcons, partKey } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import TextField from './ui/TextField.svelte';
@@ -56,11 +56,11 @@
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
 			if (picked.kind === 'settings') {
-				const page = settingsPages.find(picked.file);
+				const page = settingsPages.find(picked.key);
 				return page && { kind: 'settings', page };
 			}
 			if (picked.kind === 'part') {
-				const part = parts.find(picked.part, picked.file);
+				const part = parts.find(picked.part, picked.key);
 				return part && { kind: 'part', part };
 			}
 			if (picked.kind === 'canDevice') {
@@ -262,7 +262,8 @@
 		{#if !part.registered}
 			<p class="flex items-start gap-2 text-[13px] text-warn">
 				<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
-				lib/main.dart does not hand it to SmartifyOS, so your app does not have it.
+				Nothing in your app hands it to SmartifyOS yet, so your app does not have it. It usually goes
+				in lib/main.dart.
 			</p>
 		{/if}
 		<Button
@@ -281,61 +282,94 @@
 				To see it, hold an area of the home screen in the preview and add it there.
 			</p>
 		{/if}
-		{#if parts.showProblem?.file === part.file}
+		{#if parts.showProblem?.key === partKey(part)}
 			<p class="text-[13px] text-bad">{parts.showProblem.message}</p>
 		{/if}
 	{/snippet}
 	{@render section(undefined, what)}
 
 	{#snippet looks()}
+		{@const Icon = iconFor(part.kind, part.icon)}
 		<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3">
 			<span class="text-[13px] text-muted">Name</span>
-			<TextField
-				value={part.name ?? ''}
-				placeholder={part.name === null ? 'Set in code' : ''}
-				onchange={(name) => {
-					if (name.trim()) void parts.edit(part, { name: name.trim() });
-				}}
-			/>
-		</div>
-		<div class="grid grid-cols-9 gap-1">
-			{#each partIcons as choice (choice.id)}
-				{@const picked = part.icon === choice.id}
-				<button
-					type="button"
-					title={choice.label}
-					aria-label={choice.label}
-					aria-pressed={picked}
-					disabled={!canRun || parts.busy > 0}
-					class={[
-						'grid aspect-square place-items-center rounded-md border transition-colors disabled:opacity-50',
-						picked
-							? 'border-primary/60 bg-primary/10 text-primary'
-							: 'border-transparent text-muted hover:bg-hover hover:text-fg'
-					]}
-					onclick={() => {
-						if (!picked) void parts.edit(part, { icon: choice.id });
+			{#if part.canChange.name}
+				<TextField
+					value={part.name ?? ''}
+					placeholder={part.name === null ? 'Set in code' : ''}
+					onchange={(name) => {
+						if (name.trim()) void parts.edit(part, { name: name.trim() });
 					}}
-				>
-					<choice.icon class="size-4" />
-				</button>
-			{/each}
+				/>
+			{:else}
+				<span class="flex h-8 items-center gap-2 text-[13px]">
+					{#if !part.canChange.icon}<Icon class="size-4 shrink-0 text-muted" />{/if}
+					<span class={['truncate', part.name === null && 'text-faint']}>
+						{part.name ?? 'Set in code'}
+					</span>
+				</span>
+			{/if}
 		</div>
-		{#if part.icon && !partIcons.some((known) => known.id === part.icon)}
-			<p class="text-xs text-faint">Its icon is Icons.{part.icon}, set in code.</p>
+		{#if part.canChange.icon}
+			<div class="grid grid-cols-9 gap-1">
+				{#each partIcons as choice (choice.id)}
+					{@const picked = part.icon === choice.id}
+					<button
+						type="button"
+						title={choice.label}
+						aria-label={choice.label}
+						aria-pressed={picked}
+						disabled={!canRun || parts.busy > 0}
+						class={[
+							'grid aspect-square place-items-center rounded-md border transition-colors disabled:opacity-50',
+							picked
+								? 'border-primary/60 bg-primary/10 text-primary'
+								: 'border-transparent text-muted hover:bg-hover hover:text-fg'
+						]}
+						onclick={() => {
+							if (!picked) void parts.edit(part, { icon: choice.id });
+						}}
+					>
+						<choice.icon class="size-4" />
+					</button>
+				{/each}
+			</div>
+			{#if part.icon && !partIcons.some((known) => known.id === part.icon)}
+				<p class="text-xs text-faint">Its icon is Icons.{part.icon}, set in code.</p>
+			{/if}
+		{/if}
+		{#if !part.canChange.name || !part.canChange.icon}
+			{@const elsewhere = part.nameAt.file !== part.file}
+			<!-- Written some other way than the editor writes them, so they are changed in the code. -->
+			<p class="flex items-start gap-2 text-[13px] text-warn">
+				<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+				Written outside this editor{elsewhere ? `, in ${part.nameAt.file}` : ''}, so change it in VS
+				Code.
+			</p>
+			<!-- In its own file, the button above already opens it. -->
+			{#if elsewhere}
+				<Button
+					size="sm"
+					class="w-full justify-start"
+					onclick={() => editor.openInVsCode(undefined, part.nameAt.file, part.nameAt.line)}
+				>
+					<VsCode /> Open {part.nameAt.file.split('/').pop()}
+				</Button>
+			{/if}
 		{/if}
 	{/snippet}
 	{@render section('Name and icon', looks)}
 
-	{#snippet danger()}
-		{@render action(
-			Trash,
-			`Remove this ${words.one}`,
-			() => void parts.remove(part),
-			'ghost-muted'
-		)}
-	{/snippet}
-	{@render section(undefined, danger)}
+	{#if part.canChange.remove}
+		{#snippet danger()}
+			{@render action(
+				Trash,
+				`Remove this ${words.one}`,
+				() => void parts.remove(part),
+				'ghost-muted'
+			)}
+		{/snippet}
+		{@render section(undefined, danger)}
+	{/if}
 {/snippet}
 
 {#snippet canDeviceView(name: string, title: string, node: number)}

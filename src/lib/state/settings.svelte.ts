@@ -1,6 +1,6 @@
 import type { ResultEvent, SettingsPageInfo } from '../../../shared/cli.ts';
 import { settingsCommands } from '../commands.ts';
-import { builtInPages } from '../settings.ts';
+import { builtInPages, pageKey } from '../settings.ts';
 import { editor, type Problem } from './editor.svelte.ts';
 import { look } from './look.svelte.ts';
 
@@ -28,9 +28,9 @@ class SettingsPages {
 		this.pages = result?.ok ? (result.data as { pages: SettingsPageInfo[] }).pages : [];
 	}
 
-	/** The page in this file, if it is still there. */
-	find(file: string): SettingsPageInfo | undefined {
-		return this.pages?.find((page) => page.file === file);
+	/** The page with this key (`pageKey`), if it is still there. */
+	find(key: string): SettingsPageInfo | undefined {
+		return this.pages?.find((page) => pageKey(page) === key);
 	}
 
 	/**
@@ -59,7 +59,7 @@ class SettingsPages {
 		const result = await this.run(settingsCommands.create(title, parent, icon));
 		if (!result.ok) return { message: result.error.message, hint: result.error.hint };
 		const { page } = result.data as { page: SettingsPageInfo };
-		editor.selection = { kind: 'settings', file: page.file };
+		editor.selection = { kind: 'settings', key: pageKey(page) };
 		return undefined;
 	}
 
@@ -113,7 +113,7 @@ class SettingsPages {
 			if (changed && editor.preview.status === 'running') {
 				await editor.restart();
 				const picked = editor.selection;
-				const page = picked.kind === 'settings' ? this.find(picked.file) : undefined;
+				const page = picked.kind === 'settings' ? this.find(picked.key) : undefined;
 				if (page) await this.show(page, { afterRestart: true });
 			}
 			return result;

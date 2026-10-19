@@ -1,6 +1,6 @@
 import type { Part, PartKind, PartVariant } from '../../../shared/cli.ts';
 import { partCommands } from '../commands.ts';
-import { partKinds } from '../parts.ts';
+import { partKey, partKinds } from '../parts.ts';
 import { editor, type Problem } from './editor.svelte.ts';
 
 /**
@@ -31,9 +31,9 @@ class Parts {
 		this.lists = lists;
 	}
 
-	/** The one in this file, if it is still there. */
-	find(kind: PartKind, file: string): Part | undefined {
-		return this.lists?.[kind].find((part) => part.file === file);
+	/** The one with this key (`partKey`), if it is still there. */
+	find(kind: PartKind, key: string): Part | undefined {
+		return this.lists?.[kind].find((part) => partKey(part) === key);
 	}
 
 	/**
@@ -49,7 +49,7 @@ class Parts {
 		const result = await this.run(partCommands.create(kind, name, variant, icon));
 		if (!result.ok) return { message: result.error.message, hint: result.error.hint };
 		const { part } = result.data as { part: Part };
-		editor.selection = { kind: 'part', part: kind, file: part.file };
+		editor.selection = { kind: 'part', part: kind, key: partKey(part) };
 		void editor.openInVsCode(undefined, part.file, part.line);
 		return undefined;
 	}
@@ -68,8 +68,8 @@ class Parts {
 		}
 	}
 
-	/** Why the last one could not be put on screen, by its file, until it can. */
-	showProblem = $state<{ file: string; message: string } | undefined>();
+	/** Why the last one could not be put on screen, by its key, until it can. */
+	showProblem = $state<{ key: string; message: string } | undefined>();
 
 	/** Puts one on screen in the running app, the way the driver would find it. */
 	async show(part: Part): Promise<void> {
@@ -78,7 +78,7 @@ class Parts {
 		this.showProblem = reply.ok
 			? undefined
 			: {
-					file: part.file,
+					key: partKey(part),
 					// A SmartifyOS from before `show`, the likely reason.
 					message: /does not know/.test(reply.error)
 						? 'Showing it needs a newer SmartifyOS in your car. Update it in the inspector of your car.'
