@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import type { OpenResult, Project, RecentProject } from '../shared/api.ts';
-import type { CarInfo, DeviceInfo, DeviceList } from '../shared/cli.ts';
+import type { CanDeviceDefinition, CarInfo, DeviceInfo, DeviceList } from '../shared/cli.ts';
 import { cliEnv } from './cli/environment.ts';
 import { runCli } from './cli/job.ts';
 import { cliStatus } from './cli/locate.ts';
@@ -98,7 +98,13 @@ export async function openProject(host: BrowserWindow, path?: string): Promise<O
 	const result = await readCar(dir);
 	if (!result.ok) return result;
 
-	current = { path: dir, name: projectName(dir), car: result.car, devices: result.devices };
+	current = {
+		path: dir,
+		name: projectName(dir),
+		car: result.car,
+		devices: result.devices,
+		canDevices: result.canDevices
+	};
 	update((stored) => {
 		stored.recentProjects = [
 			{ path: dir, name: current?.name ?? basename(dir), openedAt: new Date().toISOString() },
@@ -113,14 +119,22 @@ export async function refreshProject(): Promise<OpenResult> {
 	if (!current) return { ok: false, cancelled: false, message: 'No project is open.' };
 	const result = await readCar(current.path);
 	if (!result.ok) return result;
-	current = { ...current, car: result.car, devices: result.devices };
+	current = {
+		...current,
+		car: result.car,
+		devices: result.devices,
+		canDevices: result.canDevices
+	};
 	return { ok: true, project: current };
 }
 
 /** Internal: asks the CLI what the car in this folder runs, and which devices it has. */
 async function readCar(
 	dir: string
-): Promise<{ ok: true; car: CarInfo; devices: DeviceInfo[] } | Extract<OpenResult, { ok: false }>> {
+): Promise<
+	| { ok: true; car: CarInfo; devices: DeviceInfo[]; canDevices: CanDeviceDefinition[] }
+	| Extract<OpenResult, { ok: false }>
+> {
 	const cli = await cliStatus();
 	if (!cli.found) {
 		return {
@@ -142,6 +156,7 @@ async function readCar(
 		ok: true,
 		car: car.data as CarInfo,
 		// A CLI from before `device list` knows of none, which leaves the panel empty.
-		devices: devices.ok ? (devices.data as DeviceList).devices : []
+		devices: devices.ok ? (devices.data as DeviceList).devices : [],
+		canDevices: (devices.ok && (devices.data as DeviceList).defined) || []
 	};
 }

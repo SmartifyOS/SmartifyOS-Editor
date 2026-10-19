@@ -10,9 +10,10 @@
       },
       "devDependencies": {
         "@clack/prompts": "^1.7.0",
+        "@iconify-json/ic": "^1.2.4",
         "@iconify-json/logos": "^1.2.16",
         "@iconify-json/lucide": "^1.2.145",
-        "@iconify-json/mdi": "1.2.3",
+        "@iconify-json/mdi": "^1.2.3",
         "@sveltejs/adapter-static": "^4.0.0",
         "@sveltejs/kit": "^3.0.0",
         "@sveltejs/vite-plugin-svelte": "^7.2.0",
@@ -114,6 +115,8 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.28.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-YmJbfTlvU7Sdn9BB+4PRES4oB6pxgS37MAONj+hBr/cpXS1aBPKXxNnDbu+QCWPj0o9dgyxeq79g6c5P8KeuYA=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
+
+    "@iconify-json/ic": ["@iconify-json/ic@1.2.4", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-pzPMmrZrBQuwT7nmtrYdkttun8KalRGgZPIL1Ny9KpF2zjRGIUPN+npTfuD3lrgO/OnSwAoJWuekQwBpt/Cqrw=="],
 
     "@iconify-json/logos": ["@iconify-json/logos@1.2.16", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-J7uewTzmJchaWkc8f/SW3aS14Y6H1bnLihMZaVccDao3TRsWFJvGfAhbkTzErKjSSbRJG8uzjY4yzMbGMELPIw=="],
 

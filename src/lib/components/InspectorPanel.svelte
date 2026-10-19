@@ -20,10 +20,13 @@
 	import { exportChoices } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
-	import { canShow, iconFor, kindWords, partIcons, partKey } from '#lib/parts.ts';
+	import { canShow, kindWords, partKey } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import TextField from './ui/TextField.svelte';
+	import Switch from './ui/Switch.svelte';
+	import CarIcon from './CarIcon.svelte';
+	import IconPicker from './IconPicker.svelte';
 	import BusSimulator from './BusSimulator.svelte';
 	import CarLook from './CarLook.svelte';
 	import SettingsPageInspector from './SettingsPageInspector.svelte';
@@ -64,7 +67,10 @@
 				return part && { kind: 'part', part };
 			}
 			if (picked.kind === 'canDevice') {
-				const device = bus.network?.devices.find((known) => known.name === picked.name);
+				// The running app's, or the app's own definition while it is not running.
+				const device =
+					bus.network?.devices.find((known) => known.name === picked.name) ??
+					project.canDevices.find((known) => known.name === picked.name);
 				return device && { kind: 'canDevice', ...device };
 			}
 			if (picked.kind === 'device') {
@@ -259,7 +265,12 @@
 
 	{#snippet what()}
 		<p class="text-[13px] text-muted">{words.about} {variant?.describe ?? ''}</p>
-		{#if !part.registered}
+		{#if !part.registered && part.inAppList === false}
+			<p class="flex items-start gap-2 text-[13px] text-warn">
+				<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+				It is not in the app list, and nothing in your app opens it yet.
+			</p>
+		{:else if !part.registered}
 			<p class="flex items-start gap-2 text-[13px] text-warn">
 				<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
 				Nothing in your app hands it to SmartifyOS yet, so your app does not have it. It usually goes
@@ -277,6 +288,10 @@
 		</Button>
 		{#if editor.preview.status === 'running' && canShow(part)}
 			{@render action(Eye, words.show, () => void parts.show(part), 'outline', false)}
+		{:else if editor.preview.status === 'running' && part.inAppList === false}
+			<p class="text-[13px] text-muted">
+				To see it, open it in the preview the way your app does, since it is not in the app list.
+			</p>
 		{:else if editor.preview.status === 'running'}
 			<p class="text-[13px] text-muted">
 				To see it, hold an area of the home screen in the preview and add it there.
@@ -289,7 +304,6 @@
 	{@render section(undefined, what)}
 
 	{#snippet looks()}
-		{@const Icon = iconFor(part.kind, part.icon)}
 		<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3">
 			<span class="text-[13px] text-muted">Name</span>
 			{#if part.canChange.name}
@@ -302,7 +316,13 @@
 				/>
 			{:else}
 				<span class="flex h-8 items-center gap-2 text-[13px]">
-					{#if !part.canChange.icon}<Icon class="size-4 shrink-0 text-muted" />{/if}
+					{#if !part.canChange.icon}
+						<CarIcon
+							name={part.icon}
+							fallback={kindWords[part.kind].icon}
+							class="size-4 shrink-0 text-muted"
+						/>
+					{/if}
 					<span class={['truncate', part.name === null && 'text-faint']}>
 						{part.name ?? 'Set in code'}
 					</span>
@@ -310,32 +330,11 @@
 			{/if}
 		</div>
 		{#if part.canChange.icon}
-			<div class="grid grid-cols-9 gap-1">
-				{#each partIcons as choice (choice.id)}
-					{@const picked = part.icon === choice.id}
-					<button
-						type="button"
-						title={choice.label}
-						aria-label={choice.label}
-						aria-pressed={picked}
-						disabled={!canRun || parts.busy > 0}
-						class={[
-							'grid aspect-square place-items-center rounded-md border transition-colors disabled:opacity-50',
-							picked
-								? 'border-primary/60 bg-primary/10 text-primary'
-								: 'border-transparent text-muted hover:bg-hover hover:text-fg'
-						]}
-						onclick={() => {
-							if (!picked) void parts.edit(part, { icon: choice.id });
-						}}
-					>
-						<choice.icon class="size-4" />
-					</button>
-				{/each}
-			</div>
-			{#if part.icon && !partIcons.some((known) => known.id === part.icon)}
-				<p class="text-xs text-faint">Its icon is Icons.{part.icon}, set in code.</p>
-			{/if}
+			<IconPicker
+				value={part.icon}
+				disabled={!canRun || parts.busy > 0}
+				onpick={(icon) => void parts.edit(part, { icon })}
+			/>
 		{/if}
 		{#if !part.canChange.name || !part.canChange.icon}
 			{@const elsewhere = part.nameAt.file !== part.file}
@@ -358,6 +357,45 @@
 		{/if}
 	{/snippet}
 	{@render section('Name and icon', looks)}
+
+	{#snippet place()}
+		{#if part.kind === 'window'}
+			<div class="flex items-center justify-between gap-3">
+				<span class="text-[13px]">In the app list</span>
+				<Switch
+					checked={part.inAppList ?? true}
+					label="In the app list"
+					disabled={!part.canChange.appList || !canRun || parts.busy > 0}
+					onchange={(appList) => void parts.edit(part, { appList })}
+				/>
+			</div>
+			{#if part.inAppList === false}
+				<p class="text-[13px] text-muted">
+					Your app opens it some other way, with SmartifyOsNavigator.push.
+				</p>
+			{/if}
+		{/if}
+		<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3">
+			<span class="text-[13px] text-muted">Order</span>
+			{#if part.canChange.order}
+				<TextField
+					value={part.order?.toString() ?? ''}
+					placeholder="100"
+					label="Order"
+					onchange={(text) => {
+						const order = text.trim() === '' ? null : Number(text);
+						if (order === null || Number.isInteger(order)) void parts.edit(part, { order });
+					}}
+				/>
+			{:else}
+				<span class="text-[13px]">{part.order ?? 100}</span>
+			{/if}
+		</div>
+		<p class="text-xs text-faint">
+			Smaller comes first{part.kind === 'window' ? ' in the app list' : ''}. Empty is 100.
+		</p>
+	{/snippet}
+	{@render section('Where it shows', place)}
 
 	{#if part.canChange.remove}
 		{#snippet danger()}

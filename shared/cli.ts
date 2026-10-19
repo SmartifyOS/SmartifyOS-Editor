@@ -84,9 +84,18 @@ export interface DeviceInfo {
 	board: string | null;
 }
 
+/** A device the car's app has on its CAN bus, a `CanDevice` in its Dart. */
+export interface CanDeviceDefinition {
+	node: number;
+	name: string;
+	title: string;
+}
+
 /** What `device list` returns. */
 export interface DeviceList {
 	devices: DeviceInfo[];
+	/** Every device the car's app defines, with a program or not. Missing from an older CLI. */
+	defined?: CanDeviceDefinition[];
 }
 
 /** What `update --check` returns: `to` is the newer SmartifyOS, null when the car has it. */
@@ -275,7 +284,11 @@ export interface Part {
 	 * What of it the CLI can change: all of it for one in a file of its own, the way the CLI
 	 * makes them, nothing for one written some other way (several in a list, say).
 	 */
-	canChange: { name: boolean; icon: boolean; remove: boolean };
+	canChange: { name: boolean; icon: boolean; order: boolean; appList: boolean; remove: boolean };
+	/** Where it sits among the others of its kind, smaller first. Null when not written, which is 100. */
+	order: number | null;
+	/** A window: whether its icon is in the app list. Null for the other kinds. */
+	inAppList: boolean | null;
 	/** Where its name and icon are written, another file for a window in an app list of its own. */
 	nameAt: { file: string; line: number };
 	/** Where what it shows or does is written. */
@@ -314,6 +327,8 @@ export interface SettingsPageInfo {
 	file: string;
 	symbol: string | null;
 	registered: boolean;
+	/** Where its row sits on the page it goes in, smaller first. Null when not written, which is 100. */
+	order: number | null;
 	/** Whether the CLI can change it, false for one written some other way than it writes them. */
 	editable: boolean;
 	rows: SettingsRow[];

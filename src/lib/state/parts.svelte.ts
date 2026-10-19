@@ -1,5 +1,5 @@
 import type { Part, PartKind, PartVariant } from '../../../shared/cli.ts';
-import { partCommands } from '../commands.ts';
+import { type PartChange, partCommands } from '../commands.ts';
 import { partKey, partKinds } from '../parts.ts';
 import { editor, type Problem } from './editor.svelte.ts';
 
@@ -54,8 +54,8 @@ class Parts {
 		return undefined;
 	}
 
-	/** Renames one or gives it another icon. Resolves with why it could not be. */
-	async edit(part: Part, change: { name?: string; icon?: string }): Promise<string | undefined> {
+	/** Changes its name, icon, order or place in the app list. Resolves with why it could not be. */
+	async edit(part: Part, change: PartChange): Promise<string | undefined> {
 		const result = await this.run(partCommands.edit(part, change));
 		return result.ok ? undefined : result.error.message;
 	}

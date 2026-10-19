@@ -201,20 +201,17 @@ export const defaultIcons: Record<PartKind, string> = {
 	widget: 'info'
 };
 
-/** What the editor draws for an icon from Flutter's `Icons`, the kind's own for any other. */
-export function iconFor(kind: PartKind, icon: string | null): Component {
-	return partIcons.find((known) => known.id === icon)?.icon ?? kindWords[kind].icon;
-}
-
-/**
- * Whether `show` can put one on screen in the running app. A widget that is not a card is
- * only on the home screen once the driver adds it there.
- */
 /** What picks a part in the car panel: its file, and which one in it, since a file can have several. */
 export function partKey(part: Part): string {
 	return `${part.file}#${part.id ?? part.line}`;
 }
 
+/**
+ * Whether `show` can put one on screen in the running app. A widget that is not a card is
+ * only on the home screen once the driver adds it there, and a window only opens from the app
+ * list while it is in there.
+ */
 export function canShow(part: Part): boolean {
+	if (part.kind === 'window') return part.inAppList !== false;
 	return part.kind !== 'widget' || part.variant === 'card';
 }

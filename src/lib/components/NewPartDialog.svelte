@@ -3,7 +3,8 @@
 	import VsCode from '~icons/logos/visual-studio-code';
 	import type { PartKind, PartVariant } from '../../../shared/cli.ts';
 	import { coversViewport } from '#lib/attachments.ts';
-	import { defaultIcons, kindWords, partIcons } from '#lib/parts.ts';
+	import { defaultIcons, kindWords } from '#lib/parts.ts';
+	import IconPicker from './IconPicker.svelte';
 	import type { Problem } from '#lib/state/editor.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import Button from './ui/Button.svelte';
@@ -105,26 +106,7 @@
 
 			<div class="flex flex-col gap-2">
 				<span class="font-medium">Which icon?</span>
-				<div class="grid grid-cols-9 gap-1.5">
-					{#each partIcons as choice (choice.id)}
-						{@const picked = icon === choice.id}
-						<button
-							type="button"
-							title={choice.label}
-							aria-label={choice.label}
-							aria-pressed={picked}
-							class={[
-								'grid aspect-square place-items-center rounded-lg border transition-colors',
-								picked
-									? 'border-primary/60 bg-primary/10 text-primary'
-									: 'border-line bg-tint text-muted hover:bg-hover hover:text-fg'
-							]}
-							onclick={() => (icon = choice.id)}
-						>
-							<choice.icon class="size-[18px]" />
-						</button>
-					{/each}
-				</div>
+				<IconPicker value={icon} large onpick={(picked) => (icon = picked)} />
 			</div>
 
 			{#if problem}

@@ -154,15 +154,26 @@ export const partCommands = {
 		'--icon',
 		icon
 	],
-	edit: (part: Part, change: { name?: string; icon?: string }): string[] => [
+	edit: (part: Part, change: PartChange): string[] => [
 		part.kind,
 		'edit',
 		partQuery(part),
 		...(change.name !== undefined ? ['--name', change.name] : []),
-		...(change.icon !== undefined ? ['--icon', change.icon] : [])
+		...(change.icon !== undefined ? ['--icon', change.icon] : []),
+		...(change.order !== undefined ? ['--order', change.order?.toString() ?? ''] : []),
+		...(change.appList !== undefined ? ['--app-list', change.appList ? 'on' : 'off'] : [])
 	],
 	remove: (part: Part): string[] => [part.kind, 'remove', partQuery(part)]
 };
+
+/** What can be changed of a part. A null order goes back to the usual place. */
+export interface PartChange {
+	name?: string;
+	icon?: string;
+	order?: number | null;
+	/** A window: whether its icon is in the app list. */
+	appList?: boolean;
+}
 
 /** Internal: what the CLI finds a part by, its id, or its file when it has none. */
 function partQuery(part: Part): string {
@@ -221,7 +232,13 @@ export const settingsCommands = {
 	],
 	edit: (
 		page: SettingsPageInfo,
-		change: { title?: string; subtitle?: string; icon?: string; parent?: string }
+		change: {
+			title?: string;
+			subtitle?: string;
+			icon?: string;
+			parent?: string;
+			order?: number | null;
+		}
 	): string[] => [
 		'settings',
 		'edit',
@@ -229,7 +246,8 @@ export const settingsCommands = {
 		...(change.title !== undefined ? ['--title', change.title] : []),
 		...(change.subtitle !== undefined ? ['--subtitle', change.subtitle] : []),
 		...(change.icon !== undefined ? ['--icon', change.icon] : []),
-		...(change.parent !== undefined ? ['--in', change.parent] : [])
+		...(change.parent !== undefined ? ['--in', change.parent] : []),
+		...(change.order !== undefined ? ['--order', change.order?.toString() ?? ''] : [])
 	],
 	remove: (page: SettingsPageInfo): string[] => ['settings', 'remove', pageQuery(page)],
 	addRow: (page: SettingsPageInfo, kind: RowKind, title: string): string[] => [

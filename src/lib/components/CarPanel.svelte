@@ -14,7 +14,8 @@
 	import type { DeviceCreated } from '../../../shared/cli.ts';
 	import { goto } from '$app/navigation';
 	import { commands } from '#lib/commands.ts';
-	import { iconFor, kindWords, partKey, partKinds } from '#lib/parts.ts';
+	import { kindWords, partKey, partKinds } from '#lib/parts.ts';
+	import CarIcon from './CarIcon.svelte';
 	import { pageKey } from '#lib/settings.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
@@ -93,12 +94,20 @@
 
 	/** The running app's devices on the bus, by name, to show which are there. */
 	const onBus = $derived(new Map(bus.network?.devices.map((device) => [device.name, device])));
-	/** Devices the running app has on its bus that have no program yet. */
-	const withoutProgram = $derived(
-		bus.network?.devices.filter(
+	/**
+	 * Devices on the bus that have no program yet: the ones the car's app defines, known while it
+	 * is not running too, and any more the running app has.
+	 */
+	const withoutProgram = $derived.by(() => {
+		const all = new Map<string, { name: string; title: string; online: boolean }>();
+		for (const device of editor.project?.canDevices ?? []) {
+			all.set(device.name, { ...device, online: false });
+		}
+		for (const device of bus.network?.devices ?? []) all.set(device.name, device);
+		return [...all.values()].filter(
 			(device) => !editor.project?.devices.some((known) => known.name === device.name)
-		) ?? []
-	);
+		);
+	});
 
 	const project = $derived(editor.project);
 	const updates = $derived(editor.carUpdates);
@@ -168,8 +177,12 @@
 								{ kind: 'part', part: kind, key: partKey(part) },
 								part.name ?? part.id ?? part.file,
 								null,
-								iconFor(kind, part.icon),
-								{ faint: !part.registered, hint: 'Nothing in your app hands it to SmartifyOS' }
+								kindWords[kind].icon,
+								{
+									carIcon: part.icon,
+									faint: !part.registered,
+									hint: 'Nothing in your app hands it to SmartifyOS'
+								}
 							)}
 						{/each}
 						{@render add(words.create, () => (parts.dialog = kind))}
@@ -188,8 +201,12 @@
 							{ kind: 'settings', key: pageKey(page) },
 							page.title ?? page.id ?? page.file,
 							null,
-							page.icon ? iconFor('window', page.icon) : SettingsIcon,
-							{ faint: !page.registered, hint: 'Nothing in your app hands it to SmartifyOS' }
+							SettingsIcon,
+							{
+								carIcon: page.icon,
+								faint: !page.registered,
+								hint: 'Nothing in your app hands it to SmartifyOS'
+							}
 						)}
 					{/each}
 					{@render add('New settings page', newSettingsPage)}
@@ -260,8 +277,17 @@
 		update,
 		online = false,
 		faint = false,
-		hint
-	}: { off?: boolean; update?: string; online?: boolean; faint?: boolean; hint?: string } = {}
+		hint,
+		carIcon
+	}: {
+		off?: boolean;
+		update?: string;
+		online?: boolean;
+		faint?: boolean;
+		hint?: string;
+		/** One of the car's icons, by its name in Flutter's `Icons`, with `Icon` until it can draw. */
+		carIcon?: string | null;
+	} = {}
 )}
 	{@const picked = isPicked(selection)}
 	<button
@@ -277,7 +303,15 @@
 			openMenu(event, actionsFor(selection));
 		}}
 	>
-		<Icon class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']} />
+		{#if carIcon !== undefined}
+			<CarIcon
+				name={carIcon}
+				fallback={Icon}
+				class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']}
+			/>
+		{:else}
+			<Icon class={['size-4 shrink-0', picked ? 'text-fg' : 'text-muted']} />
+		{/if}
 		<span
 			class={['truncate', off && 'text-faint line-through', faint && !picked && 'text-muted']}
 			title={faint ? hint : undefined}>{title}</span

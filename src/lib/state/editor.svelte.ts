@@ -43,8 +43,8 @@ export interface Problem {
 }
 
 /**
- * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the
- * running app has on its CAN bus that has no program yet, by its name. A `part` is one of the
+ * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the car's
+ * app has on its CAN bus that has no program yet, by its name. A `part` is one of the
  * app's windows, quick settings tiles or home screen widgets, and `settings` one of its settings
  * pages, both by their key (`partKey`, `pageKey`), since a file can have several.
  */

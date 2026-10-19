@@ -8,7 +8,7 @@
 	import type { Snippet } from 'svelte';
 	import type { RowKind, SettingsPageInfo, SettingsRow } from '../../../shared/cli.ts';
 	import { settingsCommands } from '#lib/commands.ts';
-	import { partIcons } from '#lib/parts.ts';
+	import IconPicker from './IconPicker.svelte';
 	import { rowKinds, rowWords } from '#lib/settings.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
@@ -39,6 +39,7 @@
 		subtitle?: string;
 		icon?: string;
 		parent?: string;
+		order?: number | null;
 	}) {
 		void settingsPages.change(settingsCommands.edit(page, change));
 	}
@@ -109,27 +110,22 @@
 				(parent) => parent && parent !== page.parent && changePage({ parent })
 			}
 		/>
+		<span class="text-[13px] text-muted">Order</span>
+		<TextField
+			value={page.order?.toString() ?? ''}
+			placeholder="100"
+			label="Order"
+			onchange={(text) => {
+				const order = text.trim() === '' ? null : Number(text);
+				if (order === null || Number.isInteger(order)) changePage({ order });
+			}}
+		/>
 	</div>
-	<div class="grid grid-cols-9 gap-1">
-		{#each partIcons as choice (choice.id)}
-			{@const picked = page.icon === choice.id}
-			<button
-				type="button"
-				title={choice.label}
-				aria-label={choice.label}
-				aria-pressed={picked}
-				class={[
-					'grid aspect-square place-items-center rounded-md border transition-colors',
-					picked
-						? 'border-primary/60 bg-primary/10 text-primary'
-						: 'border-transparent text-muted hover:bg-hover hover:text-fg'
-				]}
-				onclick={() => !picked && changePage({ icon: choice.id })}
-			>
-				<choice.icon class="size-4" />
-			</button>
-		{/each}
-	</div>
+	<p class="text-xs text-faint">
+		Order is where its row sits on {parentTitle ?? 'the page it goes in'}, smaller first. Empty is
+		100.
+	</p>
+	<IconPicker value={page.icon} onpick={(icon) => changePage({ icon })} />
 {/snippet}
 {#snippet pageWritten()}
 	<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-[13px]">
@@ -145,6 +141,8 @@
 		<span class={['truncate', !parentTitle && !page.parent && 'text-faint']}>
 			{parentTitle ?? page.parent ?? 'Set in code'}
 		</span>
+		<span class="text-muted">Order</span>
+		<span>{page.order ?? 100}</span>
 	</div>
 	<p class="flex items-start gap-2 text-[13px] text-warn">
 		<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
@@ -242,7 +240,6 @@
 
 {#snippet last()}
 	<Button
-		variant="ghost-muted"
 		size="sm"
 		class="w-full justify-start"
 		onclick={() => editor.openInVsCode(undefined, page.file, page.line)}

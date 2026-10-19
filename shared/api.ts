@@ -1,4 +1,11 @@
-import type { AppReply, CarInfo, CliEvent, DeviceInfo, ResultEvent } from './cli.ts';
+import type {
+	AppReply,
+	CanDeviceDefinition,
+	CarInfo,
+	CliEvent,
+	DeviceInfo,
+	ResultEvent
+} from './cli.ts';
 
 /**
  * The contract between the main process and the window: what the preload script puts on
@@ -31,6 +38,8 @@ export interface Project {
 	car: CarInfo;
 	/** The devices on the car's CAN bus that have a program, from `device list`. */
 	devices: DeviceInfo[];
+	/** Every device the car's app has on its CAN bus, with a program or not, from `device list`. */
+	canDevices: CanDeviceDefinition[];
 }
 
 /** An extension the editor recommends, see electron/catalog.ts. */
