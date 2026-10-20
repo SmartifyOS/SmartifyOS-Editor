@@ -48,6 +48,8 @@ class Config implements SettingsStore {
 	writing = $state(0);
 
 	private queue: Promise<unknown> = Promise.resolve();
+	/** Changes shown at once that are still waiting to be written, oldest first. */
+	private waiting: Waiting[] = [];
 	/** A change was written, and the running app has not been restarted since. */
 	private restartDue = false;
 
@@ -134,22 +136,22 @@ class Config implements SettingsStore {
 		const field = this.field(key);
 		if (!field) return Promise.resolve();
 		if (field.type === 'section') {
-			this.shown(key, true);
-			return this.run(configCommands.set(key, JSON.stringify(value)), key);
+			const shown = this.shown(key, true);
+			return this.run(configCommands.set(key, JSON.stringify(value)), key, shown);
 		}
 		const plain = value as ConfigValue;
 		if (!field.required && same(plain, field.default)) return this.unset(key);
-		this.shown(key, plain);
+		const shown = this.shown(key, plain);
 		this.showLive(key);
-		return this.run(configCommands.set(key, configText(field, plain)), key);
+		return this.run(configCommands.set(key, configText(field, plain)), key, shown);
 	}
 
 	/** Takes a setting out, so SmartifyOS's own default is used. */
 	unset(key: string): Promise<void> {
 		if (!this.isSet(key)) return Promise.resolve();
-		this.shown(key, undefined);
+		const shown = this.shown(key, undefined);
 		this.showLive(key);
-		return this.run(configCommands.unset(key), key);
+		return this.run(configCommands.unset(key), key, shown);
 	}
 
 	/** Puts an element at the end of a list: an object of settings, or an id. */
@@ -166,21 +168,21 @@ class Config implements SettingsStore {
 	/** Takes an id out of a list of ids. */
 	removeId(key: string, id: string): Promise<void> {
 		const ids = this.value<string[]>(key);
-		this.shown(
+		const shown = this.shown(
 			key,
 			ids.filter((known) => known !== id)
 		);
 		this.showLive(key);
-		return this.run(configCommands.removeId(key, id), key);
+		return this.run(configCommands.removeId(key, id), key, shown);
 	}
 
 	/** Puts an id into a list of ids, at the end. */
 	addId(key: string, id: string): Promise<void> {
 		const ids = this.value<string[]>(key);
 		if (ids.includes(id)) return Promise.resolve();
-		this.shown(key, [...ids, id]);
+		const shown = this.shown(key, [...ids, id]);
 		this.showLive(key);
-		return this.run(configCommands.add(key, id), key);
+		return this.run(configCommands.add(key, id), key, shown);
 	}
 
 	/** Moves an element of a list, or an id in a list of ids, to another place. */
@@ -189,9 +191,9 @@ class Config implements SettingsStore {
 		if (to < 0 || to >= list.length || from === to) return Promise.resolve();
 		const moved = [...list];
 		moved.splice(to, 0, ...moved.splice(from, 1));
-		this.shown(key, moved as ConfigValue);
+		const shown = this.shown(key, moved as ConfigValue);
 		this.showLive(key);
-		return this.run(configCommands.move(`${key}[${from}]`, to), key);
+		return this.run(configCommands.move(`${key}[${from}]`, to), key, shown);
 	}
 
 	/**
@@ -208,8 +210,24 @@ class Config implements SettingsStore {
 		}
 	}
 
+	/**
+	 * Internal: shows a change at once, and keeps showing it over whatever the CLI says until
+	 * its own write is done, so a change made while another is being written never flickers back.
+	 */
+	private shown(key: string, value: ConfigValue | undefined): Waiting {
+		const waiting = { key, value };
+		this.waiting.push(waiting);
+		this.apply(key, value);
+		return waiting;
+	}
+
+	/** Internal: every change shown that is still waiting to be written, again. */
+	private applyWaiting(): void {
+		for (const { key, value } of this.waiting) this.apply(key, value);
+	}
+
 	/** Internal: what the inspector shows until the CLI says what it wrote. */
-	private shown(key: string, value: ConfigValue | undefined): void {
+	private apply(key: string, value: ConfigValue | undefined): void {
 		if (!this.result) return;
 		const values = { ...this.result.values };
 		const element = elementKey(key);
@@ -289,13 +307,15 @@ class Config implements SettingsStore {
 	}
 
 	/** Internal: one change at a time, the running app restarted once they are all written. */
-	private run(args: string[], key?: string): Promise<void> {
+	private run(args: string[], key?: string, shown?: Waiting): Promise<void> {
 		this.writing++;
 		const step = this.queue.then(async () => {
 			const result: ResultEvent = await editor.runCli(args);
+			this.waiting = this.waiting.filter((waiting) => waiting !== shown);
 			if (result.ok) {
 				const data = result.data as ConfigResult;
 				this.result = data;
+				this.applyWaiting();
 				this.problem = undefined;
 				this.manual = data.manual;
 				// What the running app took at once needs no restart, the rest does.
@@ -378,3 +398,9 @@ export function configText(field: ConfigField, value: ConfigValue): string {
 }
 
 export const config = new Config();
+
+/** Internal: a change shown at once, until it is written. */
+interface Waiting {
+	key: string;
+	value: ConfigValue | undefined;
+}

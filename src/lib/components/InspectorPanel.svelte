@@ -26,6 +26,7 @@
 	import TextField from './ui/TextField.svelte';
 	import Switch from './ui/Switch.svelte';
 	import CarIcon from './CarIcon.svelte';
+	import ExtensionAdds from './ExtensionAdds.svelte';
 	import ExtensionSettings from './ExtensionSettings.svelte';
 	import IconPicker from './IconPicker.svelte';
 	import BusSimulator from './BusSimulator.svelte';
@@ -221,6 +222,7 @@
 
 	{#if !info.core}
 		{#key info.name}
+			<ExtensionAdds name={info.name} />
 			<ExtensionSettings name={info.name} />
 		{/key}
 	{/if}

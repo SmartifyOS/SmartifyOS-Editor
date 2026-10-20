@@ -18,6 +18,7 @@
 	import { config, type SettingsStore } from '#lib/state/config.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Button from '../ui/Button.svelte';
+	import AddField from '../ui/AddField.svelte';
 	import ColorField from '../ui/ColorField.svelte';
 	import NumberField from '../ui/NumberField.svelte';
 	import Select from '../ui/Select.svelte';
@@ -102,7 +103,10 @@
 	{#if field.type === 'bool' && !spec.automatic}
 		<div class="group flex flex-col gap-0.5">
 			<div class="flex min-h-8 items-center gap-2">
-				<span class="min-w-0 flex-1 text-[13px]">{spec.label}</span>
+				<!-- Brighter once it is written, like every other setting. -->
+				<span class={['min-w-0 flex-1 text-[13px]', isSet ? 'text-fg' : 'text-muted']}
+					>{spec.label}</span
+				>
 				{@render reset()}
 				{#if code}
 					{@render inCode(code)}
@@ -146,16 +150,12 @@
 						</Button>
 					</div>
 				{/each}
-				{#key ids.length}
-					<TextField
-						value=""
-						placeholder="Add one"
-						label={`Add to ${spec.label}`}
-						onchange={(text) => {
-							if (text.trim()) void store.addId(spec.key, text.trim());
-						}}
-					/>
-				{/key}
+				<AddField
+					placeholder={field.itemType === 'integer' ? 'A number, like 0x18d1' : 'A new one'}
+					label={`Add to ${spec.label}`}
+					disabled={off}
+					onadd={(text) => void store.addId(spec.key, text)}
+				/>
 			{/if}
 			{@render hint()}
 		</div>
@@ -387,7 +387,8 @@
 	{:else}
 		<TextField
 			value={isSet ? ((value as string | null) ?? '') : ''}
-			placeholder={spec.placeholder ?? (field.default === null ? 'Not set' : String(field.default))}
+			placeholder={spec.placeholder ??
+				(field.default === null || field.default === '' ? 'Not set' : String(field.default))}
 			label={spec.label}
 			onchange={(text) => {
 				const next = text.trim();

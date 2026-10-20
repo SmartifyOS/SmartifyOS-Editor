@@ -216,6 +216,11 @@ export type ConfigFieldType =
 	| 'ids'
 	| 'list'
 	| 'section'
+	/** Another class, with settings of its own, see `SettingDetail`. An extension's only. */
+	| 'object'
+	/** A list or set of `item`s, or a map of them by a string, see `CollectionDetail`. */
+	| 'array'
+	| 'map'
 	| 'code';
 
 /** One setting `config` knows, by its key: `car.model3D.scale`. */
@@ -241,6 +246,10 @@ export interface ConfigField {
 	fields?: ConfigField[];
 	/** The default as it is written, when it is code rather than a plain value. */
 	defaultCode?: string;
+	/** ids: whole numbers rather than names, each as it is written (`0x18d1`). */
+	itemType?: 'integer';
+	/** array and map: what each item is. */
+	item?: ConfigField;
 }
 
 /** One element of a list of configs, like one wheel. */
@@ -270,6 +279,8 @@ export type ConfigValue =
  * what the app's `lib/main.dart` gives them, by name.
  */
 export interface ExtensionSettingsResult {
+	/** Its class, which is how the running app names it too (`describe`'s `extensions`). */
+	className?: string;
 	changed: boolean;
 	manual: string[];
 	/** Each argument of its constructor, with its doc comment as `describe`. */
@@ -280,6 +291,47 @@ export interface ExtensionSettingsResult {
 	line: number | null;
 	values: Record<string, ConfigValue>;
 	code: Record<string, { code: string; line: number }>;
+}
+
+/**
+ * What `extension settings --describe <key>` returns as `detail`: a setting with settings of its
+ * own, the ways it can be made, and what the app gives it. Its settings are named by dotted keys,
+ * `aiServer.url`.
+ */
+export interface SettingDetail {
+	kind: 'object';
+	key: string;
+	className: string;
+	/** Each constructor it can be made with, by its name after the dot, empty for the class's own. */
+	makings: { name: string; fields: ConfigField[] }[];
+	/** The ready-made ones it can be instead, as written: `SpeechModels.parakeet`. */
+	constants: string[];
+	written:
+		| {
+				kind: 'made';
+				making: string;
+				values: Record<string, ConfigValue>;
+				code: Record<string, { code: string; line: number }>;
+		  }
+		| { kind: 'constant'; name: string }
+		| { kind: 'code'; code: string; line: number }
+		| null;
+}
+
+/**
+ * What `extension settings --describe <key>` returns as `detail` for a list or map setting: its
+ * items, each by its place or its key (`voices[de]`, `backups[2]`).
+ */
+export interface CollectionDetail {
+	kind: 'collection';
+	key: string;
+	collection: 'array' | 'map';
+	/** What each item is. */
+	item: ConfigField;
+	/** Each item: what it is when it can be read, the code it is written as otherwise. */
+	entries: { key: string; line: number; value?: ConfigValue; code?: string }[];
+	/** The whole list or map, when it is written as code rather than item by item. */
+	code?: { code: string; line: number };
 }
 
 /** What `config` returns, every time: how the car is set up, and what it could set. */
@@ -318,6 +370,17 @@ export interface AppDescription {
 		current: CarLookName | null;
 	};
 	about: { deviceName: string; model: string | null; extra: Record<string, string> };
+	/**
+	 * Every extension, by its class, and what it added to SmartifyOS while it was set up, by
+	 * kind (`windows`, `widgets`, `tiles`, `settingsPages`, `statusIcons`, `layouts`, `themes`,
+	 * `infoDisplayValues`). Missing from an older SmartifyOS.
+	 */
+	extensions?: {
+		id: string;
+		name: string;
+		className: string;
+		adds: Record<string, { id: string; title: string | null }[]>;
+	}[];
 	/**
 	 * The configs `configure` can change as a whole while the app runs (`model3D`,
 	 * `infoDisplay`). Missing from an older SmartifyOS, which needs a restart for them.

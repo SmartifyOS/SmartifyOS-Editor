@@ -241,8 +241,15 @@
 		</div>
 	</Fold>
 
-	<Fold id="screen.size" title="Size" closed>
+	<Fold id="screen.size" title="Size">
 		<div class="flex flex-col gap-2.5">
+			<ConfigField
+				spec={{
+					key: 'display.windowSize',
+					label: "Your car's screen",
+					hint: 'In pixels. The preview takes its shape, and on a computer the window opens this big. On the car, the screen decides.'
+				}}
+			/>
 			<ConfigField
 				spec={{
 					key: 'display.designWidth',
@@ -258,7 +265,7 @@
 					automatic: { label: 'Only on the car', on: 'Always', off: 'Never' }
 				}}
 			/>
-			<ConfigField spec={{ key: 'display.windowSize', label: 'Window on a computer' }} />
+
 			<ConfigField
 				spec={{
 					key: 'display.ignoreSystemTextScale',

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Select from '../ui/Select.svelte';
-	import TextField from '../ui/TextField.svelte';
+	import AddField from '../ui/AddField.svelte';
 
 	/**
 	 * Adds a part to a list by its name: picked from the names the model or drawing has, the
@@ -45,6 +45,6 @@
 			/>
 		{/if}
 	{:else if !disabled}
-		<TextField value="" placeholder={`${label}, by its name`} {label} onchange={add} />
+		<AddField placeholder="Its name in the file" {label} onadd={add} />
 	{/if}
 {/key}

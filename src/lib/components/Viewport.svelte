@@ -5,6 +5,7 @@
 	import TriangleAlert from '~icons/lucide/triangle-alert';
 	import MonitorPlay from '~icons/lucide/monitor-play';
 	import { shortcut } from '#lib/shortcuts.ts';
+	import { config } from '#lib/state/config.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { remembered } from '#lib/state/remembered.svelte.ts';
 	import Panel from './Panel.svelte';
@@ -18,18 +19,31 @@
 	 * says where the frame is and shows what is going on while there is no app to show.
 	 */
 
-	const aspects = [
+	/** The size of your car's screen, `display.windowSize` in its `lib/main.dart`. */
+	const screen = $derived(config.value<{ width: number; height: number }>('display.windowSize'));
+
+	const aspects = $derived([
+		...(screen
+			? [
+					{
+						value: 'car',
+						label: `Your car's screen (${screen.width}×${screen.height})`,
+						ratio: screen.width / screen.height
+					}
+				]
+			: []),
 		{ value: 'free', label: 'Fill', ratio: undefined },
 		{ value: '16:9', label: '16:9', ratio: 16 / 9 },
 		{ value: '8:3', label: '8:3 (1280×480)', ratio: 8 / 3 },
 		{ value: '5:3', label: '5:3 (800×480)', ratio: 5 / 3 },
 		{ value: '4:3', label: '4:3', ratio: 4 / 3 }
-	] as const;
+	]);
 
 	/** Room around the frame, so it reads as a screen on a canvas. */
 	const padding = 16;
 
-	const aspect = remembered('viewport.aspect', 'free');
+	/** The shape picked, your car's own until another is. */
+	const aspect = remembered('viewport.shape', 'car');
 
 	let area = $state<HTMLDivElement>();
 	let frame = $state<HTMLDivElement>();

@@ -10,6 +10,7 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
 	import Button from '../ui/Button.svelte';
+	import AddField from '../ui/AddField.svelte';
 	import NumberField from '../ui/NumberField.svelte';
 	import Select from '../ui/Select.svelte';
 	import Switch from '../ui/Switch.svelte';
@@ -76,9 +77,6 @@
 			if (copied === id) copied = undefined;
 		}, 1500);
 	}
-
-	/** Made anew after a value is added, so its field is empty again. */
-	let addedValue = $state(0);
 </script>
 
 {#if sectionCode}
@@ -212,18 +210,12 @@
 						</div>
 					{/if}
 				{/each}
-				{#key addedValue}
-					<TextField
-						value=""
-						placeholder="Add a value, like Engine speed"
-						label="Add a value"
-						onchange={(label) => {
-							if (!label.trim()) return;
-							void config.add(values, { id: idFor(label), label: label.trim() });
-							addedValue++;
-						}}
-					/>
-				{/key}
+				<AddField
+					placeholder="A new value, like Engine speed"
+					label="Add a value"
+					disabled={!canWrite}
+					onadd={(label) => void config.add(values, { id: idFor(label), label })}
+				/>
 				<p class="text-xs text-faint">
 					Smaller orders come first in the list the driver picks from. Your app reports each number
 					with SmartifyOsInfoDisplay.reportReading.

@@ -304,6 +304,8 @@ export const configCommands = {
  */
 export const extensionSettingsCommands = {
 	read: (name: string) => ['extension', 'settings', name],
+	/** Data: `{ detail: SettingDetail }`. */
+	describe: (name: string, key: string) => ['extension', 'settings', name, '--describe', key],
 	set: (name: string, key: string, value: string) => [
 		'extension',
 		'settings',

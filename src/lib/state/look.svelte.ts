@@ -31,13 +31,16 @@ class Look {
 	partNames = $state<{ model3D: string[]; drawing2D: string[] }>({ model3D: [], drawing2D: [] });
 
 	private queue: Promise<void> = Promise.resolve();
+	/** Changes shown at once that are still waiting to be written, oldest first. */
+	private waiting: LookChange[] = [];
 	private describing = 0;
 
-	/** Reads `lib/main.dart` again. */
+	/** Reads `lib/main.dart` again, unless a change is being written, which reads it anyway. */
 	async read(): Promise<void> {
+		if (this.writing > 0) return;
 		const path = editor.project?.path;
 		const result = await editor.queryCli(checks.appearance);
-		if (editor.project?.path !== path) return;
+		if (editor.project?.path !== path || this.writing > 0) return;
 		const data = result?.ok ? (result.data as AppearanceResult) : undefined;
 		this.appearance = data?.appearance;
 		this.partNames = data?.partNames ?? { model3D: [], drawing2D: [] };
@@ -73,13 +76,17 @@ class Look {
 	/** Shows a change in the running app at once, then writes it into `lib/main.dart`. */
 	change(change: LookChange): Promise<void> {
 		this.problem = undefined;
+		this.waiting.push(change);
 		if (this.appearance) this.appearance = applied(this.appearance, change);
 		const files = change.files !== undefined;
 		if (!files && this.app) void this.configure(change);
 
 		this.writing++;
 		const write = this.queue.then(() => this.write(change));
-		this.queue = write.finally(() => this.writing--);
+		this.queue = write.finally(() => {
+			this.writing--;
+			this.waiting = this.waiting.filter((waiting) => waiting !== change);
+		});
 		return write;
 	}
 
@@ -118,6 +125,12 @@ class Look {
 				restart ||= data.restart;
 			} else if (this.appearance) {
 				this.appearance = { ...this.appearance, about: data.about };
+			}
+			// The changes made since are not in what the CLI says yet: they stay shown.
+			for (const waiting of this.waiting) {
+				if (waiting !== change && this.appearance) {
+					this.appearance = applied(this.appearance, waiting);
+				}
 			}
 		}
 		this.manual = manual;
