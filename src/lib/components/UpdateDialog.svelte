@@ -50,7 +50,7 @@
 			</div>
 		</div>
 		<div class="flex justify-end gap-2 border-t border-line px-6 py-4">
-			<Button variant="ghost" size="sm" onclick={later}>Later</Button>
+			<Button size="sm" onclick={later}>Later</Button>
 			<!-- svelte-ignore a11y_autofocus -->
 			<Button variant="primary" size="sm" autofocus onclick={() => editor.restartToUpdate()}>
 				Restart now

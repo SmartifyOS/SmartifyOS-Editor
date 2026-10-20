@@ -189,7 +189,7 @@
 			/>
 			<span class="text-xs text-faint">What it says, the driver reads this.</span>
 			<div class="flex justify-end gap-2">
-				<Button variant="ghost" size="sm" onclick={() => (adding = undefined)}>Cancel</Button>
+				<Button size="sm" onclick={() => (adding = undefined)}>Cancel</Button>
 				<Button variant="primary" size="sm" disabled={!newTitle.trim()} onclick={addRow}>Add</Button
 				>
 			</div>
@@ -215,7 +215,6 @@
 	{#each page.rows as row, index (row.id ?? index)}
 		{@const words = row.kind ? rowWords[row.kind] : undefined}
 		<Button
-			variant="ghost-muted"
 			size="sm"
 			class="w-full justify-start"
 			title="Open it in VS Code"
@@ -247,12 +246,7 @@
 		<VsCode /> Open it in VS Code
 	</Button>
 	{#if page.editable}
-		<Button
-			variant="ghost-muted"
-			size="sm"
-			class="w-full justify-start"
-			onclick={() => void settingsPages.remove(page)}
-		>
+		<Button size="sm" class="w-full justify-start" onclick={() => void settingsPages.remove(page)}>
 			<Trash /> Remove this page
 		</Button>
 	{/if}

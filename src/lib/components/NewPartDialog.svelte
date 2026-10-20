@@ -122,7 +122,7 @@
 				<VsCode class="size-3.5 shrink-0" />
 				<span>Then it opens in VS Code, to {words.write.toLowerCase()}.</span>
 			</span>
-			<Button variant="ghost" size="sm" disabled={creating} onclick={close}>Cancel</Button>
+			<Button size="sm" disabled={creating} onclick={close}>Cancel</Button>
 			<Button variant="primary" size="sm" disabled={!name.trim() || creating} onclick={create}>
 				{#if creating}<LoaderCircle class="animate-spin" />{/if}
 				Create

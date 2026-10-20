@@ -410,7 +410,7 @@
 							</p>
 						{/if}
 						<div class="flex gap-2">
-							<Button variant="ghost" onclick={close}>Close</Button>
+							<Button onclick={close}>Close</Button>
 							<!-- svelte-ignore a11y_autofocus -->
 							<Button variant="primary" autofocus onclick={() => openCreated(path)}>
 								Open it
@@ -431,7 +431,7 @@
 							{/if}
 						</div>
 						<div class="flex gap-2">
-							<Button variant="ghost" onclick={close}>Close</Button>
+							<Button onclick={close}>Close</Button>
 							<Button onclick={() => (creating = undefined)}>
 								<ArrowLeft /> Back
 							</Button>
@@ -689,7 +689,7 @@
 					<span class="text-[13px] text-faint">Step {index + 1} of {order.length}</span>
 					<div class="ml-auto flex gap-2">
 						{#if index > 0}
-							<Button variant="ghost" disabled={busy} onclick={() => go(order[index - 1] ?? step)}>
+							<Button disabled={busy} onclick={() => go(order[index - 1] ?? step)}>
 								<ArrowLeft /> Back
 							</Button>
 						{/if}

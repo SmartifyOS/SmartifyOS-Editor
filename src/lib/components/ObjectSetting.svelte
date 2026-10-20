@@ -231,9 +231,7 @@
 							<Button size="sm" variant="primary" disabled={!ready || !canWrite} onclick={finish}>
 								Use it
 							</Button>
-							<Button size="sm" variant="ghost-muted" onclick={() => (pending = undefined)}>
-								Leave it
-							</Button>
+							<Button size="sm" onclick={() => (pending = undefined)}>Leave it</Button>
 						</div>
 					</div>
 				{:else if written?.kind === 'code'}

@@ -85,12 +85,7 @@
 
 {#snippet computer()}
 	{#snippet recheck()}
-		<Button
-			variant="ghost-muted"
-			size="sm"
-			disabled={editor.checkingComputer}
-			onclick={() => editor.checkComputer()}
-		>
+		<Button size="sm" disabled={editor.checkingComputer} onclick={() => editor.checkComputer()}>
 			<RefreshCw class={editor.checkingComputer ? 'animate-spin' : ''} /> Check again
 		</Button>
 	{/snippet}
@@ -166,11 +161,7 @@
 				'Next to the car you opened last, or in Documents for the first one.'}
 		>
 			{#if editor.settings?.newCarFolder}
-				<Button
-					variant="ghost-muted"
-					size="sm"
-					onclick={() => editor.changeSettings({ newCarFolder: null })}
-				>
+				<Button size="sm" onclick={() => editor.changeSettings({ newCarFolder: null })}>
 					Reset
 				</Button>
 			{/if}

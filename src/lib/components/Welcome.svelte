@@ -51,9 +51,7 @@
 						>
 							Install SmartifyOS
 						</Button>
-						<Button size="sm" variant="ghost" onclick={() => editor.refreshCli()}>
-							Check again
-						</Button>
+						<Button size="sm" onclick={() => editor.refreshCli()}>Check again</Button>
 					</div>
 				{:else}
 					<p class="selectable mt-1.5 text-muted">{editor.cli.reason}</p>
@@ -82,9 +80,7 @@
 					>
 						Get it ready
 					</Button>
-					<Button size="sm" variant="ghost" onclick={() => goto('#/settings')}>
-						See what it has
-					</Button>
+					<Button size="sm" onclick={() => goto('#/settings')}>See what it has</Button>
 				</div>
 			</div>
 		{/if}

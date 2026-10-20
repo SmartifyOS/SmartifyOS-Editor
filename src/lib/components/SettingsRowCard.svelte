@@ -158,7 +158,6 @@
 							</div>
 						{/each}
 						<Button
-							variant="ghost-muted"
 							size="sm"
 							class="justify-start"
 							onclick={() => edit({ options: [...options, `Option ${options.length + 1}`] })}
@@ -280,7 +279,6 @@
 					<ArrowDown />
 				</Button>
 				<Button
-					variant="ghost-muted"
 					size="sm"
 					class="ml-auto"
 					onclick={() => void settingsPages.change(settingsCommands.removeRow(page, query))}

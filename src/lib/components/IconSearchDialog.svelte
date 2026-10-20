@@ -108,7 +108,7 @@
 			<span class="flex-1 text-[13px] text-muted">
 				{loaded ? `${found.length} of ${materialIcons.all.length} icons` : ''}
 			</span>
-			<Button variant="ghost" size="sm" onclick={onclose}>Cancel</Button>
+			<Button size="sm" onclick={onclose}>Cancel</Button>
 		</div>
 	</div>
 </div>

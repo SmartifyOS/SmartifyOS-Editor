@@ -56,11 +56,7 @@
 				<Eye /> Show it
 			</Button>
 		{/if}
-		<Button
-			variant="ghost-muted"
-			size="sm"
-			onclick={() => editor.openInVsCode(undefined, 'lib/main.dart', line)}
-		>
+		<Button size="sm" onclick={() => editor.openInVsCode(undefined, 'lib/main.dart', line)}>
 			<VsCode /> Open in VS Code
 		</Button>
 	</div>

@@ -147,7 +147,6 @@
 			<div class="flex justify-end gap-2 border-t border-line px-6 py-4">
 				{#if task.status === 'running'}
 					<Button
-						variant="ghost"
 						size="sm"
 						label="It keeps going, the bottom of the window shows how far it is"
 						onclick={() => (task.hidden = true)}

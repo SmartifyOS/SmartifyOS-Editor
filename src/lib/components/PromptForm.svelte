@@ -104,7 +104,7 @@
 	</div>
 
 	<div class="flex justify-end gap-2 border-t border-line px-6 py-4">
-		<Button variant="ghost" size="sm" onclick={() => editor.cancelPrompt(open)}>Cancel</Button>
+		<Button size="sm" onclick={() => editor.cancelPrompt(open)}>Cancel</Button>
 		{#if prompt.kind === 'confirm'}
 			<Button size="sm" disabled={open.answered} onclick={() => editor.answer(open, false)}>
 				No

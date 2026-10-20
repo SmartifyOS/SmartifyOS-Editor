@@ -146,7 +146,7 @@
 		</div>
 
 		<div class="flex justify-end gap-2 border-t border-line px-6 py-4">
-			<Button variant="ghost" size="sm" onclick={close}>Close</Button>
+			<Button size="sm" onclick={close}>Close</Button>
 		</div>
 	</div>
 </div>

@@ -165,7 +165,6 @@
 					/>
 				{:else}
 					<Button
-						variant="ghost-muted"
 						size="sm"
 						class="justify-start"
 						disabled={!canWrite || waiting.length > 0}

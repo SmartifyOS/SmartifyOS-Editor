@@ -103,7 +103,7 @@
 		</div>
 
 		<div class="flex items-center justify-end gap-2 border-t border-line px-6 py-4">
-			<Button variant="ghost" size="sm" disabled={creating} onclick={close}>Cancel</Button>
+			<Button size="sm" disabled={creating} onclick={close}>Cancel</Button>
 			<Button variant="primary" size="sm" disabled={!name.trim() || creating} onclick={create}>
 				{#if creating}<LoaderCircle class="animate-spin" />{/if}
 				Create

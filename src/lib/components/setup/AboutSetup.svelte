@@ -124,7 +124,6 @@
 					</div>
 				{/each}
 				<Button
-					variant="ghost-muted"
 					size="sm"
 					class="justify-start"
 					disabled={!canWrite}

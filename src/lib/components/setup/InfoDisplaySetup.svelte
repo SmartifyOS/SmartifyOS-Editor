@@ -196,7 +196,6 @@
 										Report it in code as <code class="font-mono text-muted">'{id}'</code>
 									</span>
 									<Button
-										variant="ghost-muted"
 										size="sm"
 										class="h-6! px-1.5! text-xs"
 										label="Copies the line your code reports its number with"
@@ -307,7 +306,6 @@
 					<p class="text-[13px] text-muted">None yet, so it shows only the speed.</p>
 				{/if}
 				<Button
-					variant="ghost-muted"
 					size="sm"
 					class="justify-start"
 					disabled={!canWrite}

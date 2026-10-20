@@ -142,7 +142,6 @@
 			<div class="flex flex-col gap-0.5">
 				{#each setupAreas.slice(0, 4) as area (area.id)}
 					<Button
-						variant="ghost"
 						size="sm"
 						class="justify-start font-normal"
 						onclick={() => (editor.selection = { kind: 'setup', area: area.id })}
@@ -163,7 +162,7 @@
 				</p>
 			{:else if updates.failed}
 				<p class="text-[13px] text-muted">Could not look for updates. Is this computer online?</p>
-				{@render action(RefreshCw, 'Look again', () => editor.checkCarUpdates(), 'ghost-muted')}
+				{@render action(RefreshCw, 'Look again', () => editor.checkCarUpdates())}
 			{:else}
 				{@const extensions = Object.keys(updates.extensions).length}
 				{#if updates.smartifyOs}
@@ -252,7 +251,7 @@
 			)}
 		{/if}
 		{#if !info.linkedTo}
-			{@render action(FolderInput, 'Use a copy from a folder…', linkCopy, 'ghost-muted')}
+			{@render action(FolderInput, 'Use a copy from a folder…', linkCopy)}
 		{/if}
 	{/snippet}
 	{@render section(undefined, actions)}
@@ -435,12 +434,7 @@
 
 	{#if part.canChange.remove}
 		{#snippet danger()}
-			{@render action(
-				Trash,
-				`Remove this ${words.one}`,
-				() => void parts.remove(part),
-				'ghost-muted'
-			)}
+			{@render action(Trash, `Remove this ${words.one}`, () => void parts.remove(part))}
 		{/snippet}
 		{@render section(undefined, danger)}
 	{/if}
@@ -478,7 +472,7 @@
 	Icon: Component,
 	label: string,
 	onclick: () => void,
-	variant: 'primary' | 'outline' | 'ghost-muted' = 'outline',
+	variant: 'primary' | 'outline' = 'outline',
 	runsCli = true
 )}
 	<Button {variant} size="sm" class="w-full justify-start" disabled={runsCli && !canRun} {onclick}>

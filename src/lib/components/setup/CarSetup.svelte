@@ -209,7 +209,7 @@
 			/>
 			{@render vector('car.model3D.rotation', 'Turned', '°', 15)}
 			<div class="-mt-1 flex justify-end">
-				<Button variant="ghost-muted" size="sm" disabled={!canWrite} onclick={turnAround}>
+				<Button size="sm" disabled={!canWrite} onclick={turnAround}>
 					<RotateCw /> Turn it around
 				</Button>
 			</div>
