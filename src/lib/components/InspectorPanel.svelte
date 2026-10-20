@@ -26,18 +26,21 @@
 	import TextField from './ui/TextField.svelte';
 	import Switch from './ui/Switch.svelte';
 	import CarIcon from './CarIcon.svelte';
+	import ExtensionSettings from './ExtensionSettings.svelte';
 	import IconPicker from './IconPicker.svelte';
 	import BusSimulator from './BusSimulator.svelte';
-	import CarLook from './CarLook.svelte';
 	import SettingsPageInspector from './SettingsPageInspector.svelte';
+	import SetupInspector from './setup/SetupInspector.svelte';
+	import { setupAreas, type SetupArea } from '#lib/setup.ts';
+	import ChevronRight from '~icons/lucide/chevron-right';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
 
 	/**
 	 * What is picked in the car panel, and what can be done with it: the car as a whole, its
-	 * SmartifyOS or an extension, or a device. How the car looks is edited here too, with the
-	 * change showing in the preview.
+	 * SmartifyOS or an extension, a device, or one of the setup pages, where how the car looks
+	 * and works is edited with the change showing in the preview.
 	 */
 
 	type Package = PackageInfo & { switchedOn?: boolean | null; core: boolean };
@@ -54,10 +57,12 @@
 			| { kind: 'canDevice'; name: string; title: string; node: number }
 			| { kind: 'part'; part: Part }
 			| { kind: 'settings'; page: SettingsPageInfo }
+			| { kind: 'setup'; area: SetupArea }
 			| undefined => {
 			const picked = editor.selection;
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
+			if (picked.kind === 'setup') return picked;
 			if (picked.kind === 'settings') {
 				const page = settingsPages.find(picked.key);
 				return page && { kind: 'settings', page };
@@ -109,6 +114,10 @@
 				{@render partView(item.part)}
 			{:else if item.kind === 'settings'}
 				<SettingsPageInspector page={item.page} />
+			{:else if item.kind === 'setup'}
+				{#key item.area}
+					<SetupInspector area={item.area} />
+				{/key}
 			{:else}
 				{@render deviceView(item.info)}
 			{/if}
@@ -125,7 +134,26 @@
 	{#if project}
 		{@render heading(project.name, project.path)}
 
-		<CarLook />
+		{#snippet setup()}
+			<p class="text-[13px] text-muted">
+				How your car looks and works is under Setup in the car panel.
+			</p>
+			<div class="flex flex-col gap-0.5">
+				{#each setupAreas.slice(0, 4) as area (area.id)}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="justify-start font-normal"
+						onclick={() => (editor.selection = { kind: 'setup', area: area.id })}
+					>
+						<area.icon class="text-muted" />
+						{area.title}
+						<ChevronRight class="ml-auto text-faint" />
+					</Button>
+				{/each}
+			</div>
+		{/snippet}
+		{@render section('Setup', setup)}
 
 		{#snippet updateList()}
 			{#if !updates}
@@ -190,6 +218,12 @@
 			{@render field('Switched on', info.switchedOn ? 'Yes' : 'No, not in lib/main.dart')}
 		{/if}
 	</dl>
+
+	{#if !info.core}
+		{#key info.name}
+			<ExtensionSettings name={info.name} />
+		{/key}
+	{/if}
 
 	{#snippet actions()}
 		{#if info.linkedTo}

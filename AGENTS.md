@@ -11,7 +11,7 @@ It is for people doing something like programming for the first time. The CLI (t
 - **Electron** for the window on macOS, Windows and Linux.
 - **SvelteKit** (Svelte 5, runes only) for the window, as a static single page with the hash router, served by Electron from `app://editor/`.
 - **Tailwind CSS 4**, every color a token in `src/routes/layout.css`. Dark only: near black surfaces edge to edge, hairline borders of white at a few percent, rounded controls with a faint top highlight, glass for menus and dialogs. Text is 14px and controls 32 to 36px tall; nothing smaller than 12px.
-- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices, `ui/Switch.svelte` for on and off and `ui/TextField.svelte` for a line of text (taken on Enter or when left, not on every key).
+- **Every button is `ui/Button.svelte`** (variants `primary`, `outline`, `ghost`, `ghost-muted`), with `ui/Kbd.svelte` for shortcuts, `ui/Select.svelte` for choices, `ui/Segmented.svelte` for a few side by side, `ui/Switch.svelte` for on and off, `ui/TextField.svelte` for a line of text and `ui/NumberField.svelte` for a number (both taken on Enter or when left, not on every key), `ui/Slider.svelte` (taken when let go) and `ui/ColorField.svelte`.
 - **unplugin-icons** for every icon, from the Lucide Iconify set: `import Play from '~icons/lucide/play'`. A brand's own logo comes from the `logos` set (`~icons/logos/visual-studio-code`), and from `mdi` in one colour where it sits on the accent colour (`~icons/mdi/microsoft-visual-studio-code`). Never draw an icon by hand. The car's own icons (Flutter's `Icons`, which a window, tile, widget or settings page has) are `CarIcon.svelte`: the Lucide one for the few the editor offers first, otherwise the Material icon from the `ic` set, loaded whole the first time one is needed (`lib/materialIcons.svelte.ts`). `IconPicker.svelte` picks one, with every icon behind "More icons".
 - **koffi** for the few native calls the live preview needs (Win32, Xlib, macOS Accessibility). The only runtime dependency.
 - **Bun** for installing, scripts and the dev runner. **esbuild** bundles the main process and preload. **electron-builder** packages.
@@ -36,6 +36,7 @@ src/lib/commands.ts  every CLI command the window runs on the car, with its argu
 src/lib/exports.ts   what the Export menu (and the inspector) can put on a USB stick
 src/lib/carActions.ts what the right click menu of each row in the car panel offers
 src/lib/look.ts      the built-in layouts, themes, bars and ways to draw the car, a copy of the CLI's
+src/lib/setup.ts     the setup pages, and the editor's words for every setting on them
 shared/next-steps.ts the editor's words for the steps the CLI suggests after a command
 electron/catalog.ts  the recommended extensions, catalog/extensions.json for now
 src/lib/components/  the panels, the title bar, the start screen, the dialogs, settings/
@@ -59,7 +60,15 @@ Opening in VS Code looks where its installers put it on every system before PATH
 
 ## How the car looks
 
-The inspector edits how the car looks (layout, theme, driver's side, bar, the 3D model, drawing or picture) and its About page, in `CarLook.svelte` with its state in `state/look.svelte.ts`. Two sources: `lib/main.dart`, read with `appearance --show` and written by `appearance` and `about` (which is what lasts), and the running app, asked through `preview.call` (`describe`, `configure`, see `call` in the CLI's README) for its own layouts and themes and to show a change at once. A change goes to the running app first and is then written by the CLI, one at a time, with no task dialog. A new picture of the car only shows after a hot restart, which the editor does by itself. Something new the editor should change live is a parameter of `configure` in core's `EditorBridge` first, then a flag of a CLI command.
+The Screen, car and About setup pages (see below) edit how the car looks (layout, theme, driver's side, bar, the 3D model, drawing or picture) and its About page, with their state in `state/look.svelte.ts`. Two sources: `lib/main.dart`, read with `appearance --show` and written by `appearance` and `about` (which is what lasts), and the running app, asked through `preview.call` (`describe`, `configure`, see `call` in the CLI's README) for its own layouts and themes and to show a change at once. A change goes to the running app first and is then written by the CLI, one at a time, with no task dialog. A new picture of the car only shows after a hot restart, which the editor does by itself. Something new the editor should change live is a parameter of `configure` in core's `EditorBridge` first, then a flag of a CLI command.
+
+## Setting up the car
+
+Everything else the car's `lib/main.dart` hands `SmartifyOs().init` that is plain data (how the 3D model sits and which of its parts move, the info display, Bluetooth, the reverse camera, the built-ins to leave out and the rest) is a setting of the CLI's `config`, by its key: `car.model3D.scale`. The car panel's Setup group has a page for each part (`setupAreas` in `src/lib/setup.ts`), shown by `setup/SetupInspector.svelte`. A page that is only settings is a list of folds in `fieldPages`, each setting drawn by `setup/ConfigField.svelte` with the control its type wants; the Screen, car, info display, About and built-ins pages have components of their own. The CLI says what each setting is and its default, the editor only what it is called and where it goes, so a new setting is a field in the CLI's schema and a line in `setup.ts`.
+
+`state/config.svelte.ts` writes one change at a time, shows it at once, and takes a setting back to its default instead of writing the default. How the 3D model sits and is lit, and the info display, go to the running app at once too (`configure`, while a slider is dragged as well), when its `describe` lists them under `live`. Everything else SmartifyOS reads when it starts, so once every change is written the running app is restarted and what the page is about put on screen again (`show` in `setupAreas`). A setting written as code is only shown, with a way to it in VS Code. The wheels and steering wheel are picked from the names of the model's objects and the drawing's groups, which `appearance` reports.
+
+An extension's inspector shows its settings the same way, through the CLI's `extension settings` (`state/extensionSettings.svelte.ts`, `ExtensionSettings.svelte`): the arguments its class takes, with its doc comments as the explanations, cut to a sentence with "More". `ConfigField` draws any `SettingsStore`, the car's or an extension's.
 
 ## Windows, tiles and widgets
 

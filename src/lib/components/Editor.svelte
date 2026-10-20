@@ -3,6 +3,8 @@
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
+	import { config } from '#lib/state/config.svelte.ts';
+	import { rereadExtensionSettings } from '#lib/state/extensionSettings.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
@@ -20,6 +22,7 @@
 	$effect(() => {
 		if (!editor.project) return;
 		void look.read();
+		void config.read();
 		void parts.read();
 		void settingsPages.read();
 	});
@@ -32,7 +35,11 @@
 			paths.some((path) => prefixes.some((prefix) => path.startsWith(prefix)));
 		const main = any('lib/main.dart', 'pubspec.yaml');
 		untrack(() => {
-			if (main) void look.read();
+			if (main) {
+				void look.read();
+				void config.read();
+				rereadExtensionSettings();
+			}
 			if (main || any('lib/windows/', 'lib/quick_settings/', 'lib/home_widgets/')) {
 				void parts.read();
 			}

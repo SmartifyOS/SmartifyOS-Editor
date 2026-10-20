@@ -280,6 +280,54 @@ export const settingsCommands = {
 	]
 };
 
+/**
+ * The commands that change one setting of `SmartifyOs().init` by its key (see `config` in the
+ * CLI's README), run without the task dialog, one at a time. Values are given the way the CLI
+ * takes them typed, see `configText`. Data: `ConfigResult`.
+ */
+export const configCommands = {
+	set: (key: string, value: string) => ['config', '--set', `${key}=${value}`],
+	/** Back to SmartifyOS's own default. */
+	unset: (key: string) => ['config', '--unset', key],
+	/** At the end of a list, an element as JSON or an id. */
+	add: (key: string, value: string) => ['config', '--add', `${key}=${value}`],
+	/** An element by its place, `key[2]`. */
+	remove: (element: string) => ['config', '--remove', element],
+	/** An id out of a list of ids. */
+	removeId: (key: string, id: string) => ['config', '--remove', `${key}=${id}`],
+	move: (element: string, to: number) => ['config', '--move', `${element}=${to}`]
+};
+
+/**
+ * The commands that read and change an extension's settings, the arguments its class takes in
+ * `lib/main.dart`, by its package name. Data: `ExtensionSettingsResult`.
+ */
+export const extensionSettingsCommands = {
+	read: (name: string) => ['extension', 'settings', name],
+	set: (name: string, key: string, value: string) => [
+		'extension',
+		'settings',
+		name,
+		'--set',
+		`${key}=${value}`
+	],
+	unset: (name: string, key: string) => ['extension', 'settings', name, '--unset', key],
+	add: (name: string, key: string, id: string) => [
+		'extension',
+		'settings',
+		name,
+		'--add',
+		`${key}=${id}`
+	],
+	remove: (name: string, key: string, id: string) => [
+		'extension',
+		'settings',
+		name,
+		'--remove',
+		`${key}=${id}`
+	]
+};
+
 /** Internal: what the CLI finds a page by, its id, or its file when it has none. */
 function pageQuery(page: SettingsPageInfo): string {
 	return page.id ?? page.file.split('/').pop() ?? page.file;
@@ -310,5 +358,7 @@ export const checks = {
 	/** Data: `DoctorReport`, or the same as `error.details` when something is missing. */
 	computer: ['doctor'],
 	/** Data: `AppearanceResult`, how the car looks and its About page. */
-	appearance: ['appearance', '--show']
+	appearance: ['appearance', '--show'],
+	/** Data: `ConfigResult`, every other setting in `lib/main.dart`. */
+	config: ['config']
 };

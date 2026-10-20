@@ -198,6 +198,102 @@ export interface AppearanceResult {
 	assets: string[];
 	/** The running app only shows it after a restart. */
 	restart: boolean;
+	/** What the parts of the 3D model and the drawing are called. Missing from an older CLI. */
+	partNames?: { model3D: string[]; drawing2D: string[] };
+}
+
+/** What a setting of `config` is, which says how it is shown and given. */
+export type ConfigFieldType =
+	| 'bool'
+	| 'number'
+	| 'integer'
+	| 'string'
+	| 'enum'
+	| 'duration'
+	| 'color'
+	| 'offset3d'
+	| 'size'
+	| 'ids'
+	| 'list'
+	| 'section'
+	| 'code';
+
+/** One setting `config` knows, by its key: `car.model3D.scale`. */
+export interface ConfigField {
+	/** The whole key, or for a field of a list's elements its name in the element. */
+	key: string;
+	type: ConfigFieldType;
+	/** The CLI's own line about it. */
+	describe: string;
+	/** What SmartifyOS takes when it is not written, null when that is nothing. */
+	default: ConfigValue;
+	/** Null can be written, and means something else than leaving it out. */
+	nullable?: boolean;
+	/** Has to be given when its config or element is made. */
+	required?: boolean;
+	/** enum: the names it can be. */
+	values?: string[];
+	/** The ids constants of SmartifyOS stand for, by the constant's name. */
+	constants?: Record<string, string>;
+	/** section and list: its class. */
+	className?: string;
+	/** list: what each element has. */
+	fields?: ConfigField[];
+	/** The default as it is written, when it is code rather than a plain value. */
+	defaultCode?: string;
+}
+
+/** One element of a list of configs, like one wheel. */
+export interface ConfigElement {
+	/** Where it starts in `lib/main.dart`, from 1. */
+	line: number;
+	values: Record<string, ConfigValue>;
+	/** What is written as code, by the field's name. */
+	code: Record<string, string>;
+	/** The whole element, when it is written as code. */
+	asCode?: string;
+}
+
+/** A value of a setting: durations in milliseconds, colours as `#AARRGGBB`. */
+export type ConfigValue =
+	| boolean
+	| number
+	| string
+	| null
+	| { x: number; y: number; z: number }
+	| { width: number; height: number }
+	| string[]
+	| ConfigElement[];
+
+/**
+ * What `extension settings` returns, every time: the settings an extension's class takes, and
+ * what the app's `lib/main.dart` gives them, by name.
+ */
+export interface ExtensionSettingsResult {
+	changed: boolean;
+	manual: string[];
+	/** Each argument of its constructor, with its doc comment as `describe`. */
+	fields: ConfigField[];
+	/** Whether the app hands it to SmartifyOS, where its settings go. */
+	switchedOn: boolean;
+	/** Where it is in `lib/main.dart`, from 1. */
+	line: number | null;
+	values: Record<string, ConfigValue>;
+	code: Record<string, { code: string; line: number }>;
+}
+
+/** What `config` returns, every time: how the car is set up, and what it could set. */
+export interface ConfigResult {
+	changed: boolean;
+	/** What has no clear place in `lib/main.dart`, as the line to add by hand. */
+	manual: string[];
+	fields: ConfigField[];
+	/** What is written and can be read, by key. Anything else is its default. */
+	values: Record<string, ConfigValue>;
+	/** What is written as code, by key, with the line it is on. */
+	code: Record<string, { code: string; line: number }>;
+	/** Where each config that is written starts, from 1, by key. */
+	lines: Record<string, number>;
 }
 
 /** What `about` returns, `--show` included. */
@@ -222,6 +318,11 @@ export interface AppDescription {
 		current: CarLookName | null;
 	};
 	about: { deviceName: string; model: string | null; extra: Record<string, string> };
+	/**
+	 * The configs `configure` can change as a whole while the app runs (`model3D`,
+	 * `infoDisplay`). Missing from an older SmartifyOS, which needs a restart for them.
+	 */
+	live?: string[];
 	/** Every settings page a page of the car's own can go in. Missing from an older SmartifyOS. */
 	settingsPages?: { id: string; title: string; parent: string }[];
 }

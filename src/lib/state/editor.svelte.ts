@@ -20,6 +20,7 @@ import type {
 	ResultEvent
 } from '../../../shared/cli.ts';
 import { checks, computerCommands } from '../commands.ts';
+import type { SetupArea } from '../setup.ts';
 import { Task, type TaskSpec } from './task.svelte.ts';
 
 /**
@@ -46,7 +47,8 @@ export interface Problem {
  * What is picked in the car panel, and shown in the inspector. A `canDevice` is one the car's
  * app has on its CAN bus that has no program yet, by its name. A `part` is one of the
  * app's windows, quick settings tiles or home screen widgets, and `settings` one of its settings
- * pages, both by their key (`partKey`, `pageKey`), since a file can have several.
+ * pages, both by their key (`partKey`, `pageKey`), since a file can have several. A `setup` is
+ * one of the setup pages, how the car is set up in `lib/main.dart`.
  */
 export type Selection =
 	| { kind: 'car' }
@@ -54,7 +56,8 @@ export type Selection =
 	| { kind: 'device'; folder: string }
 	| { kind: 'canDevice'; name: string }
 	| { kind: 'part'; part: PartKind; key: string }
-	| { kind: 'settings'; key: string };
+	| { kind: 'settings'; key: string }
+	| { kind: 'setup'; area: SetupArea };
 
 /** Newer versions there are for the car, by what they are for. */
 export interface CarUpdates {

@@ -27,6 +27,8 @@ class Look {
 	manual = $state<string[]>([]);
 	/** Changes still being written. */
 	writing = $state(0);
+	/** What the parts of the car's 3D model and drawing are called, for picking them by name. */
+	partNames = $state<{ model3D: string[]; drawing2D: string[] }>({ model3D: [], drawing2D: [] });
 
 	private queue: Promise<void> = Promise.resolve();
 	private describing = 0;
@@ -36,7 +38,9 @@ class Look {
 		const path = editor.project?.path;
 		const result = await editor.queryCli(checks.appearance);
 		if (editor.project?.path !== path) return;
-		this.appearance = result?.ok ? (result.data as AppearanceResult).appearance : undefined;
+		const data = result?.ok ? (result.data as AppearanceResult) : undefined;
+		this.appearance = data?.appearance;
+		this.partNames = data?.partNames ?? { model3D: [], drawing2D: [] };
 	}
 
 	/**
@@ -110,6 +114,7 @@ class Look {
 			manual.push(...data.manual);
 			if ('appearance' in data) {
 				this.appearance = data.appearance;
+				if (data.partNames) this.partNames = data.partNames;
 				restart ||= data.restart;
 			} else if (this.appearance) {
 				this.appearance = { ...this.appearance, about: data.about };

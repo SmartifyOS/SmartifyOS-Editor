@@ -15,6 +15,8 @@
 	import { goto } from '$app/navigation';
 	import { commands } from '#lib/commands.ts';
 	import { kindWords, partKey, partKinds } from '#lib/parts.ts';
+	import { setupAreas, type SetupArea } from '#lib/setup.ts';
+	import { config } from '#lib/state/config.svelte.ts';
 	import CarIcon from './CarIcon.svelte';
 	import { pageKey } from '#lib/settings.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
@@ -28,10 +30,10 @@
 	import ContextMenu, { type MenuItem } from './ui/ContextMenu.svelte';
 
 	/**
-	 * The car's parts, like Unity's hierarchy, all under the car: what it runs, its own windows,
-	 * tiles and widgets, and the devices on its CAN bus, each section folding away. Picking one
-	 * shows it in the inspector, and right clicking it offers what its inspector does. The
-	 * editor's own settings sit at the bottom.
+	 * The car's parts, like Unity's hierarchy, all under the car: how it is set up, what it runs,
+	 * its own windows, tiles and widgets, and the devices on its CAN bus, each section folding
+	 * away. Picking one shows it in the inspector, and right clicking it offers what its
+	 * inspector does. The editor's own settings sit at the bottom.
 	 */
 
 	let refreshing = $state(false);
@@ -89,6 +91,9 @@
 		if (picked.kind === 'settings' && selection.kind === 'settings') {
 			return picked.key === selection.key;
 		}
+		if (picked.kind === 'setup' && selection.kind === 'setup') {
+			return picked.area === selection.area;
+		}
 		return true;
 	}
 
@@ -112,6 +117,21 @@
 	const project = $derived(editor.project);
 	const updates = $derived(editor.carUpdates);
 	const canRun = $derived(!editor.busy && editor.cli?.found === true);
+
+	/** Why a setup page's row is dimmed: what it is about is off, or not there yet. */
+	function setupOff(area: SetupArea): string | undefined {
+		if (!config.result) return undefined;
+		const off = (key: string) => config.value(key) === false;
+		if (area === 'bluetooth' && off('bluetooth.enabled')) return 'Bluetooth is off';
+		if (area === 'gps' && off('gps.enabled')) return 'The GPS is off';
+		if (area === 'reverseCamera' && config.value('reverseCamera') !== true) {
+			return config.inCode('reverseCamera') ? undefined : 'Your car has no reverse camera yet';
+		}
+		if (area === 'can' && config.value('can') !== true) {
+			return config.inCode('can') ? undefined : 'Your car has no CAN bus yet';
+		}
+		return undefined;
+	}
 </script>
 
 <Panel title="Car" surface="card">
@@ -141,6 +161,17 @@
 			{@render row({ kind: 'car' }, project.name, null, Car)}
 
 			<div class="ml-[17px] flex flex-col border-l border-line pl-1.5">
+				{#snippet setup()}
+					{#each setupAreas as area (area.id)}
+						{@const off = setupOff(area.id)}
+						{@render row({ kind: 'setup', area: area.id }, area.title, null, area.icon, {
+							faint: Boolean(off),
+							hint: off
+						})}
+					{/each}
+				{/snippet}
+				{@render group('setup', 'Setup', 0, setup)}
+
 				{#snippet components()}
 					{@render row(
 						{ kind: 'package', name: car.smartifyOs.name },
@@ -330,14 +361,14 @@
 	</button>
 {/snippet}
 
-{#snippet group(key: string, title: string, count: number, children: Snippet, create: MenuItem)}
+{#snippet group(key: string, title: string, count: number, children: Snippet, create?: MenuItem)}
 	{@const open = !collapsed.value.includes(key)}
 	<button
 		type="button"
 		aria-expanded={open}
 		class="mt-1 flex h-8 items-center gap-1.5 rounded-lg pr-2.5 pl-1.5 text-xs font-medium text-faint transition-colors hover:bg-hover hover:text-muted"
 		onclick={() => toggle(key)}
-		oncontextmenu={(event) => openMenu(event, [create])}
+		oncontextmenu={(event) => openMenu(event, create ? [create] : [])}
 	>
 		<ChevronRight
 			class={['size-3.5 shrink-0 transition-transform duration-150', open && 'rotate-90']}

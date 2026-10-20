@@ -13,6 +13,8 @@ import VsCode from '~icons/logos/visual-studio-code';
 import type { MenuItem } from './components/ui/ContextMenu.svelte';
 import { commands } from './commands.ts';
 import { canShow, kindWords } from './parts.ts';
+import { areaInfo } from './setup.ts';
+import { config } from './state/config.svelte.ts';
 import { editor, type Selection } from './state/editor.svelte.ts';
 import { parts } from './state/parts.svelte.ts';
 import { settingsPages } from './state/settings.svelte.ts';
@@ -220,5 +222,26 @@ export function actionsFor(selection: Selection): MenuItem[] {
 					disabled: !canRun
 				}
 			];
+
+		case 'setup': {
+			const info = areaInfo(selection.area);
+			const line = info.key ? config.line(info.key) : undefined;
+			return [
+				{
+					icon: VsCode,
+					label: 'Open it in VS Code',
+					run: () => editor.openInVsCode(undefined, 'lib/main.dart', line)
+				},
+				...(running && info.show
+					? [
+							{
+								icon: Eye,
+								label: 'Show it in the preview',
+								run: () => void config.showArea(selection.area)
+							}
+						]
+					: [])
+			];
+		}
 	}
 }
