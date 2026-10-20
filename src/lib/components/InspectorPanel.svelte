@@ -23,6 +23,7 @@
 	import { canShow, kindWords, partKey } from '#lib/parts.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
+	import RunAppLink from './RunAppLink.svelte';
 	import TextField from './ui/TextField.svelte';
 	import Switch from './ui/Switch.svelte';
 	import CarIcon from './CarIcon.svelte';
@@ -330,6 +331,10 @@
 		{:else if editor.preview.status === 'running'}
 			<p class="text-[13px] text-muted">
 				To see it, hold an area of the home screen in the preview and add it there.
+			</p>
+		{:else}
+			<p class="text-[13px] text-muted">
+				Run your car's app to see it in the preview. <RunAppLink />
 			</p>
 		{/if}
 		{#if parts.showProblem?.key === partKey(part)}

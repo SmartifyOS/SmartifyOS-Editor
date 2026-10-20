@@ -8,6 +8,7 @@
 	import { config } from '#lib/state/config.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
+	import RunAppLink from '../RunAppLink.svelte';
 	import Button from '../ui/Button.svelte';
 	import AboutSetup from './AboutSetup.svelte';
 	import BuiltInsSetup from './BuiltInsSetup.svelte';
@@ -60,6 +61,11 @@
 			<VsCode /> Open in VS Code
 		</Button>
 	</div>
+	{#if info.show && !running}
+		<p class="text-[13px] text-muted">
+			Run your car's app to see it in the preview. <RunAppLink />
+		</p>
+	{/if}
 </div>
 
 {#if !config.result}

@@ -12,6 +12,7 @@
 	import { rowKinds, rowWords } from '#lib/settings.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
+	import RunAppLink from './RunAppLink.svelte';
 	import SettingsRowCard from './SettingsRowCard.svelte';
 	import Button from './ui/Button.svelte';
 	import Select from './ui/Select.svelte';
@@ -76,6 +77,10 @@
 		<Button size="sm" class="w-full justify-start" onclick={() => void settingsPages.show(page)}>
 			<Eye /> Show it in the preview
 		</Button>
+	{:else}
+		<p class="text-[13px] text-muted">
+			Run your car's app to see it in the preview. <RunAppLink />
+		</p>
 	{/if}
 	{#if settingsPages.problem}
 		<p class="text-[13px] text-bad">{settingsPages.problem}</p>

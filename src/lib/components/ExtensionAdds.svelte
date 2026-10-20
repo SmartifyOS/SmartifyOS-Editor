@@ -13,6 +13,7 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { extensionSettings } from '#lib/state/extensionSettings.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
+	import RunAppLink from './RunAppLink.svelte';
 	import Fold from './setup/Fold.svelte';
 
 	/**
@@ -54,7 +55,7 @@
 
 <Fold id={`extension.${name}.adds`} title="What it adds">
 	{#if !running}
-		<p class="text-[13px] text-muted">Run your car's app to see what it adds.</p>
+		<p class="text-[13px] text-muted">Run your car's app to see what it adds. <RunAppLink /></p>
 	{:else if !look.app?.extensions}
 		<p class="text-[13px] text-muted">
 			Seeing what it adds needs a newer SmartifyOS in your car. Update it in your car's inspector.

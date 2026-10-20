@@ -9,6 +9,7 @@
 	import type { CanFieldInfo, CanNetwork } from '../../../shared/cli.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import RunAppLink from './RunAppLink.svelte';
 	import Button from './ui/Button.svelte';
 	import Select from './ui/Select.svelte';
 	import Switch from './ui/Switch.svelte';
@@ -78,7 +79,7 @@
 	{#snippet idle()}
 		<p class="text-[13px] text-muted">
 			Run your car's app to try this device out before it is built: send what it sends, and see what
-			your app does.
+			your app does. <RunAppLink />
 		</p>
 	{/snippet}
 	{@render section('Try it out', idle)}
