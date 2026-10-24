@@ -57,16 +57,22 @@ export const commands = {
 		args: ['unlink', name],
 		changes: 'car'
 	}),
-	/** Puts the device into the car's app too when it is a new one, so it changes the car. */
-	createDevice: (): TaskSpec => ({
-		title: 'Make a device',
-		args: ['device', 'create'],
+	/**
+	 * Puts the device into the car's app too when it is a new one, so it changes the car. With
+	 * a name, the program of the device of that name; `usb` for a board on a USB cable, which
+	 * the CLI otherwise asks about.
+	 */
+	createDevice: (name?: string, usb = false): TaskSpec => ({
+		title: usb ? 'Make a board on USB' : 'Make a device',
+		args: ['device', 'create', ...(name ? [name] : []), ...(usb ? ['--usb'] : [])],
 		changes: 'car'
 	}),
+	/** With the running app stopped meanwhile, since it may have the board's port open. */
 	flashDevice: (name: string): TaskSpec => ({
 		title: `Put ${name} on its board`,
 		args: ['device', 'flash', name],
-		changes: 'devices'
+		changes: 'devices',
+		stopsApp: true
 	}),
 	/** The devices named, or the CLI asks which. */
 	exportDevices: (names: string[] = []): TaskSpec => ({
@@ -74,6 +80,14 @@ export const commands = {
 		args: ['device', 'export', ...names],
 		changes: 'devices'
 	}),
+	/** Changes a board on USB where the car's app defines it, and its sketch's speed with it. */
+	editUsbDevice: (name: string, change: { title?: string; baudRate?: number }): string[] => [
+		'device',
+		'edit',
+		name,
+		...(change.title !== undefined ? ['--title', change.title] : []),
+		...(change.baudRate !== undefined ? ['--baud-rate', String(change.baudRate)] : [])
+	],
 	exportInstaller: (): TaskSpec => ({
 		title: 'Export installer',
 		args: ['export', 'installer'],

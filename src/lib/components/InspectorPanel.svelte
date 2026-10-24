@@ -17,7 +17,7 @@
 	import type { DeviceInfo, PackageInfo, Part, SettingsPageInfo } from '../../../shared/cli.ts';
 	import { linkCopy } from '#lib/carActions.ts';
 	import { commands } from '#lib/commands.ts';
-	import { exportChoices } from '#lib/exports.ts';
+	import { exportsFor } from '#lib/exports.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import type { TaskSpec } from '#lib/state/task.svelte.ts';
 	import { canShow, kindWords, partKey } from '#lib/parts.ts';
@@ -31,6 +31,7 @@
 	import ExtensionSettings from './ExtensionSettings.svelte';
 	import IconPicker from './IconPicker.svelte';
 	import BusSimulator from './BusSimulator.svelte';
+	import UsbDeviceInspector from './UsbDeviceInspector.svelte';
 	import SettingsPageInspector from './SettingsPageInspector.svelte';
 	import SetupInspector from './setup/SetupInspector.svelte';
 	import { setupAreas, type SetupArea } from '#lib/setup.ts';
@@ -57,6 +58,7 @@
 			| { kind: 'package'; info: Package }
 			| { kind: 'device'; info: DeviceInfo }
 			| { kind: 'canDevice'; name: string; title: string; node: number }
+			| { kind: 'usbDevice'; name: string }
 			| { kind: 'part'; part: Part }
 			| { kind: 'settings'; page: SettingsPageInfo }
 			| { kind: 'setup'; area: SetupArea }
@@ -64,7 +66,7 @@
 			const picked = editor.selection;
 			if (!project) return undefined;
 			if (picked.kind === 'car') return { kind: 'car' };
-			if (picked.kind === 'setup') return picked;
+			if (picked.kind === 'setup' || picked.kind === 'usbDevice') return picked;
 			if (picked.kind === 'settings') {
 				const page = settingsPages.find(picked.key);
 				return page && { kind: 'settings', page };
@@ -112,6 +114,10 @@
 				{@render packageView(item.info)}
 			{:else if item.kind === 'canDevice'}
 				{@render canDeviceView(item.name, item.title, item.node)}
+			{:else if item.kind === 'usbDevice'}
+				{#key item.name}
+					<UsbDeviceInspector name={item.name} />
+				{/key}
 			{:else if item.kind === 'part'}
 				{@render partView(item.part)}
 			{:else if item.kind === 'settings'}
@@ -190,10 +196,8 @@
 
 		{#snippet usb()}
 			<p class="text-[13px] text-muted">SmartifyOS goes onto the car on a USB stick.</p>
-			{#each exportChoices as choice (choice.label)}
-				{#if !choice.needsDevices || project.devices.length > 0}
-					{@render action(choice.icon, choice.label, run(choice.task))}
-				{/if}
+			{#each exportsFor(project) as choice (choice.label)}
+				{@render action(choice.icon, choice.label, run(choice.task))}
 			{/each}
 		{/snippet}
 		{@render section('Put it on your car', usb)}
@@ -452,7 +456,7 @@
 		<p class="text-[13px] text-muted">
 			It is on your car's CAN bus, but has no program yet. Make one to put it on a board.
 		</p>
-		{@render action(Cpu, 'Make its program', run(commands.createDevice()))}
+		{@render action(Cpu, 'Make its program', run(commands.createDevice(name)))}
 	{/snippet}
 	{@render section(undefined, program)}
 

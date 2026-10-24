@@ -12,6 +12,8 @@ const wording: Record<string, ((step: NextStep) => string) | null> = {
 	run: () => 'Press Run once, so SmartifyOS writes the messages of your CAN bus out for it.',
 	'write-program': () => 'Write its program: pick Open its program in VS Code, on the right.',
 	flash: () => 'Plug its board into this computer with a USB cable, and pick Put it on its board.',
+	'read-serial': (step) =>
+		`Read what it prints in your car's app, in ${step.path ?? 'lib/serial.dart'}. DEVICES.md in the SmartifyOS repository shows how.`,
 	'edit-main': (step) => `Everything about your car is in ${step.path ?? 'lib/main.dart'}.`,
 	'add-extension': () => 'Add extensions with Add an extension, on the left.',
 	'export-installer': () => 'Export an installer to put it on your car.',

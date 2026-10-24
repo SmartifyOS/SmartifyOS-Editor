@@ -16,7 +16,7 @@
 	import { page } from '$app/state';
 	import icon from '#lib/assets/icon.png';
 	import { clickOutside, coversViewport } from '#lib/attachments.ts';
-	import { exportChoices } from '#lib/exports.ts';
+	import { exportsFor } from '#lib/exports.ts';
 	import { shortcut } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Button from './ui/Button.svelte';
@@ -45,9 +45,7 @@
 		action();
 	}
 
-	const exportable = $derived(
-		exportChoices.filter((choice) => !choice.needsDevices || editor.project?.devices.length)
-	);
+	const exportable = $derived(exportsFor(editor.project));
 </script>
 
 <header

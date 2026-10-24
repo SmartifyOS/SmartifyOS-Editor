@@ -3,6 +3,7 @@
 	import { isCommand } from '#lib/shortcuts.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
+	import { serial } from '#lib/state/serial.svelte.ts';
 	import { config } from '#lib/state/config.svelte.ts';
 	import { rereadExtensionSettings } from '#lib/state/extensionSettings.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
@@ -53,9 +54,11 @@
 		if (appRunning) {
 			void look.describe();
 			bus.follow();
+			serial.follow();
 		} else {
 			look.forgetApp();
 			bus.stop();
+			serial.stop();
 		}
 	});
 

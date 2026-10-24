@@ -4,7 +4,8 @@ import type {
 	CarInfo,
 	CliEvent,
 	DeviceInfo,
-	ResultEvent
+	ResultEvent,
+	SerialDeviceDefinition
 } from './cli.ts';
 
 /**
@@ -36,10 +37,12 @@ export interface Project {
 	path: string;
 	name: string;
 	car: CarInfo;
-	/** The devices on the car's CAN bus that have a program, from `device list`. */
+	/** The devices that have a program, on the CAN bus or on USB, from `device list`. */
 	devices: DeviceInfo[];
 	/** Every device the car's app has on its CAN bus, with a program or not, from `device list`. */
 	canDevices: CanDeviceDefinition[];
+	/** Every board on a USB cable the car's app has, with a program or not, from `device list`. */
+	usbDevices: SerialDeviceDefinition[];
 }
 
 /** An extension the editor recommends, see electron/catalog.ts. */

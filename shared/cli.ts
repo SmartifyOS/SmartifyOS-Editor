@@ -72,9 +72,9 @@ export interface CarInfo {
 	extensions: (PackageInfo & { switchedOn: boolean | null })[];
 }
 
-/** A device on the car's CAN bus with a program, as `device list` and the other device commands report one. */
+/** A device with a program, as `device list` and the other device commands report one. */
 export interface DeviceInfo {
-	/** `CanDevice.name` in the car's app. */
+	/** `CanDevice.name` (or `SerialDevice.name`) in the car's app. */
 	name: string;
 	/** Its folder, relative to the car's app: `devices/headlights`. */
 	folder: string;
@@ -82,6 +82,8 @@ export interface DeviceInfo {
 	version: string;
 	/** PlatformIO's name for its board. */
 	board: string | null;
+	/** On the CAN bus, or a board on a USB cable. Missing from an older CLI, which means `can`. */
+	connection?: 'can' | 'usb';
 }
 
 /** A device the car's app has on its CAN bus, a `CanDevice` in its Dart. */
@@ -91,11 +93,26 @@ export interface CanDeviceDefinition {
 	title: string;
 }
 
+/** A board on a USB cable the car's app has, a `SerialDevice` in its Dart. */
+export interface SerialDeviceDefinition {
+	name: string;
+	title: string;
+	/** How fast it talks, the same as `Serial.begin` in its sketch. */
+	baudRate: number;
+	/** The port it is tied to, null for one the car finds by itself. */
+	port: string | null;
+	/** Where it is written, relative to the car's app, and its line from 1. */
+	file: string;
+	line: number;
+}
+
 /** What `device list` returns. */
 export interface DeviceList {
 	devices: DeviceInfo[];
 	/** Every device the car's app defines, with a program or not. Missing from an older CLI. */
 	defined?: CanDeviceDefinition[];
+	/** Every board on USB the car's app defines, with a program or not. Missing from an older CLI. */
+	usb?: SerialDeviceDefinition[];
 }
 
 /** What `update --check` returns: `to` is the newer SmartifyOS, null when the car has it. */
@@ -114,7 +131,14 @@ export interface ExtensionUpdates {
 
 /** The parts of what `device create` returns that the app uses. */
 export interface DeviceCreated {
-	device: { name: string; node: number; title: string; new: boolean };
+	/** `node` is null for a board on USB. */
+	device: {
+		name: string;
+		node: number | null;
+		title: string;
+		new: boolean;
+		connection?: 'can' | 'usb';
+	};
 	board: string;
 	/** Relative to the car's app: `devices/headlights`. */
 	folder: string;
@@ -423,6 +447,35 @@ export interface CanSentFrame {
 	/** The message it is, null when the bus has none with its id. */
 	message: string | null;
 	values: Record<string, unknown> | null;
+}
+
+/** One board on USB of the running app, as `serialDescribe` lists it. */
+export interface SerialBoard {
+	name: string;
+	title: string;
+	baudRate: number;
+	state: 'searching' | 'connected' | 'failed';
+	/** The port of the real board it is on, null when there is none (or it is pretending). */
+	port: string | null;
+	problem: string | null;
+	/** Connected to the editor rather than a board. */
+	pretending: boolean;
+	/** The names of the values the app listens for, with `SmartifyOsSerial.values`. */
+	values: string[];
+	/** Whether the app listens to every line, with `SmartifyOsSerial.lines`. */
+	lines: boolean;
+	/** The last value of each name the board printed. */
+	last: Record<string, number>;
+}
+
+/** One line the app sent to a board, as `serialTraffic` lists it. */
+export interface SerialSentLine {
+	seq: number;
+	/** Milliseconds since 1970. */
+	at: number;
+	/** The board's name. */
+	device: string;
+	line: string;
 }
 
 /** What the CLI calls the kinds of things it makes in a car's app (`window`, `tile`, `widget`). */

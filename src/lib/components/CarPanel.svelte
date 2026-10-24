@@ -9,6 +9,7 @@
 	import Puzzle from '~icons/lucide/puzzle';
 	import ChevronRight from '~icons/lucide/chevron-right';
 	import RefreshCw from '~icons/lucide/refresh-cw';
+	import Usb from '~icons/lucide/usb';
 	import type { Component, Snippet } from 'svelte';
 	import { actionsFor } from '#lib/carActions.ts';
 	import type { DeviceCreated } from '../../../shared/cli.ts';
@@ -20,6 +21,7 @@
 	import CarIcon from './CarIcon.svelte';
 	import { pageKey } from '#lib/settings.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
+	import { serial } from '#lib/state/serial.svelte.ts';
 	import { parts } from '#lib/state/parts.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
 	import { editor, type Selection } from '#lib/state/editor.svelte.ts';
@@ -31,7 +33,7 @@
 
 	/**
 	 * The car's parts, like Unity's hierarchy, all under the car: how it is set up, what it runs,
-	 * its own windows, tiles and widgets, and the devices on its CAN bus, each section folding
+	 * its own windows, tiles and widgets, and its devices (on the CAN bus or on USB), each section folding
 	 * away. Picking one shows it in the inspector, and right clicking it offers what its
 	 * inspector does. The editor's own settings sit at the bottom.
 	 */
@@ -70,7 +72,11 @@
 	async function makeDevice() {
 		const result = await editor.runTask(commands.createDevice());
 		if (!result.ok) return;
-		editor.selection = { kind: 'device', folder: (result.data as DeviceCreated).folder };
+		const created = result.data as DeviceCreated;
+		editor.selection =
+			created.device.connection === 'usb'
+				? { kind: 'usbDevice', name: created.device.name }
+				: { kind: 'device', folder: created.folder };
 	}
 
 	function isPicked(selection: Selection): boolean {
@@ -83,6 +89,9 @@
 			return picked.folder === selection.folder;
 		}
 		if (picked.kind === 'canDevice' && selection.kind === 'canDevice') {
+			return picked.name === selection.name;
+		}
+		if (picked.kind === 'usbDevice' && selection.kind === 'usbDevice') {
 			return picked.name === selection.name;
 		}
 		if (picked.kind === 'part' && selection.kind === 'part') {
@@ -112,6 +121,29 @@
 		return [...all.values()].filter(
 			(device) => !editor.project?.devices.some((known) => known.name === device.name)
 		);
+	});
+	/** The devices on the CAN bus that have a program. */
+	const onBusWithProgram = $derived(
+		editor.project?.devices.filter((device) => device.connection !== 'usb') ?? []
+	);
+	/**
+	 * The boards on a USB cable, with a program or not: the ones the car's app defines, known
+	 * while it is not running too, and any more the running app has (an extension's).
+	 */
+	const usbBoards = $derived.by(() => {
+		const all = new Map<string, { name: string; title: string }>();
+		for (const board of editor.project?.usbDevices ?? []) all.set(board.name, board);
+		for (const board of serial.boards ?? []) {
+			if (!all.has(board.name)) all.set(board.name, board);
+		}
+		return [...all.values()].map((board) => ({
+			...board,
+			connected: serial.board(board.name)?.state === 'connected',
+			hasProgram:
+				editor.project?.devices.some(
+					(device) => device.name === board.name && device.connection === 'usb'
+				) ?? false
+		}));
 	});
 
 	const project = $derived(editor.project);
@@ -250,7 +282,7 @@
 				})}
 
 				{#snippet devices()}
-					{#each project.devices as device (device.folder)}
+					{#each onBusWithProgram as device (device.folder)}
 						{@render row(
 							{ kind: 'device', folder: device.folder },
 							device.name,
@@ -266,12 +298,19 @@
 							hint: 'It has no program yet'
 						})}
 					{/each}
+					{#each usbBoards as board (board.name)}
+						{@render row({ kind: 'usbDevice', name: board.name }, board.title, 'USB', Usb, {
+							online: board.connected,
+							faint: !board.hasProgram,
+							hint: 'It has no program yet'
+						})}
+					{/each}
 					{@render add('Make a device', makeDevice)}
 				{/snippet}
 				{@render group(
 					'devices',
-					'Devices on the CAN bus',
-					project.devices.length + withoutProgram.length,
+					'Devices',
+					onBusWithProgram.length + withoutProgram.length + usbBoards.length,
 					devices,
 					{ icon: Plus, label: 'Make a device', run: () => void makeDevice(), disabled: !canRun }
 				)}

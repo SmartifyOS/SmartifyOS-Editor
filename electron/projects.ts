@@ -3,7 +3,13 @@ import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import type { OpenResult, Project, RecentProject } from '../shared/api.ts';
-import type { CanDeviceDefinition, CarInfo, DeviceInfo, DeviceList } from '../shared/cli.ts';
+import type {
+	CanDeviceDefinition,
+	CarInfo,
+	DeviceInfo,
+	DeviceList,
+	SerialDeviceDefinition
+} from '../shared/cli.ts';
 import { cliEnv } from './cli/environment.ts';
 import { runCli } from './cli/job.ts';
 import { cliStatus } from './cli/locate.ts';
@@ -103,7 +109,8 @@ export async function openProject(host: BrowserWindow, path?: string): Promise<O
 		name: projectName(dir),
 		car: result.car,
 		devices: result.devices,
-		canDevices: result.canDevices
+		canDevices: result.canDevices,
+		usbDevices: result.usbDevices
 	};
 	update((stored) => {
 		stored.recentProjects = [
@@ -123,16 +130,21 @@ export async function refreshProject(): Promise<OpenResult> {
 		...current,
 		car: result.car,
 		devices: result.devices,
-		canDevices: result.canDevices
+		canDevices: result.canDevices,
+		usbDevices: result.usbDevices
 	};
 	return { ok: true, project: current };
 }
 
 /** Internal: asks the CLI what the car in this folder runs, and which devices it has. */
-async function readCar(
-	dir: string
-): Promise<
-	| { ok: true; car: CarInfo; devices: DeviceInfo[]; canDevices: CanDeviceDefinition[] }
+async function readCar(dir: string): Promise<
+	| {
+			ok: true;
+			car: CarInfo;
+			devices: DeviceInfo[];
+			canDevices: CanDeviceDefinition[];
+			usbDevices: SerialDeviceDefinition[];
+	  }
 	| Extract<OpenResult, { ok: false }>
 > {
 	const cli = await cliStatus();
@@ -157,6 +169,7 @@ async function readCar(
 		car: car.data as CarInfo,
 		// A CLI from before `device list` knows of none, which leaves the panel empty.
 		devices: devices.ok ? (devices.data as DeviceList).devices : [],
-		canDevices: (devices.ok && (devices.data as DeviceList).defined) || []
+		canDevices: (devices.ok && (devices.data as DeviceList).defined) || [],
+		usbDevices: (devices.ok && (devices.data as DeviceList).usb) || []
 	};
 }

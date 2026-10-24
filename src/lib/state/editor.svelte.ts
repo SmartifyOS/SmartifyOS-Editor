@@ -55,6 +55,8 @@ export type Selection =
 	| { kind: 'package'; name: string }
 	| { kind: 'device'; folder: string }
 	| { kind: 'canDevice'; name: string }
+	/** A board on a USB cable, with a program or not. */
+	| { kind: 'usbDevice'; name: string }
 	| { kind: 'part'; part: PartKind; key: string }
 	| { kind: 'settings'; key: string }
 	| { kind: 'setup'; area: SetupArea };
@@ -365,6 +367,8 @@ class Editor {
 	async runTask(spec: TaskSpec): Promise<ResultEvent> {
 		const task = new Task(spec);
 		this.task = task;
+		const stopped = spec.stopsApp === true && this.running;
+		if (stopped) await window.smartify.preview.stop();
 		let result: ResultEvent;
 		try {
 			const job = await this.startCli(spec.args, (event) => task.handle(event));
@@ -380,6 +384,7 @@ class Editor {
 			this.task = undefined;
 		}
 		task.hidden = false;
+		if (stopped) void window.smartify.preview.start();
 		if (spec.changes !== 'nothing') await this.refreshProject();
 		const changed = result.ok && (result.data as { changed?: boolean } | null)?.changed !== false;
 		if (spec.changes === 'car' && changed) {

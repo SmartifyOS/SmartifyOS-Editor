@@ -17,6 +17,11 @@ export interface TaskSpec {
 	 * `devices` only reads the car again, `nothing` leaves it as it is.
 	 */
 	changes: 'car' | 'devices' | 'nothing';
+	/**
+	 * Stops the running app while it runs, and starts it again afterwards: putting a program on
+	 * a board needs its port, which the app may have open.
+	 */
+	stopsApp?: boolean;
 }
 
 export type TaskLine =

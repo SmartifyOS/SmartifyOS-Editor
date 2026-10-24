@@ -218,10 +218,58 @@ export function actionsFor(selection: Selection): MenuItem[] {
 				{
 					icon: Cpu,
 					label: 'Make its program',
-					run: run(commands.createDevice()),
+					run: run(commands.createDevice(selection.name)),
 					disabled: !canRun
 				}
 			];
+
+		case 'usbDevice': {
+			const program = project.devices.find(
+				(device) => device.name === selection.name && device.connection === 'usb'
+			);
+			const defined = project.usbDevices.find((board) => board.name === selection.name);
+			return [
+				...(program
+					? [
+							{
+								icon: VsCode,
+								label: 'Open its program in VS Code',
+								run: () => editor.openInVsCode(program.folder, 'src/main.cpp')
+							},
+							'separator' as const,
+							{
+								icon: Usb,
+								label: 'Put it on its board',
+								run: run(commands.flashDevice(selection.name)),
+								disabled: !canRun
+							},
+							{
+								icon: HardDriveDownload,
+								label: 'Export its firmware',
+								run: run(commands.exportDevices([selection.name])),
+								disabled: !canRun
+							}
+						]
+					: [
+							{
+								icon: Cpu,
+								label: 'Make its program',
+								run: run(commands.createDevice(selection.name, true)),
+								disabled: !canRun || !defined
+							}
+						]),
+				...(defined
+					? [
+							'separator' as const,
+							{
+								icon: VsCode,
+								label: 'Open where your app defines it',
+								run: () => editor.openInVsCode(undefined, defined.file, defined.line)
+							}
+						]
+					: [])
+			];
+		}
 
 		case 'setup': {
 			const info = areaInfo(selection.area);

@@ -81,7 +81,8 @@
 {:else if area === 'can' && config.value('can') !== true}
 	<div class="flex flex-col gap-2">
 		<p class="text-[13px] text-muted">
-			Your car has no CAN bus yet. It gets one with the first board you make for it.
+			Your car has no CAN bus yet. It gets one with the first board you make for it. With only one
+			or two boards, a board on a USB cable is simpler and needs no CAN bus.
 		</p>
 		<Button
 			size="sm"
