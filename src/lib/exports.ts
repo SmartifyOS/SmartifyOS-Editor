@@ -2,6 +2,7 @@ import type { Component } from 'svelte';
 import Cpu from '~icons/lucide/cpu';
 import HardDriveDownload from '~icons/lucide/hard-drive-download';
 import RefreshCw from '~icons/lucide/refresh-cw';
+import TabletSmartphone from '~icons/lucide/tablet-smartphone';
 import type { Project } from '../../shared/api.ts';
 import { commands } from './commands.ts';
 import type { TaskSpec } from './state/task.svelte.ts';
@@ -35,6 +36,13 @@ export const exportChoices: ExportChoice[] = [
 		hint: 'For a car that runs SmartifyOS already',
 		icon: RefreshCw,
 		task: commands.exportUpdate(),
+		needsDevices: false
+	},
+	{
+		label: 'Export for Android',
+		hint: 'Your car as an app, for a tablet that is its screen',
+		icon: TabletSmartphone,
+		task: commands.exportAndroid(),
 		needsDevices: false
 	},
 	{

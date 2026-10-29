@@ -97,6 +97,11 @@ export const commands = {
 		title: 'Export update',
 		args: ['export', 'update'],
 		changes: 'nothing'
+	}),
+	exportAndroid: (): TaskSpec => ({
+		title: 'Export for Android',
+		args: ['export', 'android'],
+		changes: 'nothing'
 	})
 };
 
