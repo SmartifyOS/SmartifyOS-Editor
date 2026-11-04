@@ -286,6 +286,7 @@ class Config implements SettingsStore {
 					offset: value(`${model}.offset`),
 					rotation: value(`${model}.rotation`),
 					render: {
+						scale: value(`${model}.render.scale`),
 						exposure: value(`${model}.render.exposure`),
 						environmentIntensity: value(`${model}.render.environmentIntensity`),
 						vignette: value(`${model}.render.vignette`)
@@ -350,7 +351,7 @@ type LiveConfig = 'model3D' | 'infoDisplay';
 /** Internal: which config of the running app a key changes, when it can take it at once. */
 function liveConfig(key: string): LiveConfig | undefined {
 	const model =
-		/^car\.model3D\.(scale|lookAtHeight|offset|rotation|render\.(exposure|environmentIntensity|vignette))$/;
+		/^car\.model3D\.(scale|lookAtHeight|offset|rotation|render\.(scale|exposure|environmentIntensity|vignette))$/;
 	if (model.test(key)) return 'model3D';
 	if (/^infoDisplay\.(values|views|hiddenValues)(\[|$)/.test(key)) return 'infoDisplay';
 	return undefined;

@@ -532,8 +532,8 @@
 				spec={{
 					key: 'car.model3D.render.scale',
 					label: 'Sharpness',
-					range: { min: 1, max: 3, step: 0.25 },
-					hint: 'Smoother edges, at a cost that grows fast. 1.5 suits a small board.'
+					range: { min: 0.25, max: 2, step: 0.25 },
+					hint: 'How many pixels the car is drawn with. Below 1 is much less work and looks the same on a small, sharp screen, above 1 rarely helps.'
 				}}
 			/>
 			{@render shadow()}
@@ -553,7 +553,7 @@
 				class="w-full"
 				options={[
 					{ value: '512', label: 'Soft, 512' },
-					{ value: '1024', label: 'Good for a small board' },
+					{ value: '1024', label: 'Medium, 1024' },
 					{ value: '2048', label: 'Sharp, 2048' },
 					{ value: '4096', label: 'Sharpest, 4096' },
 					...([512, 1024, 2048, 4096].includes(config.value<number>(key))

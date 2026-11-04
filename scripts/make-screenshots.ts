@@ -71,6 +71,16 @@ try {
 			`PRODUCT_BUNDLE_IDENTIFIER = ${bundleId}`
 		)
 	);
+	// The 3D car is drawn with Flutter GPU, which is off unless the app switches it on (the
+	// CLI does this for a car, this copy is made without it).
+	const plist = join(app, 'macos', 'Runner', 'Info.plist');
+	const plistText = await Bun.file(plist).text();
+	if (!plistText.includes('FLTEnableFlutterGPU')) {
+		await Bun.write(
+			plist,
+			swap(plistText, /\n<\/dict>\s*<\/plist>/, '\n\t<key>FLTEnableFlutterGPU</key>\n\t<true/>$&')
+		);
+	}
 	const entitlements = join(app, 'macos', 'Runner', 'Release.entitlements');
 	await Bun.write(
 		entitlements,
