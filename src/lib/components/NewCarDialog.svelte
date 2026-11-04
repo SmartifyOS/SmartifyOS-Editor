@@ -29,13 +29,13 @@
 	 * refuses is said on the page it was typed on.
 	 */
 
-	type From = 'minimal' | 'miata';
+	type From = 'minimal' | 'example';
 	type Side = 'left' | 'right';
 	type Bar = 'info-display' | 'dock' | 'both';
 	type Look = 'none' | 'model-3d' | 'drawing' | 'picture';
 	type StepId = 'start' | 'car' | 'layout' | 'side' | 'bar' | 'more';
 
-	// Screenshots of the Miata app in every layout, driver's side and bar, named
+	// Screenshots of the example app in every layout, driver's side and bar, named
 	// `<layout>-<side>-<bar>.webp`, made by scripts/make-screenshots.ts.
 	const shots = import.meta.glob<string>('../assets/new-car/*.webp', {
 		eager: true,
@@ -142,7 +142,7 @@
 	>();
 
 	const order = $derived<StepId[]>(
-		from === 'miata' ? ['start', 'car'] : ['start', 'car', 'layout', 'side', 'bar', 'more']
+		from === 'example' ? ['start', 'car'] : ['start', 'car', 'layout', 'side', 'bar', 'more']
 	);
 	const index = $derived(order.indexOf(step));
 	const last = $derived(index === order.length - 1);
@@ -221,7 +221,7 @@
 				creating = {
 					status: 'done',
 					path: data.path,
-					name: data.name ?? 'The Miata app',
+					name: data.name ?? 'The example app',
 					manual: data.manual ?? [],
 					committed: data.committed !== false
 				};
@@ -362,7 +362,7 @@
 						<LoaderCircle class="size-9 animate-spin text-primary" />
 						<div class="flex flex-col items-center gap-1 text-center">
 							<h2 id="new-car-title" class="text-lg font-semibold">
-								Creating {from === 'miata' ? 'a copy of the Miata app' : name.trim()}
+								Creating {from === 'example' ? 'a copy of the example app' : name.trim()}
 							</h2>
 							<p class="text-muted">This takes a minute or two. Nothing is needed from you.</p>
 						</div>
@@ -466,10 +466,10 @@
 								true
 							)}
 							{@render startCard(
-								'miata',
+								'example',
 								BookOpen,
-								'A copy of the Miata app',
-								'The example car with everything in it, to learn from. You give it your own car later.',
+								'A copy of the example app',
+								'A pretend car with one of everything SmartifyOS can do, to learn from. You give it your own car later.',
 								false
 							)}
 						</div>

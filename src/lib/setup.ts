@@ -546,6 +546,31 @@ export const fieldPages: Partial<Record<SetupArea, FoldSpec[]>> = {
 					key: 'volume.enabled',
 					label: 'Change the volume',
 					hint: 'Off, SmartifyOS never touches it, and there is no volume bar.'
+				},
+				{
+					key: 'volume.boostedMaxVolume',
+					label: 'Loudest, once louder is allowed',
+					range: { min: 1, max: 3, step: 0.1 },
+					hint: 'The driver can allow louder than 100% in Settings, Sound. 1.5 is 150%, and 1 leaves that switch out.',
+					when: 'volume.enabled'
+				}
+			]
+		},
+		{
+			id: 'system.power',
+			title: 'Switching off',
+			fields: [
+				{
+					key: 'power.enabled',
+					label: 'Power button',
+					hint: 'In the quick settings, to switch the computer off or restart it.'
+				},
+				{
+					key: 'power.delay',
+					label: 'Logo shows for',
+					unit: seconds,
+					hint: 'Before the computer really switches off, the time your app gets to finish up.',
+					when: 'power.enabled'
 				}
 			]
 		}
@@ -561,6 +586,7 @@ export const ownCode: Partial<Record<SetupArea, { key: string; what: string }[]>
 	system: [
 		{ key: 'drives.backend', what: 'drives of its own' },
 		{ key: 'volume.backend', what: 'a volume of its own' },
+		{ key: 'power.backend', what: 'switching off of its own' },
 		{ key: 'updates.backend', what: 'updates of its own' }
 	]
 };

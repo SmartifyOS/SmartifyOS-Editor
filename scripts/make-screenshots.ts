@@ -1,14 +1,15 @@
 /**
- * Makes the screenshots the "Create your car's app" dialog shows: the Miata app in every
+ * Makes the screenshots the "Create your car's app" dialog shows: the example app in every
  * layout, with the driver on either side and every kind of bar, as
  * src/lib/assets/new-car/<layout>-<side>-<bar>.webp.
  *
  *   bun scripts/make-screenshots.ts [path to the SmartifyOS repo, ../SmartifyOS by default]
  *
- * macOS only, and it needs Flutter and cwebp (`brew install webp`). It copies the Miata app
- * somewhere temporary, so the SmartifyOS repo is never touched, and changes the copy's
- * main.dart to take the layout, side and bar from the environment, to leave out the counter
- * card, and to save a picture of itself and quit. Building it takes a few minutes, every
+ * macOS only, and it needs Flutter and cwebp (`brew install webp`). It copies the example app
+ * somewhere temporary, so the SmartifyOS repo is never touched, gives the copy the macOS part
+ * the example leaves out, and changes its main.dart to take the layout, side and bar from the
+ * environment, to leave out the tap counter card and the example's own layout and theme, and
+ * to save a picture of itself and quit. Building it takes a few minutes, every
  * picture after that about ten seconds.
  */
 
@@ -17,7 +18,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const repo = resolve(process.argv[2] ?? join(import.meta.dir, '..', '..', 'SmartifyOS'));
-const miata = join(repo, 'smartify_os_miata_app');
+const example = join(repo, 'smartify_os_example_app');
 const out = join(import.meta.dir, '..', 'src', 'lib', 'assets', 'new-car');
 const bundleId = 'com.smartifyos.editorscreenshots';
 
@@ -26,35 +27,41 @@ const sides = ['left', 'right'];
 const bars = ['info', 'dock', 'both'];
 
 if (process.platform !== 'darwin') throw new Error('This only runs on macOS.');
-if (!existsSync(miata)) throw new Error(`There is no Miata app in ${repo}.`);
+if (!existsSync(example)) throw new Error(`There is no example app in ${repo}.`);
 
 async function run(cmd: string[], cwd?: string): Promise<void> {
 	const proc = Bun.spawn(cmd, { cwd, stdout: 'inherit', stderr: 'inherit' });
 	if ((await proc.exited) !== 0) throw new Error(`${cmd.join(' ')} failed.`);
 }
 
-/** Replaces `from` in `text`, failing loudly when the Miata app no longer has it. */
+/** Replaces `from` in `text`, failing loudly when the example app no longer has it. */
 function swap(text: string, from: string | RegExp, to: string): string {
 	const changed = text.replace(from, to);
-	if (changed === text) throw new Error(`The Miata app's main.dart has changed: ${String(from)}`);
+	if (changed === text) throw new Error(`The example app's main.dart has changed: ${String(from)}`);
 	return changed;
 }
 
 const work = mkdtempSync(join(tmpdir(), 'smartify-os-screenshots-'));
-const app = join(work, 'miata');
+const app = join(work, 'smartify_os_example_app');
 console.log(`Working in ${work}`);
 
 try {
-	await run(['rsync', '-a', '--exclude', 'build', '--exclude', '.dart_tool', `${miata}/`, app]);
+	await run(['rsync', '-a', '--exclude', 'build', '--exclude', '.dart_tool', `${example}/`, app]);
 
-	// The copy lives elsewhere, so the packages next to the Miata app are named in full.
-	const overrides = join(app, 'pubspec_overrides.yaml');
-	if (existsSync(overrides)) {
-		const text = await Bun.file(overrides).text();
-		await Bun.write(overrides, text.replaceAll('path: ../', `path: ${repo}/`));
+	// The copy lives elsewhere, so the packages next to the example app are named in full.
+	for (const name of ['pubspec.yaml', 'pubspec_overrides.yaml']) {
+		const file = join(app, name);
+		if (!existsSync(file)) continue;
+		const text = await Bun.file(file).text();
+		await Bun.write(file, text.replaceAll('path: ../', `path: ${repo}/`));
 	}
 
-	// A bundle id of its own keeps the Miata's saved settings out of it, and without the
+	// The example only has linux/, the way `smartify-os create` leaves a car.
+	if (!existsSync(join(app, 'macos'))) {
+		await run(['flutter', 'create', '--platforms', 'macos', '.'], app);
+	}
+
+	// A bundle id of its own keeps the example's saved settings out of it, and without the
 	// sandbox it can write its picture anywhere.
 	const info = join(app, 'macos', 'Runner', 'Configs', 'AppInfo.xcconfig');
 	await Bun.write(
@@ -80,10 +87,8 @@ try {
 	// No counter card, and the window the size of a car's screen.
 	main = swap(
 		main,
-		'homeWidgets: HomeWidgetsConfig(widgets: miataHomeWidgets),',
-		`homeWidgets: HomeWidgetsConfig(
-      widgets: miataHomeWidgets.where((w) => w.id != counterWidgetId).toList(),
-    ),
+		'homeWidgets: HomeWidgetsConfig(widgets: [tapCounterWidget, engineWidget]),',
+		`homeWidgets: HomeWidgetsConfig(widgets: [engineWidget]),
     display: DisplayConfig(
       fullScreen: false,
       windowSize: _env('SHOT_LAYOUT') == 'portrait' ? const Size(600, 1024) : const Size(1024, 600),
@@ -93,19 +98,24 @@ try {
 	main = swap(main, 'layout: Layouts.classic,', 'layout: _layout(),');
 	main = swap(
 		main,
-		'layouts: miataLayouts,',
+		'driverSide: DriverSide.left,',
 		"driverSide: _env('SHOT_SIDE') == 'right' ? DriverSide.right : DriverSide.left,"
 	);
-	main = swap(main, /\n\s*themes: const ThemesConfig\(themes: miataThemes\),/, '');
+	main = swap(main, /\n(\s*\/\/.*\n)*\s*layouts: exampleLayouts,/, '');
 	main = swap(
 		main,
-		/bar: const BarConfig\(\n(\s*\/\/.*\n)*\s*content: BarContent\.infoDisplay\(\),/,
+		/\n(\s*\/\/.*\n)*\s*themes: const ThemesConfig\(themes: \[SunsetTheme\(\)\]\),/,
+		''
+	);
+	main = swap(
+		main,
+		/bar: const BarConfig\(\n(\s*\/\/.*\n)*\s*content: BarContent\.infoDisplayAndDock\(\),/,
 		'bar: BarConfig(\n      content: _bar(),'
 	);
 	main = swap(
 		main,
 		/dockApps: \[.*\],/,
-		"dockApps: ['settings', 'android_auto', 'reverse_camera', 'debug'],"
+		"dockApps: ['settings', 'android_auto', 'reverse_camera', 'playground'],"
 	);
 	main = swap(
 		main,
@@ -146,7 +156,7 @@ BarContent _bar() => switch (_env('SHOT_BAR')) {
 	await run(['flutter', 'build', 'macos', '--release'], app);
 	const binary = join(
 		app,
-		'build/macos/Build/Products/Release/smartify_os_miata_app.app/Contents/MacOS/smartify_os_miata_app'
+		'build/macos/Build/Products/Release/smartify_os_example_app.app/Contents/MacOS/smartify_os_example_app'
 	);
 
 	mkdirSync(out, { recursive: true });

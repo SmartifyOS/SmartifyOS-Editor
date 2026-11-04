@@ -16,6 +16,7 @@
 	import Select from '../ui/Select.svelte';
 	import Switch from '../ui/Switch.svelte';
 	import TextField from '../ui/TextField.svelte';
+	import AddField from '../ui/AddField.svelte';
 	import AddName from './AddName.svelte';
 	import CodeNote from './CodeNote.svelte';
 	import ConfigField from './ConfigField.svelte';
@@ -50,6 +51,8 @@
 	const steering = 'car.model3D.parts.steerableWheels';
 	const steeringWheel = 'car.model3D.parts.steeringWheel';
 	const drawingWheels = 'car.drawing2D.parts.steerableWheels';
+	const cameras = 'car.model3D.cameras';
+	const lights = 'car.model3D.lights';
 
 	async function pickFile() {
 		const picked = await window.smartify.files.pickFile(`A ${named} of your car`, kind.extensions);
@@ -414,6 +417,100 @@
 		</div>
 	</Fold>
 
+	<Fold id="car.model.views" title="Cameras and lamps" closed>
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-1.5">
+				<p class="text-[13px]">Cameras</p>
+				{#each config.elements(cameras) as camera, index (`${index}:${camera.line}`)}
+					{@const key = `${cameras}[${index}]`}
+					{#if camera.asCode}
+						<CodeNote text="Written as code:" code={camera.asCode} line={camera.line} />
+					{:else}
+						<div class="flex flex-col gap-2 rounded-control border border-line p-2">
+							{@render nameRow(key, String(camera.values.name ?? ''), 'Camera', () =>
+								config.remove(cameras, index)
+							)}
+							{@render vector(`${key}.position`, 'Where it is', '', 0.05, true)}
+							{@render vector(`${key}.lookAt`, 'Looks at', '', 0.05, true)}
+							<ConfigField
+								spec={{
+									key: `${key}.fieldOfView`,
+									label: 'How wide it sees',
+									unit: '°',
+									range: { min: 20, max: 120, step: 5 }
+								}}
+							/>
+						</div>
+					{/if}
+				{/each}
+				{#if !config.inCode(cameras) && canWrite}
+					<AddField
+						placeholder="A name for it, like interior"
+						label="Add a camera"
+						onadd={(name) =>
+							void config.add(cameras, {
+								name,
+								position: { x: 0, y: 1.5, z: 3 },
+								lookAt: { x: 0, y: 0.5, z: 0 }
+							})}
+					/>
+				{/if}
+				<p class="text-xs text-faint">
+					A window of your app shows the car from one with
+					<code class="font-mono">CarView(camera: 'interior')</code>, gliding there while the window
+					is open.
+				</p>
+			</div>
+
+			<div class="flex flex-col gap-1.5">
+				<p class="text-[13px]">Lamps</p>
+				{#each config.elements(lights) as light, index (`${index}:${light.line}`)}
+					{@const key = `${lights}[${index}]`}
+					{#if light.asCode}
+						<CodeNote text="Written as code:" code={light.asCode} line={light.line} />
+					{:else}
+						<div class="flex flex-col gap-2 rounded-control border border-line p-2">
+							{@render nameRow(key, String(light.values.name ?? ''), 'Lamp', () =>
+								config.remove(lights, index)
+							)}
+							{@render vector(`${key}.position`, 'Where it is', '', 0.05, true)}
+							<ConfigField
+								spec={{
+									key: `${key}.reach`,
+									label: 'Reaches',
+									range: { min: 0.1, max: 5, step: 0.1 }
+								}}
+							/>
+							<ConfigField
+								spec={{
+									key: `${key}.brightness`,
+									label: 'Brightness',
+									range: { min: 0.5, max: 10, step: 0.5 }
+								}}
+							/>
+						</div>
+					{/if}
+				{/each}
+				{#if !config.inCode(lights) && canWrite}
+					<AddField
+						placeholder="A name for it, like footwell"
+						label="Add a lamp"
+						onadd={(name) => void config.add(lights, { name, position: { x: 0, y: 0.5, z: 0 } })}
+					/>
+				{/if}
+				<p class="text-xs text-faint">
+					Off until your app switches one on, with
+					<code class="font-mono">SmartifyOsCarModel3D.turnOnLight('footwell')</code>.
+				</p>
+			</div>
+
+			<p class="text-xs text-faint">
+				Points are in the units of the model's file, before it is turned, sized and moved above: the
+				numbers Blender shows, with its Z (up) being Y here.
+			</p>
+		</div>
+	</Fold>
+
 	<Fold id="car.model.render" title="Quality and light" closed>
 		<div class="flex flex-col gap-2.5">
 			<ConfigField
@@ -469,11 +566,37 @@
 	{/if}
 {/snippet}
 
-{#snippet vector(key: string, label: string, unit: string, step: number)}
+{#snippet nameRow(key: string, name: string, label: string, remove: () => Promise<void>)}
+	<div class="flex items-center gap-1">
+		<TextField
+			class="min-w-0 flex-1"
+			value={name}
+			placeholder="Its name"
+			{label}
+			onchange={(next) => canWrite && next.trim() && void config.set(`${key}.name`, next.trim())}
+		/>
+		<Button
+			variant="ghost-muted"
+			size="icon-sm"
+			label="Take it out"
+			disabled={!canWrite}
+			onclick={() => void remove()}
+		>
+			<X />
+		</Button>
+	</div>
+{/snippet}
+
+{#snippet vector(key: string, label: string, unit: string, step: number, stacked = false)}
 	{#if config.field(key)}
 		{@const point = config.value<{ x: number; y: number; z: number }>(key)}
 		{@const written = config.result?.code[key]}
-		<div class="group grid grid-cols-[minmax(0,10fr)_minmax(0,13fr)] items-center gap-x-3">
+		<div
+			class={[
+				'group grid items-center',
+				stacked ? 'grid-cols-1 gap-y-1' : 'grid-cols-[minmax(0,10fr)_minmax(0,13fr)] gap-x-3'
+			]}
+		>
 			<span class={['text-[13px]', config.isSet(key) ? 'text-fg' : 'text-muted']}>{label}</span>
 			{#if written}
 				<CodeNote text="" code={written.code} line={written.line} />
