@@ -76,7 +76,9 @@ function load() {
 		if (status !== Success || !data[0]) return [];
 		try {
 			if (format[0] !== 32 || !count[0]) return [];
-			return (koffi.decode(data[0], 'unsigned long', count[0]) as (number | bigint)[]).map(Number);
+			// A typed array (BigUint64Array), whose own map would turn each one back into a BigInt.
+			const values = koffi.decode(data[0], 'unsigned long', count[0]) as ArrayLike<number | bigint>;
+			return Array.from(values, Number);
 		} finally {
 			XFree(data[0]);
 		}

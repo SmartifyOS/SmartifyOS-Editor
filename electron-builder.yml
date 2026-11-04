@@ -56,3 +56,6 @@ linux:
   category: Development
   synopsis: Build your car's SmartifyOS with a live preview
   maintainer: SmartifyOS contributors
+  # XWayland, for the live preview, without the editor starting itself again (electron/main.ts).
+  executableArgs:
+    - --ozone-platform=x11

@@ -46,14 +46,27 @@ const isMac = process.platform === 'darwin';
 const iconPath = join(app.getAppPath(), 'resources', isMac ? 'icon-macos.png' : 'icon.png');
 
 // On Wayland no program may own another's window, which the live preview needs. Running the
-// editor through XWayland (and the app too, see preview/embed-x11.ts) keeps it possible.
-if (process.platform === 'linux') app.commandLine.appendSwitch('ozone-platform', 'x11');
+// editor through XWayland (and the app too, see preview/embed-x11.ts) keeps it possible. It
+// has to be on the command line: added here with appendSwitch it comes too late, the window
+// is made on Wayland while the GPU process draws for X11, and nothing ever shows. So the
+// editor starts itself again with it (scripts/dev.ts and the .desktop file pass it already).
+const relaunching =
+	process.platform === 'linux' && app.commandLine.getSwitchValue('ozone-platform') !== 'x11';
+if (relaunching) {
+	// An AppImage runs from a mount that goes away once this one quits, so it starts the
+	// AppImage itself again.
+	app.relaunch({
+		...(process.env.APPIMAGE ? { execPath: process.env.APPIMAGE } : {}),
+		args: [...process.argv.slice(1), '--ozone-platform=x11']
+	});
+	app.exit(0);
+}
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }
 ]);
 
-if (!app.requestSingleInstanceLock()) app.quit();
+if (!relaunching && !app.requestSingleInstanceLock()) app.quit();
 
 let window: BrowserWindow | undefined;
 let preview: PreviewSession | undefined;
@@ -344,6 +357,7 @@ function setMenu(): void {
 }
 
 app.whenReady().then(() => {
+	if (relaunching) return;
 	updates = new Updates(
 		(state) => send(channels.updatesStateChanged, state),
 		() => {

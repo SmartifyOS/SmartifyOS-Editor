@@ -51,7 +51,10 @@ let restarting = false;
 
 function startElectron(): void {
 	const electronPath = require('electron') as unknown as string;
-	electron = Bun.spawn([electronPath, '.', ...process.argv.slice(2)], {
+	// Without it the editor starts itself again on Linux (see electron/main.ts), and this
+	// would take the first one quitting for the editor being closed.
+	const x11 = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
+	electron = Bun.spawn([electronPath, '.', ...x11, ...process.argv.slice(2)], {
 		stdout: 'inherit',
 		stderr: 'inherit',
 		env: { ...process.env, DEV_SERVER_URL: devServer }
