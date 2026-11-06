@@ -552,11 +552,10 @@
 			<Select
 				class="w-full"
 				options={[
-					{ value: '512', label: 'Soft, 512' },
-					{ value: '1024', label: 'Medium, 1024' },
-					{ value: '2048', label: 'Sharp, 2048' },
-					{ value: '4096', label: 'Sharpest, 4096' },
-					...([512, 1024, 2048, 4096].includes(config.value<number>(key))
+					{ value: '256', label: 'Soft, 256' },
+					{ value: '512', label: 'Medium, 512' },
+					{ value: '1024', label: 'Sharp, 1024' },
+					...([256, 512, 1024].includes(config.value<number>(key))
 						? []
 						: [{ value: String(config.value(key)), label: String(config.value(key)) }])
 				]}
