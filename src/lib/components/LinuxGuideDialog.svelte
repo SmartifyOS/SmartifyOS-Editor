@@ -217,9 +217,15 @@
 						<p class="text-muted">
 							Plug the stick into the car's computer and start it from the stick: right after
 							switching it on, press the key that picks what it starts from (often F12, F11, F7 or
-							Esc, it differs per computer). Then follow the installer. Leave the root password
-							empty, so the user you make next can set everything up. SmartifyOS runs as that user.
-							Installing erases the drive of the car's computer.
+							Esc, it differs per computer). On the first screen pick
+							<b class="text-fg">Graphical install</b>, then follow the installer. Connect it to the
+							internet when it asks (a network cable is easiest, or pick your Wi-Fi), since
+							installing SmartifyOS needs it later.
+						</p>
+						<p class="text-muted">
+							When it asks for a root password, <b class="text-fg">leave it empty</b> and just press Continue.
+							That lets the user you make next set everything up, and SmartifyOS runs as that user. Installing
+							erases the drive of the car's computer.
 						</p>
 					</div>
 				</li>
@@ -280,22 +286,29 @@
 			<span class="font-medium">Install SmartifyOS</span>
 			<p class="text-muted">
 				{#if exported}
-					Plug the stick with the installer into the car and type this there:
+					Plug the stick with the installer into the car.
 				{:else if editor.project}
 					Pick <b class="text-fg">Export installer</b> in the Export menu to put the installer on a USB
-					stick. Plug it into the car and type this there:
+					stick, and plug it into the car.
 				{:else}
 					Once your car's app is made, pick <b class="text-fg">Export installer</b> in the Export menu
-					to put the installer on a USB stick. Plug it into the car and type this there:
+					to put the installer on a USB stick, and plug it into the car.
 				{/if}
+				The car shows only a text screen where you are logged in, with nothing that opens the stick by
+				itself, so type these two lines there:
 			</p>
 			<pre
 				class="rounded-xl border border-line bg-tint px-3.5 py-2.5 font-mono text-[13px] text-fg">sudo mount /dev/sda1 /mnt
 bash /mnt/smartify-os/install.sh</pre>
 			<p class="text-muted">
 				If the stick is not <code class="font-mono">sda1</code>, typing
-				<code class="font-mono">lsblk</code> lists the drives. It asks for your password once, needs the
-				internet, and starts straight into SmartifyOS when it is done.
+				<code class="font-mono">lsblk</code> lists the drives (the stick is often
+				<code class="font-mono">sdb1</code> on a computer with a SATA drive). It asks for your password
+				once and starts straight into SmartifyOS when it is done.
+			</p>
+			<p class="text-muted">
+				The car needs the internet while it installs, even when SmartifyOS was built on this
+				computer: it downloads what SmartifyOS needs from Linux. Updates later usually need none.
 			</p>
 		</div>
 	</li>
