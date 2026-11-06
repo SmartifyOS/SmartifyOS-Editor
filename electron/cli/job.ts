@@ -29,6 +29,8 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 	readonly result: Promise<ResultEvent>;
 	private readonly child: ChildProcessWithoutNullStreams;
 	private finished = false;
+	/** Set once it was stopped on purpose, so its end is not taken for a crash. */
+	private stopped = false;
 	private nextCall = 0;
 	/** The calls into the running app waiting for their reply, by id. */
 	private readonly calls = new Map<string, (reply: AppReply) => void>();
@@ -75,15 +77,18 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 				}
 				this.calls.clear();
 				if (result) return resolve(result);
-				// It ended without saying how, a crash or a kill.
+				// It ended without saying how: stopped here, a crash, or a kill from elsewhere.
 				const event: ResultEvent = {
 					type: 'result',
 					ok: false,
 					exitCode,
-					error: {
-						kind: 'bug',
-						message: message ?? `The SmartifyOS CLI stopped unexpectedly (exit code ${exitCode}).`
-					}
+					error: this.stopped
+						? { kind: 'cancelled', message: 'Stopped before it was done.' }
+						: {
+								kind: 'bug',
+								message:
+									message ?? `The SmartifyOS CLI stopped unexpectedly (exit code ${exitCode}).`
+							}
 				};
 				this.emit('event', event);
 				resolve(event);
@@ -138,6 +143,7 @@ export class CliJob extends EventEmitter<{ event: [CliEvent] }> {
 	/** Stops it and everything it started, at once. */
 	kill(): void {
 		if (this.finished || this.child.pid === undefined) return;
+		this.stopped = true;
 		killTree(this.child.pid);
 	}
 }

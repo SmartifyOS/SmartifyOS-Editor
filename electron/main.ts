@@ -185,6 +185,7 @@ function registerIpc(): void {
 	ipcMain.on(channels.cliCancel, (_event, jobId: string, promptId?: string) =>
 		findJob(jobId)?.cancel(promptId)
 	);
+	ipcMain.on(channels.cliStop, (_event, jobId: string) => findJob(jobId)?.kill());
 	onJobEvent((event) => send(channels.cliEvent, event));
 	ipcMain.handle(channels.cliQuery, async (_event, args: string[]) => {
 		const cli = await cliStatus();

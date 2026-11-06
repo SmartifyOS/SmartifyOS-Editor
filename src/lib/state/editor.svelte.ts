@@ -404,6 +404,11 @@ class Editor {
 		if (!this.busy) this.task = undefined;
 	}
 
+	/** Stops the running task before it is done. Its result then says so. */
+	stopTask(): void {
+		if (this.busy && this.task?.jobId) window.smartify.cli.stop(this.task.jobId);
+	}
+
 	/**
 	 * Opens the car's app, or a folder in it, in VS Code (at a file's line when given), or says
 	 * what is missing for that.

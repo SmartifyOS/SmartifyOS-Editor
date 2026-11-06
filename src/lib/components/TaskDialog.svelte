@@ -149,6 +149,14 @@
 				{#if task.status === 'running'}
 					<Button
 						size="sm"
+						variant="ghost"
+						disabled={!task.jobId}
+						onclick={() => editor.stopTask()}
+					>
+						Stop
+					</Button>
+					<Button
+						size="sm"
 						label="It keeps going, the bottom of the window shows how far it is"
 						onclick={() => (task.hidden = true)}
 					>

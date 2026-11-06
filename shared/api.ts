@@ -142,6 +142,8 @@ export interface SmartifyApi {
 		start(args: string[]): Promise<string>;
 		answer(jobId: string, promptId: string, value: unknown): void;
 		cancel(jobId: string, promptId?: string): void;
+		/** Stops a job and everything it started, before it is done. */
+		stop(jobId: string): void;
 		onEvent(listener: (event: JobEvent) => void): () => void;
 		/**
 		 * Runs `smartify-os <args> --json` in the open project quietly, for a command that asks
@@ -246,6 +248,7 @@ export const channels = {
 	cliStart: 'cli:start',
 	cliAnswer: 'cli:answer',
 	cliCancel: 'cli:cancel',
+	cliStop: 'cli:stop',
 	cliEvent: 'cli:event',
 	cliQuery: 'cli:query',
 	cliInstall: 'cli:install',
