@@ -43,7 +43,7 @@
 
 <div
 	{@attach coversViewport}
-	class="fixed inset-0 z-[100] grid place-items-center bg-black/45 p-6 backdrop-blur-[3px]"
+	class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-6 backdrop-blur-[3px]"
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="new-settings-title"
