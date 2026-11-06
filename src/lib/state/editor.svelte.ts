@@ -113,6 +113,11 @@ class Editor {
 	vscodeDialog = $state<
 		{ folder?: string; file?: string; line?: number; message?: string } | undefined
 	>();
+	/**
+	 * Set while the guide to getting Linux onto the car's computer is open, `exported` when it
+	 * was opened right after exporting an installer.
+	 */
+	linuxGuide = $state<{ exported: boolean } | undefined>();
 
 	readonly running = $derived(
 		this.preview.status === 'starting' ||

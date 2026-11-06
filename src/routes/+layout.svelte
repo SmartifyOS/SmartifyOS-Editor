@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import type { LayoutProps } from './$types';
 	import AddExtensionDialog from '#lib/components/AddExtensionDialog.svelte';
+	import LinuxGuideDialog from '#lib/components/LinuxGuideDialog.svelte';
 	import NewCarDialog from '#lib/components/NewCarDialog.svelte';
 	import NewPartDialog from '#lib/components/NewPartDialog.svelte';
 	import NewSettingsPageDialog from '#lib/components/NewSettingsPageDialog.svelte';
@@ -71,6 +72,10 @@
 
 {#if editor.vscodeDialog}
 	<VsCodeDialog {...editor.vscodeDialog} />
+{/if}
+
+{#if editor.linuxGuide}
+	<LinuxGuideDialog exported={editor.linuxGuide.exported} />
 {/if}
 
 {#if prompt}

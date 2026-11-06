@@ -91,7 +91,8 @@ export const commands = {
 	exportInstaller: (): TaskSpec => ({
 		title: 'Export installer',
 		args: ['export', 'installer'],
-		changes: 'nothing'
+		changes: 'nothing',
+		linuxGuide: true
 	}),
 	exportUpdate: (): TaskSpec => ({
 		title: 'Export update',

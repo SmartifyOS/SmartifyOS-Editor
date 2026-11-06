@@ -5,6 +5,7 @@
 	import Plus from '~icons/lucide/plus';
 	import ExternalLink from '~icons/lucide/external-link';
 	import HardDriveDownload from '~icons/lucide/hard-drive-download';
+	import BookOpen from '~icons/lucide/book-open';
 	import VsCode from '~icons/logos/visual-studio-code';
 	import Play from '~icons/lucide/play';
 	import Square from '~icons/lucide/square';
@@ -181,6 +182,18 @@
 							</span>
 						</button>
 					{/each}
+					<div class="mx-1 my-1 h-px bg-line"></div>
+					<button
+						type="button"
+						class="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-hover"
+						onclick={() => pick(() => (editor.linuxGuide = { exported: false }))}
+					>
+						<BookOpen class="mt-0.5 size-4 shrink-0 text-muted" />
+						<span class="flex flex-col">
+							<span class="text-sm">Get the car's computer ready</span>
+							<span class="text-xs text-faint">Putting Linux on it, step by step</span>
+						</span>
+					</button>
 				</div>
 			{/if}
 		</div>

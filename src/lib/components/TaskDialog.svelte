@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BookOpen from '~icons/lucide/book-open';
 	import Check from '~icons/lucide/check';
 	import CircleAlert from '~icons/lucide/circle-alert';
 	import CircleCheck from '~icons/lucide/circle-check';
@@ -154,6 +155,17 @@
 						Keep it going in the background
 					</Button>
 				{:else}
+					{#if task.status === 'done' && task.spec.linuxGuide}
+						<Button
+							size="sm"
+							onclick={() => {
+								editor.dismissTask();
+								editor.linuxGuide = { exported: true };
+							}}
+						>
+							<BookOpen /> Get the car's computer ready
+						</Button>
+					{/if}
 					<!-- svelte-ignore a11y_autofocus -->
 					<Button variant="primary" size="sm" autofocus onclick={() => editor.dismissTask()}>
 						Close

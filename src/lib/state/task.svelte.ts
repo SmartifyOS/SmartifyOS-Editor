@@ -22,6 +22,11 @@ export interface TaskSpec {
 	 * a board needs its port, which the app may have open.
 	 */
 	stopsApp?: boolean;
+	/**
+	 * Once it worked, offers the guide to getting Linux onto the car's computer, which an
+	 * installer needs first.
+	 */
+	linuxGuide?: boolean;
 }
 
 export type TaskLine =

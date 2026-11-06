@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BookOpen from '~icons/lucide/book-open';
 	import FolderOpen from '~icons/lucide/folder-open';
 	import Folder from '~icons/lucide/folder';
 	import Plus from '~icons/lucide/plus';
@@ -104,6 +105,14 @@
 				{:else}
 					<FolderOpen /> Open your car's app
 				{/if}
+			</Button>
+			<Button
+				variant="ghost-muted"
+				size="sm"
+				class="col-span-2 justify-self-center"
+				onclick={() => (editor.linuxGuide = { exported: false })}
+			>
+				<BookOpen /> How to get the car's computer ready
 			</Button>
 		</div>
 
