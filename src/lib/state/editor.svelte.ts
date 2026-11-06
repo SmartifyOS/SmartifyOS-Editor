@@ -468,7 +468,8 @@ class Editor {
 	answer(open: OpenPrompt, value: unknown): void {
 		open.answered = true;
 		open.invalid = undefined;
-		window.smartify.cli.answer(open.jobId, open.prompt.id, value);
+		// A list of ticked options is reactive state, which IPC cannot copy.
+		window.smartify.cli.answer(open.jobId, open.prompt.id, $state.snapshot(value));
 	}
 
 	cancelPrompt(open: OpenPrompt): void {
