@@ -4,6 +4,7 @@
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import Panel from './Panel.svelte';
 	import Button from './ui/Button.svelte';
+	import Segmented from './ui/Segmented.svelte';
 	import type { ConsoleLine } from '../../../shared/api.ts';
 
 	/** Everything the CLI and the running app print, like Unity's console. */
@@ -52,29 +53,18 @@
 
 <Panel title="Console">
 	{#snippet actions()}
-		<div class="mr-1 flex items-center rounded-control border border-line p-0.5">
-			<button
-				type="button"
-				aria-pressed={!onlyProblems}
-				class="h-6 rounded-[5px] px-2 text-xs font-medium text-muted hover:text-fg aria-pressed:bg-selected aria-pressed:text-fg"
-				onclick={() => (onlyProblems = false)}
-			>
-				All
-			</button>
-			<button
-				type="button"
-				aria-pressed={onlyProblems}
-				class="flex h-6 items-center gap-1.5 rounded-[5px] px-2 text-xs font-medium text-muted hover:text-fg aria-pressed:bg-selected aria-pressed:text-fg"
-				onclick={() => (onlyProblems = true)}
-			>
-				Problems
-				{#if problems > 0}
-					<span class="rounded-full bg-bad/15 px-1.5 text-[11px] text-bad tabular-nums">
-						{problems}
-					</span>
-				{/if}
-			</button>
-		</div>
+		<Segmented
+			size="sm"
+			class="mr-1"
+			label="Which lines"
+			options={[
+				{ value: 'all', label: 'All' },
+				{ value: 'problems', label: 'Problems', count: problems }
+			]}
+			bind:value={
+				() => (onlyProblems ? 'problems' : 'all'), (pick) => (onlyProblems = pick === 'problems')
+			}
+		/>
 		<Button
 			variant="ghost-muted"
 			size="icon-sm"
@@ -107,10 +97,10 @@
 				>
 			</div>
 		{:else}
-			<p class="px-4 py-2 font-sans text-[13px] text-faint">
+			<p class="px-4 py-2 font-sans text-[13px] text-muted">
 				{onlyProblems
 					? 'No problems.'
-					: 'Nothing here yet. What your app and the CLI print shows up here.'}
+					: "Nothing here yet. What your car's app prints shows up here, and what the editor does for it."}
 			</p>
 		{/each}
 	</div>

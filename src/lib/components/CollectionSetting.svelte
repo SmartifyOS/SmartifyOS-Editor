@@ -126,7 +126,7 @@
 							onremove={() => void store.unset(itemKey)}
 						/>
 					{:else}
-						<div class="flex items-start gap-1">
+						<div class="flex items-start gap-1.5">
 							<div class="min-w-0 flex-1">
 								<ConfigField {store} spec={{ key: itemKey, label: name }} />
 							</div>

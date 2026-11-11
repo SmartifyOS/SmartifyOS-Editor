@@ -391,7 +391,7 @@
 		{/if}
 		{#if update}
 			<span class="ml-auto" title={`${update} is out`}>
-				<CircleArrowUp class="size-3.5 text-primary" />
+				<CircleArrowUp class="size-3.5 text-accent" />
 			</span>
 		{/if}
 		{#if version}
@@ -405,7 +405,7 @@
 	<button
 		type="button"
 		aria-expanded={open}
-		class="mt-1 flex h-8 items-center gap-1.5 rounded-lg pr-2.5 pl-1.5 text-xs font-medium text-faint transition-colors hover:bg-hover hover:text-muted"
+		class="mt-1 flex h-8 items-center gap-1.5 rounded-lg pr-2.5 pl-1.5 text-xs font-medium text-muted transition-colors hover:bg-hover hover:text-fg"
 		onclick={() => toggle(key)}
 		oncontextmenu={(event) => openMenu(event, create ? [create] : [])}
 	>
@@ -414,7 +414,7 @@
 		/>
 		<span class="truncate">{title}</span>
 		{#if count > 0}
-			<span class="ml-auto font-mono">{count}</span>
+			<span class="ml-auto text-faint tabular-nums">{count}</span>
 		{/if}
 	</button>
 	{#if open}

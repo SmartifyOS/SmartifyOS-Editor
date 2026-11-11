@@ -134,7 +134,7 @@
 						{@const id = String(value.values.id ?? '')}
 						{@const key = `${values}[${index}]`}
 						<div class="flex flex-col gap-2 rounded-control border border-line bg-tint p-2">
-							<div class="flex items-center gap-1">
+							<div class="flex items-center gap-1.5">
 								<TextField
 									class="min-w-0 flex-1"
 									value={String(value.values.label ?? '')}
@@ -237,14 +237,14 @@
 						{@const big = String(view.values.big ?? 'speed')}
 						{@const small = view.values.small}
 						<div class="flex flex-col gap-1.5 rounded-control border border-line bg-tint p-2">
-							<div class="flex items-center gap-1">
-								<span class="flex-1 text-xs font-medium text-faint">
+							<div class="flex items-center gap-1.5">
+								<span class="flex-1 text-xs font-medium text-muted">
 									{index === 0 ? 'First' : `Tap ${index}`}
 								</span>
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-6! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Earlier"
 									disabled={!canWrite || index === 0}
 									onclick={() => void config.move(views, index, index - 1)}
@@ -254,7 +254,7 @@
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-6! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Later"
 									disabled={!canWrite || index === list.length - 1}
 									onclick={() => void config.move(views, index, index + 1)}
@@ -264,7 +264,7 @@
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-6! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Take it out"
 									disabled={!canWrite}
 									onclick={() => void config.remove(views, index)}

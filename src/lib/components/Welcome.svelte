@@ -130,7 +130,7 @@
 
 		{#if editor.recent.length > 0}
 			<section class="flex flex-col gap-2">
-				<h2 class="px-1 text-[13px] font-medium text-muted">Recent projects</h2>
+				<h2 class="px-1 text-[13px] font-medium text-muted">Recently opened</h2>
 				<ul class="flex flex-col gap-0.5 rounded-xl border border-line bg-card p-1.5">
 					{#each editor.recent as project (project.path)}
 						<li class="group relative flex items-center">

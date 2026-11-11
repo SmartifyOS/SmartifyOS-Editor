@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoaderCircle from '~icons/lucide/loader-circle';
 	import Plus from '~icons/lucide/plus';
 	import X from '~icons/lucide/x';
 	import { editor } from '#lib/state/editor.svelte.ts';
@@ -33,7 +34,9 @@
 </script>
 
 {#if !appearance}
-	<p class="text-[13px] text-muted">Reading your car…</p>
+	<p class="flex items-center gap-2 text-[13px] text-muted">
+		<LoaderCircle class="size-3.5 animate-spin" /> Reading your car
+	</p>
 {:else}
 	<Fold id="about.car" title="Your car">
 		<div class="flex flex-col gap-2.5">
@@ -133,7 +136,9 @@
 				</Button>
 			</div>
 		{:else}
-			<p class="text-xs text-faint">They are set in code: {appearance.code.extra}</p>
+			<p class="text-[13px] text-muted">
+				They are set in code: <code class="font-mono text-xs">{appearance.code.extra}</code>
+			</p>
 		{/if}
 	</Fold>
 {/if}

@@ -42,7 +42,7 @@
 						href={notesUrl}
 						target="_blank"
 						rel="noreferrer"
-						class="text-[13px] font-medium text-primary hover:underline"
+						class="text-[13px] font-medium text-accent hover:underline"
 					>
 						See what is new
 					</a>

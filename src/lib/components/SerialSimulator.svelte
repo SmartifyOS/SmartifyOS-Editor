@@ -4,9 +4,9 @@
 	import Eraser from '~icons/lucide/eraser';
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import Send from '~icons/lucide/send';
-	import type { Snippet } from 'svelte';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { serial } from '#lib/state/serial.svelte.ts';
+	import InspectorSection from './InspectorSection.svelte';
 	import RunAppLink from './RunAppLink.svelte';
 	import Button from './ui/Button.svelte';
 	import NumberField from './ui/NumberField.svelte';
@@ -50,15 +50,14 @@
 </script>
 
 {#if !running}
-	{#snippet idle()}
+	<InspectorSection title="Try it out">
 		<p class="text-[13px] text-muted">
 			Run your car's app to try this board out before it is plugged in: send what it prints, and see
 			what your app sends it. <RunAppLink />
 		</p>
-	{/snippet}
-	{@render section('Try it out', idle)}
+	</InspectorSection>
 {:else if !serial.boards}
-	{#snippet waiting()}
+	<InspectorSection title="Try it out">
 		{#if serial.problem}
 			<p class="text-[13px] text-muted">{serial.problem}</p>
 		{:else}
@@ -66,18 +65,16 @@
 				<LoaderCircle class="size-3.5 animate-spin" /> Asking your car's app
 			</p>
 		{/if}
-	{/snippet}
-	{@render section('Try it out', waiting)}
+	</InspectorSection>
 {:else if !board}
-	{#snippet missing()}
+	<InspectorSection title="Try it out">
 		<p class="text-[13px] text-muted">
 			Your running app has no board called {name}. Once it is in the SerialConfig your app hands
 			SmartifyOS, a restart of your app picks it up.
 		</p>
-	{/snippet}
-	{@render section('Try it out', missing)}
+	</InspectorSection>
 {:else}
-	{#snippet there()}
+	<InspectorSection title="Try it out">
 		<div class="flex items-center gap-3">
 			<div class="flex min-w-0 flex-1 flex-col gap-0.5">
 				<span class="text-[13px]">Pretend it is plugged in</span>
@@ -96,26 +93,28 @@
 				onchange={(on) => void serial.pretend(name, on)}
 			/>
 		</div>
-	{/snippet}
-	{@render section('Try it out', there)}
+	</InspectorSection>
 
-	{#snippet prints()}
+	<InspectorSection title="What it prints">
 		{#each board.values as value (value)}
-			<div class="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-2">
+			<div class="field-grid">
 				<span class="truncate font-mono text-[13px] text-muted" title={value}>{value}</span>
-				<NumberField
-					label={value}
-					value={values[value] ?? 0}
-					onchange={(number) => (values[value] = number ?? 0)}
-				/>
-				<Button
-					variant="outline"
-					size="icon-sm"
-					label={`Send ${value}`}
-					onclick={() => void serial.send(name, `${value}:${values[value] ?? 0}`)}
-				>
-					<Send />
-				</Button>
+				<div class="flex min-w-0 items-center gap-1.5">
+					<NumberField
+						class="min-w-0 flex-1"
+						label={value}
+						value={values[value] ?? 0}
+						onchange={(number) => (values[value] = number ?? 0)}
+					/>
+					<Button
+						variant="outline"
+						size="icon-sm"
+						label={`Send ${value}`}
+						onclick={() => void serial.send(name, `${value}:${values[value] ?? 0}`)}
+					>
+						<Send />
+					</Button>
+				</div>
 			</div>
 		{:else}
 			<p class="text-[13px] text-muted">
@@ -141,10 +140,9 @@
 				<Send /> Send
 			</Button>
 		</form>
-	{/snippet}
-	{@render section('What it prints', prints)}
+	</InspectorSection>
 
-	{#snippet logView()}
+	<InspectorSection title="On the cable" actions={logActions}>
 		{#if log.length === 0}
 			<p class="text-[13px] text-muted">
 				What you send and what your app sends to the board shows up here.
@@ -155,7 +153,7 @@
 					<div class="flex items-start gap-2">
 						{#if entry.direction === 'in'}
 							<span title="You sent this to your app"
-								><ArrowDownRight class="mt-0.5 size-3.5 shrink-0 text-primary" /></span
+								><ArrowDownRight class="mt-0.5 size-3.5 shrink-0 text-accent" /></span
 							>
 						{:else}
 							<span title="Your app sent this"
@@ -168,8 +166,7 @@
 				{/each}
 			</div>
 		{/if}
-	{/snippet}
-	{@render section('On the cable', logView, logActions)}
+	</InspectorSection>
 {/if}
 
 {#snippet logActions()}
@@ -178,14 +175,4 @@
 			<Eraser />
 		</Button>
 	{/if}
-{/snippet}
-
-{#snippet section(title: string, children: Snippet, actions?: Snippet)}
-	<section class="flex flex-col gap-2">
-		<div class="flex h-5 items-center justify-between">
-			<h3 class="text-xs font-medium text-faint">{title}</h3>
-			{@render actions?.()}
-		</div>
-		{@render children()}
-	</section>
 {/snippet}

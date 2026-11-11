@@ -86,7 +86,7 @@
 							class={[
 								'flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2.5 transition-colors',
 								picked
-									? 'border-primary/60 bg-primary/10 text-primary'
+									? 'border-primary/60 bg-primary/10 text-accent'
 									: 'border-transparent text-muted hover:bg-hover hover:text-fg'
 							]}
 							onclick={() => pick(icon.name)}

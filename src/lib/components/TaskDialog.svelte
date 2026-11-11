@@ -1,12 +1,10 @@
 <script lang="ts">
 	import BookOpen from '~icons/lucide/book-open';
-	import Check from '~icons/lucide/check';
 	import CircleAlert from '~icons/lucide/circle-alert';
 	import CircleCheck from '~icons/lucide/circle-check';
 	import CircleX from '~icons/lucide/circle-x';
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
-	import X from '~icons/lucide/x';
 	import { coversViewport } from '#lib/attachments.ts';
 	import { nextSteps } from '../../../shared/next-steps.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
@@ -55,18 +53,8 @@
 	aria-labelledby="task-title"
 >
 	<div class="flex max-h-full w-full max-w-[34rem] flex-col rounded-2xl shadow-dialog glass">
-		<header class="flex items-center gap-3 px-6 pt-6 pb-4">
-			{#if task.status === 'running'}
-				<LoaderCircle class="size-5 shrink-0 animate-spin text-primary" />
-			{:else if task.status === 'done'}
-				<span class="grid size-6 shrink-0 place-items-center rounded-full bg-good/15 text-good">
-					<Check class="size-4" />
-				</span>
-			{:else}
-				<span class="grid size-6 shrink-0 place-items-center rounded-full bg-bad/15 text-bad">
-					<X class="size-4" />
-				</span>
-			{/if}
+		<!-- Only the title: each step below already shows whether it is going, done or failed. -->
+		<header class="px-6 pt-6 pb-4">
 			<h2 id="task-title" class="text-base font-semibold">{task.spec.title}</h2>
 		</header>
 
@@ -136,7 +124,9 @@
 					</div>
 				</div>
 			{:else if task.lines.length === 0 && !prompt}
-				<p class="text-muted">Starting…</p>
+				<p class="flex items-center gap-2.5 text-muted">
+					<LoaderCircle class="size-4 shrink-0 animate-spin" /> Starting
+				</p>
 			{/if}
 		</div>
 

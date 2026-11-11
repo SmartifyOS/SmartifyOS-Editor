@@ -8,6 +8,7 @@
 	import { config } from '#lib/state/config.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { look } from '#lib/state/look.svelte.ts';
+	import InspectorHeading from '../InspectorHeading.svelte';
 	import RunAppLink from '../RunAppLink.svelte';
 	import Button from '../ui/Button.svelte';
 	import AboutSetup from './AboutSetup.svelte';
@@ -37,30 +38,32 @@
 	const folds = $derived(fieldPages[area]);
 </script>
 
-<div class="flex flex-col gap-1.5">
-	<div class="flex items-center gap-2">
-		<info.icon class="size-4 shrink-0 text-muted" />
-		<h2 class="min-w-0 flex-1 truncate text-base font-semibold">{info.title}</h2>
-		{#if saving}
-			<span
-				class="flex items-center gap-1.5 text-xs text-faint"
-				title="Writing it into lib/main.dart"
-			>
-				<LoaderCircle class="size-3.5 animate-spin" /> Saving
-			</span>
-		{/if}
-	</div>
-	<p class="text-[13px] text-muted">{info.about}</p>
-	<div class="flex flex-wrap gap-1.5 pt-1">
-		{#if info.show && running}
-			<Button size="sm" onclick={() => void config.showArea(area)}>
-				<Eye /> Show it
-			</Button>
-		{/if}
-		<Button size="sm" onclick={() => editor.openInVsCode(undefined, 'lib/main.dart', line)}>
-			<VsCode /> Open in VS Code
+<div class="flex flex-col gap-2.5">
+	<InspectorHeading title={info.title} icon={info.icon} about={info.about}>
+		{#snippet trailing()}
+			{#if saving}
+				<span
+					class="flex items-center gap-1.5 text-xs text-muted"
+					title="Writing it into lib/main.dart"
+				>
+					<LoaderCircle class="size-3.5 animate-spin" /> Saving
+				</span>
+			{/if}
+		{/snippet}
+	</InspectorHeading>
+	<!-- Full width like the buttons on every other inspector page. -->
+	<Button
+		size="sm"
+		class="w-full justify-start"
+		onclick={() => editor.openInVsCode(undefined, 'lib/main.dart', line)}
+	>
+		<VsCode /> Open in VS Code
+	</Button>
+	{#if info.show && running}
+		<Button size="sm" class="w-full justify-start" onclick={() => void config.showArea(area)}>
+			<Eye /> Show it in the preview
 		</Button>
-	</div>
+	{/if}
 	{#if info.show && !running}
 		<p class="text-[13px] text-muted">
 			Run your car's app to see it in the preview. <RunAppLink />
@@ -115,7 +118,7 @@
 {/if}
 {#if config.manual.length > 0 || look.manual.length > 0}
 	<div class="flex flex-col gap-1 text-[13px] text-muted">
-		<p>This has no clear place in lib/main.dart, so make it there by hand:</p>
+		<p>This has no clear place in lib/main.dart, so add it there yourself:</p>
 		{#each [...config.manual, ...look.manual] as text (text)}
 			<code class="font-mono text-xs break-all text-faint">{text}</code>
 		{/each}

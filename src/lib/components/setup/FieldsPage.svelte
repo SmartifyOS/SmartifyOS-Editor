@@ -27,7 +27,7 @@
 {#each folds as fold (fold.id)}
 	{#if folds.length === 1 && !fold.section}
 		<!-- A page of one part needs no title over it, the page has one. -->
-		<section class="border-t border-line pt-3">{@render body(fold)}</section>
+		<section class="border-t border-line pt-4">{@render body(fold)}</section>
 	{:else}
 		<Fold id={`${area}.${fold.id}`} title={fold.title} closed={fold.closed}>
 			{#snippet header()}

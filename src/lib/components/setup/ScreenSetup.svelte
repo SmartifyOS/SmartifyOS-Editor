@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ArrowDown from '~icons/lucide/arrow-down';
 	import ArrowUp from '~icons/lucide/arrow-up';
+	import LoaderCircle from '~icons/lucide/loader-circle';
 	import X from '~icons/lucide/x';
 	import { bars, layouts, themes } from '#lib/look.ts';
 	import { config } from '#lib/state/config.svelte.ts';
@@ -88,7 +89,9 @@
 </script>
 
 {#if !appearance}
-	<p class="text-[13px] text-muted">Reading your car…</p>
+	<p class="flex items-center gap-2 text-[13px] text-muted">
+		<LoaderCircle class="size-3.5 animate-spin" /> Reading your car
+	</p>
 {:else}
 	<Fold id="screen.look" title="What it starts with">
 		<div class="flex flex-col gap-2.5">
@@ -171,7 +174,7 @@
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-7! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Earlier"
 									disabled={!canWrite || index === 0}
 									onclick={() => void config.move(dock, index, index - 1)}
@@ -181,7 +184,7 @@
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-7! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Later"
 									disabled={!canWrite || index === list.length - 1}
 									onclick={() => void config.move(dock, index, index + 1)}
@@ -191,7 +194,7 @@
 								<Button
 									variant="ghost-muted"
 									size="icon-sm"
-									class="size-7! [&_svg]:size-3.5!"
+									class="size-7!"
 									label="Take it out"
 									disabled={!canWrite}
 									onclick={() => void config.removeId(dock, id)}
@@ -286,7 +289,7 @@
 	{#if config.field(key)}
 		{@const written = config.result?.code[key]}
 		<div class="flex flex-col gap-1">
-			<p class="text-xs text-faint">{title}</p>
+			<p class="text-[13px]">{title}</p>
 			{#if written}
 				<CodeNote text="Written as code:" code={written.code} line={written.line} />
 			{:else}

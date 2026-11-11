@@ -5,10 +5,12 @@
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import Usb from '~icons/lucide/usb';
 	import VsCode from '~icons/logos/visual-studio-code';
-	import type { Component, Snippet } from 'svelte';
+	import type { Component } from 'svelte';
 	import { commands } from '#lib/commands.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { serial } from '#lib/state/serial.svelte.ts';
+	import InspectorHeading from './InspectorHeading.svelte';
+	import InspectorSection from './InspectorSection.svelte';
 	import SerialSimulator from './SerialSimulator.svelte';
 	import Button from './ui/Button.svelte';
 	import Select from './ui/Select.svelte';
@@ -50,46 +52,45 @@
 	const run = (spec: Parameters<typeof editor.runTask>[0]) => () => void editor.runTask(spec);
 </script>
 
-<div class="flex flex-col gap-0.5">
-	<div class="text-base font-semibold">{title}</div>
-	<div class="font-mono text-xs break-all text-faint">{name}, on a USB cable</div>
-</div>
+<InspectorHeading {title} icon={Usb} detail={`${name}, on a USB cable`} />
 
 {#if defined}
-	<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-		<span class="text-[13px] text-muted">Name</span>
-		<TextField
-			value={defined.title}
-			label="What the driver reads"
-			onchange={(text) =>
-				text.trim() && text.trim() !== defined.title && change({ title: text.trim() })}
-		/>
-		<span class="text-[13px] text-muted">Speed</span>
-		<Select
-			class="w-full"
-			options={speeds}
-			bind:value={
-				() => String(defined.baudRate),
-				(speed) => Number(speed) !== defined.baudRate && void change({ baudRate: Number(speed) })
-			}
-		/>
-	</div>
-	<p class="text-xs text-faint">
-		The speed is the same as <code class="font-mono">Serial.begin</code> in its program, which changes
-		with it.
-	</p>
-	{#if serial.busy > 0}
-		<p class="flex items-center gap-2 text-[13px] text-muted">
-			<LoaderCircle class="size-3.5 animate-spin" /> Changing it in your app
+	<InspectorSection>
+		<div class="field-grid">
+			<span class="text-[13px] text-muted">Name</span>
+			<TextField
+				value={defined.title}
+				label="What the driver reads"
+				onchange={(text) =>
+					text.trim() && text.trim() !== defined.title && change({ title: text.trim() })}
+			/>
+			<span class="text-[13px] text-muted">Speed</span>
+			<Select
+				class="w-full"
+				options={speeds}
+				bind:value={
+					() => String(defined.baudRate),
+					(speed) => Number(speed) !== defined.baudRate && void change({ baudRate: Number(speed) })
+				}
+			/>
+		</div>
+		<p class="text-xs text-faint">
+			The speed is the one in <code class="font-mono">Serial.begin</code> in its program, which changes
+			with it.
 		</p>
-	{:else if problem}
-		<p class="text-[13px] text-bad">{problem}</p>
-	{/if}
+		{#if serial.busy > 0}
+			<p class="flex items-center gap-2 text-[13px] text-muted">
+				<LoaderCircle class="size-3.5 animate-spin" /> Changing it in your app
+			</p>
+		{:else if problem}
+			<p class="text-[13px] text-bad">{problem}</p>
+		{/if}
+	</InspectorSection>
 {/if}
 
 {#if running}
-	<dl class="flex flex-col gap-1 text-[13px]">
-		<dt class="text-xs font-medium text-faint">In your app now</dt>
+	<dl class="field-grid text-[13px]">
+		<dt class="self-start text-muted">In your app now</dt>
 		<dd>
 			{#if running.pretending}
 				Plugged in, pretend
@@ -98,13 +99,13 @@
 			{:else if running.state === 'failed'}
 				{running.problem ?? 'Found, but it could not be opened'}
 			{:else}
-				Not plugged in into this computer
+				Not plugged into this computer
 			{/if}
 		</dd>
 	</dl>
 {/if}
 
-{#snippet code()}
+<InspectorSection title="Its program">
 	{#if program}
 		{@render action(
 			VsCode,
@@ -113,9 +114,8 @@
 			false
 		)}
 		<p class="text-[13px] text-muted">
-			Plug it into this computer to put a new program on it (your car's app here stops meanwhile, as
-			it uses the same cable). Or export it to a USB stick: once the stick is in the car, your car
-			offers to put it on the board for you.
+			Plug the board into this computer to put its program on it (your car's app stops meanwhile).
+			Or export it to a USB stick, and the car offers to put it on the board once the stick is in.
 		</p>
 		{@render action(Usb, 'Put it on its board', run(commands.flashDevice(name)))}
 		{@render action(HardDriveDownload, 'Export its firmware', run(commands.exportDevices([name])))}
@@ -131,17 +131,9 @@
 			false
 		)}
 	{/if}
-{/snippet}
-{@render section('Its program', code)}
+</InspectorSection>
 
 <SerialSimulator {name} />
-
-{#snippet section(heading: string, children: Snippet)}
-	<section class="flex flex-col gap-2">
-		<h3 class="text-xs font-medium text-faint">{heading}</h3>
-		{@render children()}
-	</section>
-{/snippet}
 
 {#snippet action(Icon: Component, label: string, onclick: () => void, runsCli = true)}
 	<Button

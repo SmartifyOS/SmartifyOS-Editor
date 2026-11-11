@@ -32,16 +32,20 @@
 	const open = $derived(folds.value[id] ?? !closed);
 </script>
 
-<section class="flex flex-col gap-2.5 border-t border-line pt-3">
+<!-- Spaced like InspectorSection, so a page of folds and a page of sections look alike. -->
+<section class="flex flex-col gap-2.5 border-t border-line pt-4">
 	<div class="flex h-6 items-center gap-2">
 		<button
 			type="button"
 			aria-expanded={open}
-			class="-ml-1 flex min-w-0 cursor-default items-center gap-1 rounded-md py-0.5 pr-1.5 pl-1 text-xs font-medium text-faint transition-colors outline-none hover:text-muted focus-visible:ring-2 focus-visible:ring-primary/70"
+			class="group/fold -ml-1.5 flex min-w-0 flex-1 cursor-default items-center gap-1.5 self-stretch rounded-md pr-1.5 pl-1 text-left text-[13px] font-semibold outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-primary/70"
 			onclick={() => (folds.value = { ...folds.value, [id]: !open })}
 		>
 			<ChevronRight
-				class={['size-3.5 shrink-0 transition-transform duration-150', open && 'rotate-90']}
+				class={[
+					'size-3.5 shrink-0 text-muted transition-transform duration-150 group-hover/fold:text-fg',
+					open && 'rotate-90'
+				]}
 			/>
 			<span class="truncate">{title}</span>
 		</button>
