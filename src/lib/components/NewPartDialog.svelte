@@ -94,7 +94,7 @@
 							]}
 							onclick={() => (variant = choice.id)}
 						>
-							<choice.icon class={['size-5', picked ? 'text-primary' : 'text-muted']} />
+							<choice.icon class={['size-5', picked ? 'text-accent' : 'text-muted']} />
 							<span class="flex flex-col gap-0.5">
 								<span class="font-medium">{choice.label}</span>
 								<span class="text-[13px] text-muted">{choice.hint}</span>

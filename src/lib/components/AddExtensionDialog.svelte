@@ -99,7 +99,7 @@
 				<div
 					class="flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3.5"
 				>
-					<Link class="size-4 shrink-0 text-primary" />
+					<Link class="size-4 shrink-0 text-accent" />
 					<span class="min-w-0 flex-1 truncate font-mono text-[13px]">{address}</span>
 					<Button variant="primary" size="sm" onclick={() => add(address)}>Add</Button>
 				</div>

@@ -114,21 +114,29 @@
 	});
 
 	const preview = $derived(editor.preview);
+	/** Said next to the green dot while it runs, how it is shown only in the tooltip. */
 	const modeLabel = $derived(
 		preview.status !== 'running'
 			? undefined
+			: preview.mode === 'separate'
+				? 'Running in its own window'
+				: 'Running'
+	);
+	const modeHint = $derived(
+		preview.status !== 'running'
+			? undefined
 			: preview.mode === 'embedded'
-				? 'Embedded'
+				? "Your car's app runs inside the editor"
 				: preview.mode === 'overlay'
-					? 'Following the editor'
-					: 'Own window'
+					? "Your car's app runs in its own window, kept over the preview"
+					: "Your car's app runs in a window of its own"
 	);
 </script>
 
 <Panel title="Preview">
 	{#snippet actions()}
 		{#if modeLabel}
-			<span class="mr-1.5 flex items-center gap-2 text-[13px] text-muted">
+			<span class="mr-1.5 flex items-center gap-2 text-[13px] text-muted" title={modeHint}>
 				<span class="size-2 rounded-full bg-good shadow-[0_0_8px] shadow-good/60"></span>
 				{modeLabel}
 			</span>
@@ -159,7 +167,7 @@
 						<Play /> Run <Kbd keys={shortcut('P')} class="ml-1" />
 					</Button>
 				{:else if preview.status === 'starting'}
-					<LoaderCircle class="size-6 animate-spin text-primary" />
+					<LoaderCircle class="size-6 animate-spin text-accent" />
 					<div class="flex flex-col gap-1">
 						<div class="text-base font-medium">Starting your car's app</div>
 						<div class="line-clamp-2 font-mono text-xs break-all text-faint">

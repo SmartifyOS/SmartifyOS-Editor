@@ -47,7 +47,7 @@
 				'grid aspect-square place-items-center border transition-colors disabled:opacity-50',
 				large ? 'rounded-lg' : 'rounded-md',
 				picked
-					? 'border-primary/60 bg-primary/10 text-primary'
+					? 'border-primary/60 bg-primary/10 text-accent'
 					: large
 						? 'border-line bg-tint text-muted hover:bg-hover hover:text-fg'
 						: 'border-transparent text-muted hover:bg-hover hover:text-fg'

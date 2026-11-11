@@ -3,6 +3,7 @@
 	import ArrowRight from '~icons/lucide/arrow-right';
 	import BookOpen from '~icons/lucide/book-open';
 	import Box from '~icons/lucide/box';
+	import CarFront from '~icons/lucide/car-front';
 	import Check from '~icons/lucide/check';
 	import CircleAlert from '~icons/lucide/circle-alert';
 	import CircleCheck from '~icons/lucide/circle-check';
@@ -344,7 +345,7 @@
 							current
 								? 'border-primary bg-primary text-white'
 								: done
-									? 'border-primary/40 bg-primary/15 text-primary'
+									? 'border-primary/40 bg-primary/15 text-accent'
 									: 'border-line-strong'
 						]}
 					>
@@ -359,7 +360,10 @@
 			{#if creating}
 				<div class="flex flex-1 flex-col items-center justify-center gap-6 overflow-auto p-10">
 					{#if creating.status === 'running'}
-						<LoaderCircle class="size-9 animate-spin text-primary" />
+						<!-- The steps below spin already, so this only shows what is being made. -->
+						<span class="grid size-14 place-items-center rounded-full bg-primary/15 text-accent">
+							<CarFront class="size-7" />
+						</span>
 						<div class="flex flex-col items-center gap-1 text-center">
 							<h2 id="new-car-title" class="text-lg font-semibold">
 								Creating {from === 'example' ? 'a copy of the example app' : name.trim()}
@@ -609,9 +613,7 @@
 											]}
 											onclick={() => chooseLook(choice)}
 										>
-											<Icon
-												class={['size-5', look === choice.id ? 'text-primary' : 'text-muted']}
-											/>
+											<Icon class={['size-5', look === choice.id ? 'text-accent' : 'text-muted']} />
 											<span class="font-medium">{choice.label}</span>
 											<span class="text-xs text-muted">{choice.hint}</span>
 										</button>
@@ -727,7 +729,7 @@
 	>
 		{#if recommended}
 			<span
-				class="absolute top-4 right-4 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
+				class="absolute top-4 right-4 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-accent"
 			>
 				Recommended
 			</span>
@@ -736,7 +738,7 @@
 			class={[
 				'grid size-10 place-items-center rounded-lg border',
 				from === value
-					? 'border-primary/40 bg-primary/20 text-primary'
+					? 'border-primary/40 bg-primary/20 text-accent'
 					: 'border-line bg-tint text-muted'
 			]}
 		>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FileUp from '~icons/lucide/file-up';
+	import LoaderCircle from '~icons/lucide/loader-circle';
 	import RefreshCcw from '~icons/lucide/refresh-ccw';
 	import RotateCw from '~icons/lucide/rotate-cw';
 	import Trash from '~icons/lucide/trash-2';
@@ -100,7 +101,9 @@
 </script>
 
 {#if !appearance}
-	<p class="text-[13px] text-muted">Reading your car…</p>
+	<p class="flex items-center gap-2 text-[13px] text-muted">
+		<LoaderCircle class="size-3.5 animate-spin" /> Reading your car
+	</p>
 {:else if carCode}
 	<CodeNote text="Your app sets up the car in code:" code={carCode.code} line={carCode.line} />
 {:else}
@@ -237,7 +240,7 @@
 						<CodeNote text="Written as code:" code={wheel.asCode} line={wheel.line} />
 					{:else}
 						{@const backwards = wheel.values.invertSpin === true}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1.5">
 							<PartName
 								class="min-w-0 flex-1"
 								value={String(wheel.values.objectName ?? '')}
@@ -262,7 +265,7 @@
 								disabled={!canWrite}
 								onclick={() => void config.set(`${rolling}[${index}].invertSpin`, !backwards)}
 							>
-								<RefreshCcw class={backwards ? 'text-primary' : ''} />
+								<RefreshCcw class={backwards ? 'text-accent' : ''} />
 							</Button>
 							<Button
 								variant="ghost-muted"
@@ -297,7 +300,7 @@
 					{#if wheel.asCode}
 						<CodeNote text="Written as code:" code={wheel.asCode} line={wheel.line} />
 					{:else}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1.5">
 							<PartName
 								class="min-w-0 flex-1"
 								value={String(wheel.values.holderObjectName ?? '')}
@@ -355,7 +358,7 @@
 				{#if steeringCode}
 					<CodeNote text="Written as code:" code={steeringCode.code} line={steeringCode.line} />
 				{:else if config.value(steeringWheel) === true}
-					<div class="flex items-center gap-1">
+					<div class="flex items-center gap-1.5">
 						<PartName
 							class="min-w-0 flex-1"
 							value={config.value<string>(`${steeringWheel}.objectName`) ?? ''}
@@ -566,7 +569,7 @@
 {/snippet}
 
 {#snippet nameRow(key: string, name: string, label: string, remove: () => Promise<void>)}
-	<div class="flex items-center gap-1">
+	<div class="flex items-center gap-1.5">
 		<TextField
 			class="min-w-0 flex-1"
 			value={name}

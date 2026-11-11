@@ -5,10 +5,10 @@
 	import Eraser from '~icons/lucide/eraser';
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import Send from '~icons/lucide/send';
-	import type { Snippet } from 'svelte';
 	import type { CanFieldInfo, CanNetwork } from '../../../shared/cli.ts';
 	import { bus } from '#lib/state/bus.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import InspectorSection from './InspectorSection.svelte';
 	import RunAppLink from './RunAppLink.svelte';
 	import Button from './ui/Button.svelte';
 	import Select from './ui/Select.svelte';
@@ -76,15 +76,14 @@
 </script>
 
 {#if !running}
-	{#snippet idle()}
+	<InspectorSection title="Try it out">
 		<p class="text-[13px] text-muted">
 			Run your car's app to try this device out before it is built: send what it sends, and see what
 			your app does. <RunAppLink />
 		</p>
-	{/snippet}
-	{@render section('Try it out', idle)}
+	</InspectorSection>
 {:else if !network}
-	{#snippet waiting()}
+	<InspectorSection title="Try it out">
 		{#if bus.problem}
 			<p class="text-[13px] text-muted">{bus.problem}</p>
 		{:else}
@@ -92,18 +91,16 @@
 				<LoaderCircle class="size-3.5 animate-spin" /> Asking your car's app
 			</p>
 		{/if}
-	{/snippet}
-	{@render section('Try it out', waiting)}
+	</InspectorSection>
 {:else if !device}
-	{#snippet missing()}
+	<InspectorSection title="Try it out">
 		<p class="text-[13px] text-muted">
 			Your car's app has no device called {name} on its CAN bus. Add it to lib/can.dart to try it out
 			here.
 		</p>
-	{/snippet}
-	{@render section('Try it out', missing)}
+	</InspectorSection>
 {:else}
-	{#snippet there()}
+	<InspectorSection title="Try it out">
 		<div class="flex items-center gap-3">
 			<div class="flex min-w-0 flex-1 flex-col gap-0.5">
 				<span class="text-[13px]">Pretend it is connected</span>
@@ -121,10 +118,9 @@
 				onchange={(on) => void bus.pretend(device.node, on)}
 			/>
 		</div>
-	{/snippet}
-	{@render section('Try it out', there)}
+	</InspectorSection>
 
-	{#snippet sends()}
+	<InspectorSection title="What it sends">
 		{#each own as message (message.name)}
 			{@render messageForm(message)}
 		{:else}
@@ -148,10 +144,9 @@
 				{/each}
 			{/if}
 		{/if}
-	{/snippet}
-	{@render section('What it sends', sends)}
+	</InspectorSection>
 
-	{#snippet log()}
+	<InspectorSection title="On the bus" actions={logActions}>
 		{#if bus.log.length === 0}
 			<p class="text-[13px] text-muted">
 				What you send and what your app sends on the bus shows up here.
@@ -162,7 +157,7 @@
 					<div class="flex items-start gap-2">
 						{#if entry.direction === 'in'}
 							<span title="You sent this to your app"
-								><ArrowDownRight class="mt-0.5 size-3.5 shrink-0 text-primary" /></span
+								><ArrowDownRight class="mt-0.5 size-3.5 shrink-0 text-accent" /></span
 							>
 						{:else}
 							<span title="Your app sent this"
@@ -182,8 +177,7 @@
 				{/each}
 			</div>
 		{/if}
-	{/snippet}
-	{@render section('On the bus', log, logActions)}
+	</InspectorSection>
 {/if}
 
 {#snippet logActions()}
@@ -203,7 +197,7 @@
 		</div>
 		{#if form}
 			{#each message.fields as field (field.name)}
-				<div class="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-x-3">
+				<div class="field-grid">
 					<span class="truncate text-[13px] text-muted" title={field.name}
 						>{spoken(field.name)}</span
 					>
@@ -246,14 +240,4 @@
 			<Send /> Send it to your app
 		</Button>
 	</div>
-{/snippet}
-
-{#snippet section(title: string, children: Snippet, actions?: Snippet)}
-	<section class="flex flex-col gap-2">
-		<div class="flex h-5 items-center justify-between">
-			<h3 class="text-xs font-medium text-faint">{title}</h3>
-			{@render actions?.()}
-		</div>
-		{@render children()}
-	</section>
 {/snippet}

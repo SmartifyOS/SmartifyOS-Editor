@@ -82,7 +82,7 @@
 					class="absolute top-10 left-0 z-50 w-[22rem] rounded-xl p-1 shadow-float glass no-drag"
 				>
 					{#if others.length > 0}
-						<div class="px-2.5 pt-2 pb-1 text-xs font-medium text-faint">Recent projects</div>
+						<div class="px-2.5 pt-2 pb-1 text-xs font-medium text-muted">Recently opened</div>
 						{#each others as project (project.path)}
 							<button
 								type="button"
@@ -97,12 +97,12 @@
 						<div class="mx-1 my-1 h-px bg-line"></div>
 					{/if}
 					{@render item(Plus, "Create a new car's app…", () => (editor.newCarDialog = true))}
-					{@render item(FolderOpen, 'Open another project…', () => editor.open())}
+					{@render item(FolderOpen, "Open another car's app…", () => editor.open())}
 					{@render item(VsCode, 'Open in VS Code', () => editor.openInVsCode())}
 					{@render item(ExternalLink, revealLabel, () => {
 						if (editor.project) window.smartify.projects.reveal(editor.project.path);
 					})}
-					{@render item(FolderX, 'Close project', () => editor.close())}
+					{@render item(FolderX, "Close this car's app", () => editor.close())}
 				</div>
 			{/if}
 		</div>
@@ -198,7 +198,7 @@
 			{/if}
 		</div>
 	{/if}
-	<!-- With a project open the settings are at the bottom of the car panel. -->
+	<!-- With a car's app open the settings are at the bottom of the car panel. -->
 	{#if !editor.project && !onSettings}
 		<Button
 			variant="ghost-muted"

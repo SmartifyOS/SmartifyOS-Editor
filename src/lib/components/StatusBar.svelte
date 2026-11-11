@@ -9,8 +9,8 @@
 
 	/**
 	 * The strip along the bottom of the window: a way to ask for help on the left, then a task
-	 * moved out of the way and updates, which only show when there is something to say, and on the right the versions of the CLI and the editor, which checks
-	 * for updates when clicked.
+	 * moved out of the way and updates, which only show when there is something to say, and on
+	 * the right the editor's version, which checks for updates when clicked.
 	 */
 
 	const discord = 'https://discord.gg/bRw7wJMnPZ';
@@ -21,7 +21,7 @@
 </script>
 
 <footer
-	class="flex h-8 shrink-0 items-center gap-3 border-t border-line bg-bg px-3 text-[12.5px] text-muted"
+	class="flex h-8 shrink-0 items-center gap-3 border-t border-line bg-bg px-3 text-xs text-muted"
 >
 	<a
 		href={discord}
@@ -40,7 +40,7 @@
 			title="Show how far it is"
 			onclick={() => editor.task && (editor.task.hidden = false)}
 		>
-			<LoaderCircle class="size-3.5 animate-spin text-primary" />
+			<LoaderCircle class="size-3.5 animate-spin text-accent" />
 			{editor.task.spec.title}
 		</button>
 	{/if}
@@ -51,7 +51,7 @@
 		</span>
 	{:else if update.status === 'downloading'}
 		<span class="flex items-center gap-2" title="It installs by itself, you can keep working">
-			<ArrowDownToLine class="size-3.5 text-primary" />
+			<ArrowDownToLine class="size-3.5 text-accent" />
 			Downloading an update
 			<span class="h-1 w-24 overflow-hidden rounded-full bg-hover">
 				<span
@@ -70,7 +70,7 @@
 			class="flex h-6 items-center gap-1.5 rounded-md bg-primary/15 px-2 font-medium text-fg transition-colors hover:bg-primary/25"
 			onclick={() => (editor.updateDialog = true)}
 		>
-			<RefreshCw class="size-3.5 text-primary" /> Restart to update
+			<RefreshCw class="size-3.5 text-accent" /> Restart to update
 		</button>
 	{:else if update.status === 'restarting'}
 		<span class="flex items-center gap-2">
@@ -98,14 +98,14 @@
 
 	<div class="flex-1"></div>
 
-	{#if editor.cli?.found}
-		<span title={editor.cli.path}>CLI {editor.cli.version}</span>
-	{/if}
+	<!-- The tools behind the editor update with it, so their version is only in the tooltip. -->
 	{#if editor.version}
 		<button
 			type="button"
-			class="rounded px-1.5 py-0.5 hover:bg-hover hover:text-fg"
-			title="Check for updates"
+			class="-mr-1.5 flex h-6 items-center rounded-md px-1.5 hover:bg-hover hover:text-fg"
+			title={editor.cli?.found
+				? `Check for updates (its tools are at ${editor.cli.version})`
+				: 'Check for updates'}
 			onclick={() => editor.checkForUpdates()}
 		>
 			SmartifyOS Editor {editor.version}

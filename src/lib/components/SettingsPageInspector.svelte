@@ -2,16 +2,18 @@
 	import Eye from '~icons/lucide/eye';
 	import LoaderCircle from '~icons/lucide/loader-circle';
 	import Plus from '~icons/lucide/plus';
+	import SettingsIcon from '~icons/lucide/settings';
 	import Trash from '~icons/lucide/trash-2';
 	import TriangleAlert from '~icons/lucide/triangle-alert';
 	import VsCode from '~icons/logos/visual-studio-code';
-	import type { Snippet } from 'svelte';
 	import type { RowKind, SettingsPageInfo, SettingsRow } from '../../../shared/cli.ts';
 	import { settingsCommands } from '#lib/commands.ts';
 	import IconPicker from './IconPicker.svelte';
 	import { rowKinds, rowWords } from '#lib/settings.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
 	import { settingsPages } from '#lib/state/settings.svelte.ts';
+	import InspectorHeading from './InspectorHeading.svelte';
+	import InspectorSection from './InspectorSection.svelte';
 	import RunAppLink from './RunAppLink.svelte';
 	import SettingsRowCard from './SettingsRowCard.svelte';
 	import Button from './ui/Button.svelte';
@@ -56,23 +58,28 @@
 	}
 </script>
 
-<div class="flex flex-col gap-0.5">
-	<div class="text-base font-semibold">{page.title ?? page.id ?? page.file}</div>
-	<div class="font-mono text-xs break-all text-faint">{page.file}</div>
-</div>
+<InspectorHeading
+	title={page.title ?? page.id ?? page.file}
+	icon={SettingsIcon}
+	carIcon={page.icon}
+	detail={page.file}
+	about={`A page of your own in Settings. The driver opens it from its row on ${parentTitle ?? 'the page it goes in'}.`}
+/>
 
-{#snippet what()}
-	<p class="text-[13px] text-muted">
-		A page of your own in Settings. The driver opens it from its row on {parentTitle ??
-			'the page it goes in'}.
-	</p>
+<InspectorSection>
 	{#if !page.registered}
 		<p class="flex items-start gap-2 text-[13px] text-warn">
 			<TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
-			Nothing in your app hands it to SmartifyOS yet, so your app does not have it. It usually goes in
-			lib/main.dart.
+			Your app does not have it yet, since nothing hands it to SmartifyOS. That usually happens in lib/main.dart.
 		</p>
 	{/if}
+	<Button
+		size="sm"
+		class="w-full justify-start"
+		onclick={() => editor.openInVsCode(undefined, page.file, page.line)}
+	>
+		<VsCode /> Open it in VS Code
+	</Button>
 	{#if running}
 		<Button size="sm" class="w-full justify-start" onclick={() => void settingsPages.show(page)}>
 			<Eye /> Show it in the preview
@@ -85,20 +92,21 @@
 	{#if settingsPages.problem}
 		<p class="text-[13px] text-bad">{settingsPages.problem}</p>
 	{/if}
-{/snippet}
-{@render section(undefined, what)}
+</InspectorSection>
 
 {#snippet pageFields()}
-	<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
+	<div class="field-grid">
 		<span class="text-[13px] text-muted">Name</span>
 		<TextField
 			value={page.title ?? ''}
+			label="Name"
 			onchange={(title) => title.trim() && changePage({ title: title.trim() })}
 		/>
 		<span class="text-[13px] text-muted">Under it</span>
 		<TextField
 			value={page.subtitle ?? ''}
 			placeholder="Nothing"
+			label="Under it"
 			onchange={(subtitle) => changePage({ subtitle })}
 		/>
 		<span class="text-[13px] text-muted">Goes in</span>
@@ -127,13 +135,13 @@
 		/>
 	</div>
 	<p class="text-xs text-faint">
-		Order is where its row sits on {parentTitle ?? 'the page it goes in'}, smaller first. Empty is
+		Where its row sits on {parentTitle ?? 'the page it goes in'}, smaller numbers first. Empty is
 		100.
 	</p>
 	<IconPicker value={page.icon} onpick={(icon) => changePage({ icon })} />
 {/snippet}
 {#snippet pageWritten()}
-	<div class="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-[13px]">
+	<div class="field-grid text-[13px]">
 		<span class="text-muted">Name</span>
 		<span class={['truncate', page.title === null && 'text-faint']}>
 			{page.title ?? 'Set in code'}
@@ -154,7 +162,9 @@
 		Written outside this editor, so change it in VS Code.
 	</p>
 {/snippet}
-{@render section('Page', page.editable ? pageFields : pageWritten)}
+<InspectorSection title="Page">
+	{#if page.editable}{@render pageFields()}{:else}{@render pageWritten()}{/if}
+</InspectorSection>
 
 {#snippet rows()}
 	{#if page.rows.length === 0 && !adding}
@@ -178,7 +188,7 @@
 		{@const words = rowWords[adding]}
 		<div class="flex flex-col gap-2 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
 			<span class="flex items-center gap-2 text-[13px] font-medium">
-				<words.icon class="size-4 text-primary" /> New {words.label.toLowerCase()}
+				<words.icon class="size-4 text-accent" /> New {words.label.toLowerCase()}
 			</span>
 			<!-- svelte-ignore a11y_autofocus -->
 			<input
@@ -231,41 +241,26 @@
 	{/each}
 {/snippet}
 {#if page.editable}
-	{@render section(`Rows${page.rows.length > 0 ? ` (${page.rows.length})` : ''}`, rows, busy)}
+	<InspectorSection title={`Rows${page.rows.length > 0 ? ` (${page.rows.length})` : ''}`}>
+		{#snippet actions()}
+			{#if settingsPages.pending > 0}
+				<LoaderCircle class="size-3.5 animate-spin text-muted" />
+			{/if}
+		{/snippet}
+		{@render rows()}
+	</InspectorSection>
 {:else if page.rows.length > 0}
-	{@render section(`Rows (${page.rows.length})`, rowsWritten)}
+	<InspectorSection title={`Rows (${page.rows.length})`}>{@render rowsWritten()}</InspectorSection>
 {/if}
 
-{#snippet busy()}
-	{#if settingsPages.pending > 0}
-		<LoaderCircle class="size-3.5 animate-spin text-faint" />
-	{/if}
-{/snippet}
-
-{#snippet last()}
-	<Button
-		size="sm"
-		class="w-full justify-start"
-		onclick={() => editor.openInVsCode(undefined, page.file, page.line)}
-	>
-		<VsCode /> Open it in VS Code
-	</Button>
-	{#if page.editable}
-		<Button size="sm" class="w-full justify-start" onclick={() => void settingsPages.remove(page)}>
+{#if page.editable}
+	<InspectorSection title="Remove">
+		<Button
+			size="sm"
+			class="w-full justify-start text-bad! hover:bg-bad/10!"
+			onclick={() => void settingsPages.remove(page)}
+		>
 			<Trash /> Remove this page
 		</Button>
-	{/if}
-{/snippet}
-{@render section(undefined, last)}
-
-{#snippet section(title: string | undefined, children: Snippet, actions?: Snippet)}
-	<section class="flex flex-col gap-2">
-		{#if title}
-			<div class="flex h-5 items-center justify-between">
-				<h3 class="text-xs font-medium text-faint">{title}</h3>
-				{@render actions?.()}
-			</div>
-		{/if}
-		{@render children()}
-	</section>
-{/snippet}
+	</InspectorSection>
+{/if}

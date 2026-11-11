@@ -73,7 +73,7 @@
 				{#if items.length > 0}
 					{@const open = expanded.includes(kind.id)}
 					<div class="flex flex-col gap-0.5">
-						<p class="text-xs text-faint">{kind.title}</p>
+						<p class="text-[13px]">{kind.title}</p>
 						{#each open ? items : items.slice(0, few) as item (item.id)}
 							{#if kind.show}
 								<button

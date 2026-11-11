@@ -111,7 +111,7 @@
 					<VsCode /> Open it in VS Code
 				</Button>
 			{:else}
-				<div class="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
+				<div class="field-grid">
 					<span class="text-[13px] text-muted">Says</span>
 					<TextField
 						value={row.title ?? ''}
@@ -137,7 +137,7 @@
 
 				{#if row.kind === 'choice'}
 					<div class="flex flex-col gap-1.5">
-						<span class="text-xs font-medium text-faint">What can be picked</span>
+						<span class="text-[13px]">What can be picked</span>
 						{#each options as label, at (at)}
 							<div class="flex items-center gap-1.5">
 								<TextField
@@ -181,7 +181,7 @@
 							/>
 						</div>
 						{#if row.saved}
-							<div class="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-x-3">
+							<div class="field-grid">
 								<span class="text-[13px] text-muted">Starts as</span>
 								{#if row.kind === 'toggle'}
 									<Select
@@ -280,7 +280,7 @@
 				</Button>
 				<Button
 					size="sm"
-					class="ml-auto"
+					class="ml-auto text-bad! hover:bg-bad/10!"
 					onclick={() => void settingsPages.change(settingsCommands.removeRow(page, query))}
 				>
 					<Trash /> Remove

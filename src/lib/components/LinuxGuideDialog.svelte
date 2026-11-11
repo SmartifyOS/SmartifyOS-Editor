@@ -272,7 +272,7 @@
 		href={url}
 		target="_blank"
 		rel="noreferrer"
-		class="flex items-center gap-2 self-start font-medium text-primary hover:underline"
+		class="flex items-center gap-2 self-start font-medium text-accent hover:underline"
 	>
 		<Download class="size-4" />
 		{text}

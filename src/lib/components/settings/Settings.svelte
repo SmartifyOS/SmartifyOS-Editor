@@ -24,7 +24,7 @@
 	const sections: { id: SectionId; label: string; icon: Component }[] = [
 		{ id: 'computer', label: 'This computer', icon: Monitor },
 		{ id: 'updates', label: 'Updates', icon: RefreshCw },
-		{ id: 'projects', label: 'Projects', icon: FolderOpen }
+		{ id: 'projects', label: 'Car apps', icon: FolderOpen }
 	];
 
 	const section = remembered<SectionId>('settings.section', 'computer');
@@ -51,6 +51,12 @@
 
 <div class="flex min-h-0 flex-1">
 	<nav class="flex w-60 shrink-0 flex-col gap-0.5 border-r border-line bg-card p-2">
+		<!-- At the top, where it is looked for first, and saying where it goes. Escape does it too. -->
+		<Button variant="ghost-muted" class="justify-start font-normal" onclick={() => goto('#/')}>
+			<ArrowLeft />
+			{editor.project ? 'Back to your car' : 'Back to the start'}
+		</Button>
+		<div class="mx-1 my-1.5 h-px bg-line"></div>
 		{#each sections as item (item.id)}
 			<Button
 				variant="ghost"
@@ -62,10 +68,6 @@
 				{item.label}
 			</Button>
 		{/each}
-		<div class="flex-1"></div>
-		<Button variant="ghost-muted" class="justify-start font-normal" onclick={() => goto('#/')}>
-			<ArrowLeft /> Back
-		</Button>
 	</nav>
 
 	<div class="min-w-0 flex-1 overflow-auto bg-bg">
@@ -105,7 +107,7 @@
 			</p>
 		{:else}
 			<p class="px-4 py-3.5 text-muted">
-				This computer could not be checked. The tools behind the editor may need an update.
+				This computer could not be checked. The editor may need an update.
 			</p>
 		{/if}
 	</SettingsGroup>
@@ -113,7 +115,7 @@
 	<SettingsGroup title="Setup">
 		<SettingsRow
 			title="Get this computer ready"
-			description="Installs Flutter, which SmartifyOS is built with, unless this computer has it. Then it asks about PlatformIO, which builds the devices on your CAN bus, and checks everything again. It ran once by itself after installing."
+			description="Installs Flutter, which SmartifyOS is built with, if this computer does not have it, offers PlatformIO for the programs of your devices, then checks everything again. It already ran once, right after installing."
 		>
 			<Button size="sm" disabled={!canRun} onclick={() => editor.setUpComputer()}>
 				<Wrench /> Run setup
@@ -138,8 +140,8 @@
 		</SettingsRow>
 		<SettingsRow title="Look now">
 			{#snippet description()}
-				SmartifyOS Editor {editor.version}{#if editor.cli?.found}, its tools (the SmartifyOS CLI) {editor
-						.cli.version}{/if}
+				SmartifyOS Editor {editor.version}{#if editor.cli?.found}, its tools {editor.cli
+						.version}{/if}
 			{/snippet}
 			<Button
 				size="sm"
@@ -169,12 +171,12 @@
 		</SettingsRow>
 	</SettingsGroup>
 
-	<SettingsGroup title="Recent projects">
+	<SettingsGroup title="Recently opened">
 		<SettingsRow
 			title="The list on the start screen"
 			description={editor.recent.length === 1
-				? 'It has 1 project. Clearing it leaves the project itself as it is.'
-				: `It has ${editor.recent.length} projects. Clearing it leaves the projects themselves as they are.`}
+				? 'It has 1 car app. Clearing the list leaves the app itself as it is.'
+				: `It has ${editor.recent.length} car apps. Clearing the list leaves the apps themselves as they are.`}
 		>
 			<Button size="sm" disabled={editor.recent.length === 0} onclick={() => editor.forgetAll()}>
 				Clear the list
