@@ -17,6 +17,8 @@ const wording: Record<string, ((step: NextStep) => string) | null> = {
 	'edit-main': (step) => `Everything about your car is in ${step.path ?? 'lib/main.dart'}.`,
 	'add-extension': () => 'Add extensions with Add an extension, on the left.',
 	'export-installer': () => 'Export an installer to put it on your car.',
+	tablet: () =>
+		'To make the tablet start into it, plug it into this computer once and pick Set up a tablet in the Export menu.',
 	create: () => "Create your car's app on the start screen, or open one you have.",
 	// Opening a folder in a terminal.
 	'open-folder': null

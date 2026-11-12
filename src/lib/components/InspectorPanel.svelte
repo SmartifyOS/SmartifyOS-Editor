@@ -196,7 +196,9 @@
 		</InspectorSection>
 
 		<InspectorSection title="Put it on your car">
-			<p class="text-[13px] text-muted">SmartifyOS goes onto the car on a USB stick.</p>
+			<p class="text-[13px] text-muted">
+				SmartifyOS goes onto the car on a USB stick, or onto a tablet over its cable.
+			</p>
 			{#each exportsFor(project) as choice (choice.label)}
 				{@render action(choice.icon, choice.label, run(choice.task))}
 			{/each}

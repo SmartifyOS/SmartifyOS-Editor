@@ -103,6 +103,15 @@ export const commands = {
 		title: 'Export for Android',
 		args: ['export', 'android'],
 		changes: 'nothing'
+	}),
+	/**
+	 * Sets up a tablet on a USB cable as the car's screen: puts the app on it when it is not
+	 * there, makes it the home screen, and asks whether it should be the tablet's owner.
+	 */
+	setUpTablet: (): TaskSpec => ({
+		title: 'Set up a tablet',
+		args: ['tablet'],
+		changes: 'nothing'
 	})
 };
 

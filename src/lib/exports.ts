@@ -2,12 +2,16 @@ import type { Component } from 'svelte';
 import Cpu from '~icons/lucide/cpu';
 import HardDriveDownload from '~icons/lucide/hard-drive-download';
 import RefreshCw from '~icons/lucide/refresh-cw';
+import Tablet from '~icons/lucide/tablet';
 import TabletSmartphone from '~icons/lucide/tablet-smartphone';
 import type { Project } from '../../shared/api.ts';
 import { commands } from './commands.ts';
 import type { TaskSpec } from './state/task.svelte.ts';
 
-/** What can be exported onto a USB stick for the car, for the Export menu and the inspector. */
+/**
+ * What can be put on the car, for the Export menu and the inspector: onto a USB stick, or onto a
+ * tablet that is the car's screen over its USB cable.
+ */
 export interface ExportChoice {
 	label: string;
 	hint: string;
@@ -43,6 +47,13 @@ export const exportChoices: ExportChoice[] = [
 		hint: 'Your car as an app, for a tablet that is its screen',
 		icon: TabletSmartphone,
 		task: commands.exportAndroid(),
+		needsDevices: false
+	},
+	{
+		label: 'Set up a tablet',
+		hint: 'Plugged in here, so it starts into your car',
+		icon: Tablet,
+		task: commands.setUpTablet(),
 		needsDevices: false
 	},
 	{
