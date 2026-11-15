@@ -163,6 +163,8 @@ export interface FieldSpec {
 	sound?: boolean;
 	/** On, off, or left to the computer (`null`). */
 	automatic?: { label: string; on: string; off: string };
+	/** An app for a second screen: one of SmartifyOS's, or a window of the app's in the app list. */
+	appListEntry?: boolean;
 }
 
 /** A part of a setup page, folding away. */
@@ -183,6 +185,12 @@ export interface FoldSpec {
 const seconds = 's';
 const metres = 'm';
 const degrees = '°';
+
+/** SmartifyOS's own apps that a second screen can show, by their id. */
+export const secondScreenApps: Record<string, string> = {
+	file_player: 'Music',
+	reverse_camera: 'Reverse camera'
+};
 
 export const soundNames: Record<string, string> = {
 	notificationInfo: 'Info chime',
@@ -557,6 +565,41 @@ export const fieldPages: Partial<Record<SetupArea, FoldSpec[]>> = {
 			]
 		},
 		{
+			id: 'system.secondScreen',
+			title: 'Second screen',
+			note: 'For a car with a second screen, an old dashboard screen or one for the passenger. With one screen none of this does anything.',
+			fields: [
+				{
+					key: 'secondScreen.enabled',
+					label: 'Use a second screen',
+					hint: 'Off, SmartifyOS never draws on it, and Linux mirrors or extends onto it the way it would anyway.'
+				},
+				{
+					key: 'secondScreen.bootLook',
+					label: 'While the car starts',
+					when: 'secondScreen.enabled',
+					options: [
+						{ value: 'logo', label: 'The SmartifyOS logo' },
+						{ value: 'blank', label: 'Black' }
+					]
+				},
+				{
+					key: 'secondScreen.entry',
+					label: 'Shows',
+					appListEntry: true,
+					hint: 'Until the driver picks something else in Settings, Display. Not on Android.',
+					when: 'secondScreen.enabled'
+				},
+				{
+					key: 'secondScreen.androidApp',
+					label: 'Android app',
+					placeholder: 'com.google.android.apps.maps',
+					hint: 'On an Android tablet, which can only open another of its apps there, by its package name.',
+					when: 'secondScreen.enabled'
+				}
+			]
+		},
+		{
 			id: 'system.power',
 			title: 'Switching off',
 			fields: [
@@ -587,6 +630,7 @@ export const ownCode: Partial<Record<SetupArea, { key: string; what: string }[]>
 		{ key: 'drives.backend', what: 'drives of its own' },
 		{ key: 'volume.backend', what: 'a volume of its own' },
 		{ key: 'power.backend', what: 'switching off of its own' },
+		{ key: 'secondScreen.backend', what: 'a second screen of its own' },
 		{ key: 'updates.backend', what: 'updates of its own' }
 	]
 };
@@ -599,7 +643,10 @@ export const builtIns: { key: string; title: string; items: { id: string; label:
 		items: [
 			{ id: 'settings', label: 'Settings' },
 			{ id: 'home_widgets', label: 'Widgets' },
-			{ id: 'reverse_camera', label: 'Reverse camera' }
+			{ id: 'file_player', label: 'Music' },
+			{ id: 'reverse_camera', label: 'Reverse camera' },
+			{ id: 'android_apps', label: 'Android apps' },
+			{ id: 'second_screen', label: 'Second screen' }
 		]
 	},
 	{
@@ -644,6 +691,7 @@ export const builtIns: { key: string; title: string; items: { id: string; label:
 			{ id: 'mobile_data', label: 'Mobile data' },
 			{ id: 'sound', label: 'Sound' },
 			{ id: 'display', label: 'Display' },
+			{ id: 'display.second_screen', label: 'Second screen' },
 			{ id: 'appearance', label: 'Appearance' },
 			{ id: 'vehicle', label: 'Vehicle' },
 			{ id: 'vehicle.can_devices', label: 'CAN devices' },

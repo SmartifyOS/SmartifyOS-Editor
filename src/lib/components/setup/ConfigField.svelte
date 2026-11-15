@@ -14,9 +14,10 @@
 	import X from '~icons/lucide/x';
 	import VsCode from '~icons/logos/visual-studio-code';
 	import type { ConfigField, ConfigValue } from '../../../../shared/cli.ts';
-	import { soundNames, type FieldSpec } from '#lib/setup.ts';
+	import { secondScreenApps, soundNames, type FieldSpec } from '#lib/setup.ts';
 	import { config, type SettingsStore } from '#lib/state/config.svelte.ts';
 	import { editor } from '#lib/state/editor.svelte.ts';
+	import { parts } from '#lib/state/parts.svelte.ts';
 	import Button from '../ui/Button.svelte';
 	import AddField from '../ui/AddField.svelte';
 	import ColorField from '../ui/ColorField.svelte';
@@ -78,6 +79,23 @@
 		];
 		if (typeof value === 'string' && !(value in soundNames)) {
 			options.push({ value, label: value.split('/').pop() ?? value });
+		}
+		return options;
+	});
+
+	/** An app list entry's choices: SmartifyOS's own, the app's windows, and what is written. */
+	const entryOptions = $derived.by(() => {
+		const options = [
+			{ value: none, label: 'Nothing until the driver picks' },
+			...Object.entries(secondScreenApps).map(([id, label]) => ({ value: id, label }))
+		];
+		for (const window of parts.lists?.window ?? []) {
+			if (window.id && window.inAppList !== false) {
+				options.push({ value: window.id, label: window.name ?? window.id });
+			}
+		}
+		if (typeof value === 'string' && !options.some((option) => option.value === value)) {
+			options.push({ value, label: value });
 		}
 		return options;
 	});
@@ -369,6 +387,15 @@
 				onchange={(height) => set({ ...size, height: height ?? size.height })}
 			/>
 		</div>
+	{:else if field.type === 'string' && spec.appListEntry}
+		<Select
+			class="w-full"
+			options={entryOptions}
+			bind:value={
+				() => (value === null ? none : String(value)),
+				(next) => (next === none ? void store.unset(spec.key) : set(next))
+			}
+		/>
 	{:else if field.type === 'string' && spec.key === 'dateTime.timeZone' && timeZones.length > 0}
 		<Select
 			class="w-full"
